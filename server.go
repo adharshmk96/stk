@@ -85,12 +85,10 @@ func (s *Server) Patch(path string, handler HandlerFunc) {
 // and also to log the incoming request
 func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handle {
 
-	logger := logging.NewZapLogger()
-
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 		if config.RequestLogging {
-			logger.Info("incoming request",
+			config.Logger.Info("incoming request",
 				zap.String("method", r.Method),
 				zap.String("url", r.URL.String()),
 			)
@@ -100,7 +98,7 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 			Params:  p,
 			Request: r,
 			Writer:  w,
-			Logger:  logger,
+			Logger:  config.Logger,
 		}
 		handler(handlerContext)
 
