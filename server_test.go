@@ -245,3 +245,23 @@ func TestServerLogger(t *testing.T) {
 		assert.NotNil(t, s.Logger)
 	})
 }
+
+func TestNormalizePort(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected string
+	}{
+		{"0.0.0.0:8080", "0.0.0.0:8080"},
+		{"8080", "0.0.0.0:8080"},
+		{":8080", "0.0.0.0:8080"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.input, func(t *testing.T) {
+			result := stk.NormalizePort(tc.input)
+			if result != tc.expected {
+				t.Errorf("For input %s, expected %s, but got %s", tc.input, tc.expected, result)
+			}
+		})
+	}
+}

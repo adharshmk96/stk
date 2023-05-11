@@ -2,6 +2,7 @@ package stk
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/adharshmk96/stk/logging"
 	"github.com/julienschmidt/httprouter"
@@ -45,8 +46,9 @@ func NewServer(config *ServerConfig) *Server {
 
 // Start starts the server on the configured port
 func (s *Server) Start() {
-	s.Logger.Info("starting server", zap.String("port", s.Config.Port))
-	err := http.ListenAndServe(":"+s.Config.Port, s.Router)
+	startingPort := NormalizePort(s.Config.Port)
+	s.Logger.Info("starting server", zap.String("port", startingPort))
+	err := http.ListenAndServe(startingPort, s.Router)
 	if err != nil {
 		s.Logger.Panic("error starting server", zap.Error(err))
 		panic(err)
@@ -108,4 +110,16 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 			w.WriteHeader(http.StatusOK)
 		}
 	}
+}
+
+func NormalizePort(val string) string {
+	var result string
+	if strings.ContainsAny(val, ".") {
+		result = val
+	} else if strings.HasPrefix(val, ":") {
+		result = "0.0.0.0" + val
+	} else {
+		result = "0.0.0.0:" + val
+	}
+	return result
 }
