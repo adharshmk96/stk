@@ -18,6 +18,8 @@ type Context struct {
 	Logger *zap.Logger
 
 	ResponseStatus int
+
+	Map map[string]interface{}
 }
 
 // Status sets the status code of the response
