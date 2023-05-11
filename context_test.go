@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -116,7 +116,7 @@ func TestDecodeJSONBody(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			body := ioutil.NopCloser(bytes.NewReader([]byte(tt.reqBody)))
+			body := io.NopCloser(bytes.NewReader([]byte(tt.reqBody)))
 			req := httptest.NewRequest("POST", "/", body)
 			resp := httptest.NewRecorder()
 

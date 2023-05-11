@@ -2,7 +2,7 @@ package stk_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -97,7 +97,7 @@ func TestServerRoutes(t *testing.T) {
 			serverHandler.ServeHTTP(rr, req)
 
 			res := rr.Result()
-			body, _ := ioutil.ReadAll(res.Body)
+			body, _ := io.ReadAll(res.Body)
 			assert.Equal(t, test.statusCode, res.StatusCode)
 			assert.Equal(t, test.expected, string(body))
 		})
@@ -109,7 +109,7 @@ func TestServerRoutes(t *testing.T) {
 		serverHandler.ServeHTTP(rr, req)
 
 		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
+		body, _ := io.ReadAll(res.Body)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 		assert.Equal(t, "404 page not found\n", string(body))
 	})
@@ -130,7 +130,7 @@ func TestServerRoutes(t *testing.T) {
 		serverHandler.ServeHTTP(rr, req)
 
 		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
+		body, _ := io.ReadAll(res.Body)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Equal(t, "GET", string(body))
 
@@ -139,7 +139,7 @@ func TestServerRoutes(t *testing.T) {
 		serverHandler.ServeHTTP(rr, req)
 
 		res = rr.Result()
-		body, _ = ioutil.ReadAll(res.Body)
+		body, _ = io.ReadAll(res.Body)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Equal(t, "POST", string(body))
 
