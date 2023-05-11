@@ -21,21 +21,26 @@ Server tool kit - framework for developing server in golang
 package main
 
 import (
-    "github.com/adharshmk96/stk"
+	"net/http"
+
+	"github.com/adharshmk96/stk"
 )
 
 func main() {
-    // create new server
-    server := stk.NewServer()
-    
-    // add routes
-    server.Get("/", func(ctx *stk.Context) {
-        ctx.JSON(200, stk.H{
-            "message": "hello world",
-        })
-    })
-    
-    // start server
-    server.Start()
+	config := stk.ServerConfig{
+		Port:           "0.0.0.0:8080",
+		RequestLogging: true,
+		CORS:           true,
+	}
+	// create new server
+	server := stk.NewServer(&config)
+
+	// add routes
+	server.Get("/", func(c *stk.Context) {
+		c.Status(http.StatusOK).JSONResponse(stk.Map{"message": "Hello World"})
+	})
+
+	// start server
+	server.Start()
 }
 ```
