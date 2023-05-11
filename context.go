@@ -18,9 +18,9 @@ type Context struct {
 	Logger *zap.Logger
 
 	ResponseStatus int
-
-	Map map[string]interface{}
 }
+
+type Map map[string]interface{}
 
 // Status sets the status code of the response
 func (c *Context) Status(status int) *Context {
