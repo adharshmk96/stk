@@ -59,21 +59,24 @@ func TestCORS(t *testing.T) {
 		c.Status(http.StatusOK).JSONResponse("OK")
 	})
 
-	// Run the test request
-	req, _ := http.NewRequest("GET", "/", nil)
-	respRec := httptest.NewRecorder()
+	t.Run("Non-preflight request", func(t *testing.T) {
+		// Run the test request
+		req, _ := http.NewRequest("GET", "/", nil)
+		respRec := httptest.NewRecorder()
 
-	s.Router.ServeHTTP(respRec, req)
+		s.Router.ServeHTTP(respRec, req)
 
-	expectedHeaders := map[string]string{
-		"Access-Control-Allow-Origin":  "*",
-		"Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE, PATCH",
-		"Access-Control-Allow-Headers": "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization",
-	}
-
-	for header, expectedValue := range expectedHeaders {
-		if value := respRec.Header().Get(header); value != expectedValue {
-			t.Errorf("Expected %s header to be %q, but got %q", header, expectedValue, value)
+		expectedHeaders := map[string]string{
+			"Access-Control-Allow-Origin":  "*",
+			"Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE, PATCH",
+			"Access-Control-Allow-Headers": "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization",
 		}
-	}
+
+		for header, expectedValue := range expectedHeaders {
+			if value := respRec.Header().Get(header); value != expectedValue {
+				t.Errorf("Expected %s header to be %q, but got %q", header, expectedValue, value)
+			}
+		}
+	})
+
 }

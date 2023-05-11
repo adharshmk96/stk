@@ -1,9 +1,5 @@
 package stk
 
-import (
-	"net/http"
-)
-
 func SecurityHeaders(next HandlerFunc) HandlerFunc {
 	return func(c *Context) {
 		headers := map[string]string{
@@ -32,12 +28,6 @@ func CORS(next HandlerFunc) HandlerFunc {
 		headers.Set("Access-Control-Allow-Origin", "*")
 		headers.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH")
 		headers.Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-
-		// For preflight requests, send only the headers and terminate the middleware chain
-		if c.Request.Method == "OPTIONS" {
-			c.Writer.WriteHeader(http.StatusNoContent)
-			return
-		}
 
 		next(c)
 	}
