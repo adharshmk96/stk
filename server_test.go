@@ -91,7 +91,7 @@ func TestServerRoutes(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		t.Run("testing "+test.method+" with path "+test.path, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			req := httptest.NewRequest(test.method, test.path, nil)
 			rr := httptest.NewRecorder()
 			serverHandler.ServeHTTP(rr, req)
@@ -102,6 +102,49 @@ func TestServerRoutes(t *testing.T) {
 			assert.Equal(t, test.expected, string(body))
 		})
 	}
+
+	t.Run("server returns 404 for non existent route", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/non-existent-route", nil)
+		rr := httptest.NewRecorder()
+		serverHandler.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		body, _ := ioutil.ReadAll(res.Body)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
+		assert.Equal(t, "404 page not found\n", string(body))
+	})
+
+	t.Run("testing server with same routes and different http methods", func(t *testing.T) {
+
+		sampleHandler := func(ctx *stk.Context) {
+			method := ctx.Request.Method
+			ctx.Writer.WriteHeader(200)
+			ctx.Writer.Write([]byte(method))
+		}
+
+		s.Get("/get-and-post", sampleHandler)
+		s.Post("/get-and-post", sampleHandler)
+
+		req := httptest.NewRequest(http.MethodGet, "/get-and-post", nil)
+		rr := httptest.NewRecorder()
+		serverHandler.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		body, _ := ioutil.ReadAll(res.Body)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, "GET", string(body))
+
+		req = httptest.NewRequest(http.MethodPost, "/get-and-post", nil)
+		rr = httptest.NewRecorder()
+		serverHandler.ServeHTTP(rr, req)
+
+		res = rr.Result()
+		body, _ = ioutil.ReadAll(res.Body)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, "POST", string(body))
+
+	})
+
 }
 
 // Test middlewares
