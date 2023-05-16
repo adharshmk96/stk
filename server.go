@@ -14,7 +14,7 @@ type HandlerFunc func(*Context)
 type ServerConfig struct {
 	Port           string
 	RequestLogging bool
-	CORS           bool
+	AllowedOrigins []string
 	Logger         *zap.Logger
 }
 
@@ -23,6 +23,13 @@ type Server struct {
 	Middlewares []Middleware
 	Config      *ServerConfig
 	Logger      *zap.Logger
+}
+
+func configureRouter() {
+	router := httprouter.New()
+	router.OPTIONS("*", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+
+	})
 }
 
 // NewServer creates a new server instance
@@ -97,10 +104,11 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 		}
 
 		handlerContext := &Context{
-			Params:  p,
-			Request: r,
-			Writer:  w,
-			Logger:  config.Logger,
+			Params:         p,
+			Request:        r,
+			Writer:         w,
+			Logger:         config.Logger,
+			AllowedOrigins: config.AllowedOrigins,
 		}
 		handler(handlerContext)
 

@@ -18,7 +18,6 @@ func TestServerRoutes(t *testing.T) {
 	config := &stk.ServerConfig{
 		Port:           "8080",
 		RequestLogging: true,
-		CORS:           true,
 	}
 	s := stk.NewServer(config)
 
@@ -173,7 +172,6 @@ func TestMiddlewares(t *testing.T) {
 		config := &stk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: true,
-			CORS:           true,
 		}
 		s := stk.NewServer(config)
 
@@ -205,7 +203,6 @@ func TestMiddlewares(t *testing.T) {
 		config := &stk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: true,
-			CORS:           true,
 		}
 		s := stk.NewServer(config)
 
@@ -238,7 +235,6 @@ func TestServerLogger(t *testing.T) {
 		config := &stk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: true,
-			CORS:           true,
 		}
 		s := stk.NewServer(config)
 
