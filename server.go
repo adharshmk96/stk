@@ -25,6 +25,13 @@ type Server struct {
 	Logger      *zap.Logger
 }
 
+func configureRouter() {
+	router := httprouter.New()
+	router.OPTIONS("*", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+
+	})
+}
+
 // NewServer creates a new server instance
 func NewServer(config *ServerConfig) *Server {
 	if config.Logger == nil {

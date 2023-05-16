@@ -1,8 +1,8 @@
 package stk
 
 import (
+	"fmt"
 	"net/http"
-	"strings"
 )
 
 const (
@@ -33,21 +33,11 @@ func CORS(next HandlerFunc) HandlerFunc {
 	return func(c *Context) {
 		allowedOrigins := getAllowedOrigins(c)
 
-		origin := c.Request.Header.Get("Origin")
+		origin := c.Request.Header.Get("Host")
 		// Check if the origin is in the allowedOrigins list
 		isAllowed := false
 		for _, allowedOrigin := range allowedOrigins {
-			originWithoutPort := strings.Split(origin, ":")[0]
-			if allowedOrigin == "same-origin" && origin == c.Request.Host {
-				isAllowed = true
-				origin = allowedOrigin
-				break
-			}
-			if allowedOrigin == "*" {
-				isAllowed = true
-				break
-			}
-			if origin == allowedOrigin || origin == originWithoutPort {
+			if allowedOrigin == "same-origin" || allowedOrigin == "*" || origin == allowedOrigin {
 				isAllowed = true
 				break
 			}
@@ -59,6 +49,9 @@ func CORS(next HandlerFunc) HandlerFunc {
 			c.Writer.Write([]byte("Forbidden"))
 			return
 		}
+
+		fmt.Println("origin")
+		fmt.Println(origin)
 
 		// Set CORS headers
 		headers := c.Writer.Header()
