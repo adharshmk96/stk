@@ -30,7 +30,6 @@ func main() {
 	config := stk.ServerConfig{
 		Port:           "0.0.0.0:8080",
 		RequestLogging: true,
-		CORS:           true,
 	}
 	// create new server
 	server := stk.NewServer(&config)
