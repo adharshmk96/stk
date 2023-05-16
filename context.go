@@ -10,8 +10,9 @@ import (
 )
 
 type Context struct {
-	Request *http.Request
-	Writer  http.ResponseWriter
+	Request        *http.Request
+	Writer         http.ResponseWriter
+	AllowedOrigins []string
 
 	Params httprouter.Params
 

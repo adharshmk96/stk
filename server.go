@@ -14,7 +14,7 @@ type HandlerFunc func(*Context)
 type ServerConfig struct {
 	Port           string
 	RequestLogging bool
-	CORS           bool
+	AllowedOrigins []string
 	Logger         *zap.Logger
 }
 
@@ -97,10 +97,11 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 		}
 
 		handlerContext := &Context{
-			Params:  p,
-			Request: r,
-			Writer:  w,
-			Logger:  config.Logger,
+			Params:         p,
+			Request:        r,
+			Writer:         w,
+			Logger:         config.Logger,
+			AllowedOrigins: config.AllowedOrigins,
 		}
 		handler(handlerContext)
 
