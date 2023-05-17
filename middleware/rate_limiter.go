@@ -11,7 +11,7 @@ import (
 type RateLimiter struct {
 	requestsPerInterval int
 	interval            time.Duration
-	AccessCounter       map[string]int
+	accessCounter       map[string]int
 	mux                 *sync.Mutex
 	Middleware          stk.Middleware
 }
@@ -21,7 +21,7 @@ func NewRateLimiter(requestsPerInterval int, interval time.Duration) *RateLimite
 	rl := &RateLimiter{
 		requestsPerInterval: requestsPerInterval,
 		interval:            interval,
-		AccessCounter:       make(map[string]int),
+		accessCounter:       make(map[string]int),
 		mux:                 &sync.Mutex{},
 	}
 
@@ -31,21 +31,21 @@ func NewRateLimiter(requestsPerInterval int, interval time.Duration) *RateLimite
 			rl.mux.Lock()
 			defer rl.mux.Unlock()
 
-			if cnt, ok := rl.AccessCounter[clientIP]; ok {
+			if cnt, ok := rl.accessCounter[clientIP]; ok {
 				if cnt >= rl.requestsPerInterval {
 					c.Status(http.StatusTooManyRequests).JSONResponse(stk.Map{
 						"error": "Too many requests. Please try again later.",
 					})
 					return
 				}
-				rl.AccessCounter[clientIP]++
+				rl.accessCounter[clientIP]++
 			} else {
-				rl.AccessCounter[clientIP] = 1
+				rl.accessCounter[clientIP] = 1
 				go func(ip string) {
 					time.Sleep(rl.interval)
 					rl.mux.Lock()
 					defer rl.mux.Unlock()
-					delete(rl.AccessCounter, ip)
+					delete(rl.accessCounter, ip)
 				}(clientIP)
 			}
 

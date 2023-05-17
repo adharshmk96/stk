@@ -1,7 +1,6 @@
 package middleware_test
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -32,10 +31,9 @@ func TestRateLimiter(t *testing.T) {
 
 	s.Get("/test", dummyHandler)
 
-	req, _ := http.NewRequest("GET", "/test", nil)
-	respRec := httptest.NewRecorder()
-
 	for i := 0; i < requestsPerInterval; i++ {
+		req, _ := http.NewRequest("GET", "/test", nil)
+		respRec := httptest.NewRecorder()
 		s.Router.ServeHTTP(respRec, req)
 
 		if respRec.Code != http.StatusOK {
@@ -43,11 +41,9 @@ func TestRateLimiter(t *testing.T) {
 		}
 	}
 
-	fmt.Println(rateLimiter.AccessCounter)
+	req, _ := http.NewRequest("GET", "/test", nil)
+	respRec := httptest.NewRecorder()
 	s.Router.ServeHTTP(respRec, req)
-	s.Router.ServeHTTP(respRec, req)
-	s.Router.ServeHTTP(respRec, req)
-	fmt.Println(respRec.Code)
 
 	if respRec.Code != http.StatusTooManyRequests {
 		t.Errorf("Expected 429 Too Many Requests, got: %d", respRec.Code)
