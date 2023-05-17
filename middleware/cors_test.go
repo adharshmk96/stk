@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/adharshmk96/stk"
+	"github.com/adharshmk96/stk/middleware"
 )
 
 func TestCORSDefault(t *testing.T) {
@@ -15,6 +16,8 @@ func TestCORSDefault(t *testing.T) {
 		RequestLogging: true,
 	}
 	s := stk.NewServer(config)
+
+	s.Use(middleware.CORS)
 
 	// Register a test route and handler
 	s.Get("/", func(c *stk.Context) {
@@ -59,6 +62,8 @@ func TestCORSAllowedOrigin(t *testing.T) {
 		},
 	}
 	s := stk.NewServer(config)
+
+	s.Use(middleware.CORS)
 
 	// Register a test route and handler
 	s.Get("/", func(c *stk.Context) {

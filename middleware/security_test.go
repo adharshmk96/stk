@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/adharshmk96/stk"
+	"github.com/adharshmk96/stk/middleware"
 )
 
 func TestSecurityHeaders(t *testing.T) {
@@ -15,6 +16,8 @@ func TestSecurityHeaders(t *testing.T) {
 		RequestLogging: true,
 	}
 	s := stk.NewServer(config)
+
+	s.Use(middleware.SecurityHeaders)
 
 	// Register a test route and handler
 	s.Get("/", func(c *stk.Context) {
