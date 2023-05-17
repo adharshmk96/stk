@@ -84,6 +84,10 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Headers": "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization",
 		}
 
+		if respRec.Code != http.StatusOK {
+			t.Errorf("Expected response code %d, but got %d", http.StatusOK, respRec.Code)
+		}
+
 		for header, expectedValue := range expectedHeaders {
 			if value := respRec.Header().Get(header); value != expectedValue {
 				t.Errorf("Expected %s header to be %q, but got %q", header, expectedValue, value)
@@ -103,6 +107,10 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Origin":  "",
 			"Access-Control-Allow-Methods": "",
 			"Access-Control-Allow-Headers": "",
+		}
+
+		if respRec.Code != http.StatusForbidden {
+			t.Errorf("Expected response code %d, but got %d", http.StatusForbidden, respRec.Code)
 		}
 
 		for header, expectedValue := range expectedHeaders {
@@ -129,6 +137,10 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Headers": "",
 		}
 
+		if respRec.Code != http.StatusOK {
+			t.Errorf("Expected response code %d, but got %d", http.StatusOK, respRec.Code)
+		}
+
 		for header, expectedValue := range expectedHeaders {
 			if value := respRec.Header().Get(header); value != expectedValue {
 				t.Errorf("Expected %s header to be %q, but got %q", header, expectedValue, value)
@@ -149,6 +161,11 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Origin":  "",
 			"Access-Control-Allow-Methods": "",
 			"Access-Control-Allow-Headers": "",
+		}
+
+		// TODO - this should be checked later on
+		if respRec.Code != http.StatusOK {
+			t.Errorf("Expected response code %d, but got %d", http.StatusOK, respRec.Code)
 		}
 
 		for header, expectedValue := range expectedHeaders {

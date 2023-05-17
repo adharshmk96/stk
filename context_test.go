@@ -13,23 +13,111 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+func TestStatus(t *testing.T) {
+	config := &stk.ServerConfig{
+		Port:           "8080",
+		RequestLogging: true,
+	}
+	s := stk.NewServer(config)
+
+	t.Run("test status and jsonresponse methods by chaining", func(t *testing.T) {
+
+		request, _ := http.NewRequest("GET", "/", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Get("/", func(c *stk.Context) {
+			c.Status(http.StatusTeapot).JSONResponse("Hello, this is a JSON response!")
+		})
+
+		s.Router.ServeHTTP(responseRec, request)
+
+		if responseRec.Code != http.StatusTeapot {
+			t.Errorf("Expected status code to be %d but got %d", http.StatusTeapot, responseRec.Code)
+		}
+
+	})
+
+	t.Run("test status method only", func(t *testing.T) {
+
+		request, _ := http.NewRequest("GET", "/st", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Get("/st", func(c *stk.Context) {
+			c.Status(http.StatusTeapot)
+		})
+
+		s.Router.ServeHTTP(responseRec, request)
+
+		if responseRec.Code != http.StatusTeapot {
+			t.Errorf("Expected status code to be %d but got %d", http.StatusTeapot, responseRec.Code)
+		}
+
+	})
+
+	t.Run("test status and json response method without chaining", func(t *testing.T) {
+
+		request, _ := http.NewRequest("GET", "/js", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Get("/js", func(c *stk.Context) {
+			c.Status(http.StatusBadGateway)
+			c.JSONResponse("Hello, this is a JSON response!")
+		})
+
+		s.Router.ServeHTTP(responseRec, request)
+
+		if responseRec.Code != http.StatusBadGateway {
+			t.Errorf("Expected status code to be %d but got %d", http.StatusBadGateway, responseRec.Code)
+		}
+
+	})
+
+	t.Run("test json response method individually gives 200", func(t *testing.T) {
+
+		request, _ := http.NewRequest("GET", "/jso", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Get("/jso", func(c *stk.Context) {
+			c.JSONResponse("Hello, this is a JSON response!")
+		})
+
+		s.Router.ServeHTTP(responseRec, request)
+
+		if responseRec.Code != http.StatusOK {
+			t.Errorf("Expected status code to be %d but got %d", http.StatusOK, responseRec.Code)
+		}
+
+	})
+
+}
+
 type TestPayload struct {
 	Message string `json:"message"`
 	Status  int    `json:"status"`
 }
 
 func TestJSONResponse(t *testing.T) {
+
+	config := &stk.ServerConfig{
+		Port:           "8080",
+		RequestLogging: true,
+	}
+	s := stk.NewServer(config)
+
 	testCases := []struct {
+		path        string
 		name        string
 		data        interface{}
 		expectedErr error
 	}{
 		{
+			path:        "/",
 			name:        "Invalid JSON",
 			data:        make(chan int),
 			expectedErr: stk.ErrInternalServer,
 		},
 		{
+			path: "/s",
 			name: "Struct data",
 			data: TestPayload{
 				Message: "Hello, this is a JSON response!",
@@ -38,6 +126,7 @@ func TestJSONResponse(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			path: "/m",
 			name: "Map data",
 			data: map[string]interface{}{
 				"message": "Hello, this is a JSON response!",
@@ -46,6 +135,7 @@ func TestJSONResponse(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			path:        "/n",
 			name:        "nil",
 			data:        nil,
 			expectedErr: nil,
@@ -54,22 +144,18 @@ func TestJSONResponse(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			request, _ := http.NewRequest("GET", "/", nil)
+
+			request, _ := http.NewRequest("GET", tc.path, nil)
 			responseRec := httptest.NewRecorder()
 
-			router := httprouter.New()
-			router.GET("/", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-				context := &stk.Context{
-					Request: r,
-					Writer:  w,
-				}
-				context.JSONResponse(tc.data)
+			s.Get(tc.path, func(c *stk.Context) {
+				c.JSONResponse(tc.data)
 			})
 
-			router.ServeHTTP(responseRec, request)
+			s.Router.ServeHTTP(responseRec, request)
 
 			if tc.expectedErr != nil {
-				expectedErr := tc.expectedErr.Error() + "\n"
+				expectedErr := tc.expectedErr.Error()
 				if responseRec.Body.String() != string(expectedErr) {
 					t.Errorf("Expected error to be %q but got %q", expectedErr, responseRec.Body.String())
 				}

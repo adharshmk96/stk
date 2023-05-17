@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/adharshmk96/stk"
@@ -34,12 +33,9 @@ func CORS(next stk.HandlerFunc) stk.HandlerFunc {
 		if !isAllowed {
 			c.Status(http.StatusForbidden)
 			c.Writer.Header().Set("Content-Type", "text/plain")
-			c.Writer.Write([]byte("Forbidden"))
+			c.ResponseBody = []byte("Forbidden")
 			return
 		}
-
-		fmt.Println("origin")
-		fmt.Println(origin)
 
 		// Set CORS headers
 		headers := c.Writer.Header()

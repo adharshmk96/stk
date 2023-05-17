@@ -33,8 +33,7 @@ func NewRateLimiter(requestsPerInterval int, interval time.Duration) *RateLimite
 
 			if cnt, ok := rl.AccessCounter[clientIP]; ok {
 				if cnt >= rl.requestsPerInterval {
-					c.Status(http.StatusTooManyRequests)
-					c.JSONResponse(stk.Map{
+					c.Status(http.StatusTooManyRequests).JSONResponse(stk.Map{
 						"error": "Too many requests. Please try again later.",
 					})
 					return

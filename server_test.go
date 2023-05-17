@@ -21,9 +21,11 @@ func TestServerRoutes(t *testing.T) {
 	}
 	s := stk.NewServer(config)
 
+	test_status := http.StatusNoContent
+
 	sampleHandler := func(ctx *stk.Context) {
 		method := ctx.Request.Method
-		ctx.Writer.WriteHeader(200)
+		ctx.Writer.WriteHeader(test_status)
 		ctx.Writer.Write([]byte(method))
 	}
 
@@ -34,7 +36,7 @@ func TestServerRoutes(t *testing.T) {
 	s.Patch("/test-patch", sampleHandler)
 
 	queryParamHandler := func(ctx *stk.Context) {
-		ctx.Writer.WriteHeader(200)
+		ctx.Writer.WriteHeader(test_status)
 		ctx.Writer.Write([]byte(ctx.GetQueryParam("name")))
 	}
 
@@ -45,7 +47,7 @@ func TestServerRoutes(t *testing.T) {
 	s.Patch("/test/p", queryParamHandler)
 
 	paramsHandler := func(ctx *stk.Context) {
-		ctx.Writer.WriteHeader(200)
+		ctx.Writer.WriteHeader(test_status)
 		ctx.Writer.Write([]byte(ctx.GetParam("id")))
 	}
 
@@ -64,23 +66,23 @@ func TestServerRoutes(t *testing.T) {
 		statusCode int
 		expected   string
 	}{
-		{name: "testing get for 200", method: http.MethodGet, path: "/test-get", statusCode: http.StatusOK, expected: "GET"},
-		{name: "testing post for 200", method: http.MethodPost, path: "/test-post", statusCode: http.StatusOK, expected: "POST"},
-		{name: "testing put for 200", method: http.MethodPut, path: "/test-put", statusCode: http.StatusOK, expected: "PUT"},
-		{name: "testing delete for 200", method: http.MethodDelete, path: "/test-delete", statusCode: http.StatusOK, expected: "DELETE"},
-		{name: "testing patch for 200", method: http.MethodPatch, path: "/test-patch", statusCode: http.StatusOK, expected: "PATCH"},
+		{name: "testing get for 200", method: http.MethodGet, path: "/test-get", statusCode: test_status, expected: "GET"},
+		{name: "testing post for 200", method: http.MethodPost, path: "/test-post", statusCode: test_status, expected: "POST"},
+		{name: "testing put for 200", method: http.MethodPut, path: "/test-put", statusCode: test_status, expected: "PUT"},
+		{name: "testing delete for 200", method: http.MethodDelete, path: "/test-delete", statusCode: test_status, expected: "DELETE"},
+		{name: "testing patch for 200", method: http.MethodPatch, path: "/test-patch", statusCode: test_status, expected: "PATCH"},
 
-		{name: "testing get with dynamic route", method: http.MethodGet, path: "/test/d/123", statusCode: http.StatusOK, expected: "123"},
-		{name: "testing post with dynamic route", method: http.MethodPost, path: "/test/d/123", statusCode: http.StatusOK, expected: "123"},
-		{name: "testing put with dynamic route", method: http.MethodPut, path: "/test/d/123", statusCode: http.StatusOK, expected: "123"},
-		{name: "testing delete with dynamic route", method: http.MethodDelete, path: "/test/d/123", statusCode: http.StatusOK, expected: "123"},
-		{name: "testing patch with dynamic route", method: http.MethodPatch, path: "/test/d/123", statusCode: http.StatusOK, expected: "123"},
+		{name: "testing get with dynamic route", method: http.MethodGet, path: "/test/d/123", statusCode: test_status, expected: "123"},
+		{name: "testing post with dynamic route", method: http.MethodPost, path: "/test/d/123", statusCode: test_status, expected: "123"},
+		{name: "testing put with dynamic route", method: http.MethodPut, path: "/test/d/123", statusCode: test_status, expected: "123"},
+		{name: "testing delete with dynamic route", method: http.MethodDelete, path: "/test/d/123", statusCode: test_status, expected: "123"},
+		{name: "testing patch with dynamic route", method: http.MethodPatch, path: "/test/d/123", statusCode: test_status, expected: "123"},
 
-		{name: "testing get with param name=adha", method: http.MethodGet, path: "/test/p?name=adha", statusCode: http.StatusOK, expected: "adha"},
-		{name: "testing post with param name=adha", method: http.MethodPost, path: "/test/p?name=adha", statusCode: http.StatusOK, expected: "adha"},
-		{name: "testing put with param name=adha", method: http.MethodPut, path: "/test/p?name=adha", statusCode: http.StatusOK, expected: "adha"},
-		{name: "testing delete with param name=adha", method: http.MethodDelete, path: "/test/p?name=adha", statusCode: http.StatusOK, expected: "adha"},
-		{name: "testing patch with param name=adha", method: http.MethodPatch, path: "/test/p?name=adha", statusCode: http.StatusOK, expected: "adha"},
+		{name: "testing get with param name=adha", method: http.MethodGet, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
+		{name: "testing post with param name=adha", method: http.MethodPost, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
+		{name: "testing put with param name=adha", method: http.MethodPut, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
+		{name: "testing delete with param name=adha", method: http.MethodDelete, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
+		{name: "testing patch with param name=adha", method: http.MethodPatch, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
 
 		{name: "testing GET route with POST method should return method not allowed 405", method: http.MethodPost, path: "/test-get", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
 		{name: "testing POST route with GET method should return method not allowed 405", method: http.MethodGet, path: "/test-post", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
@@ -117,7 +119,7 @@ func TestServerRoutes(t *testing.T) {
 
 		sampleHandler := func(ctx *stk.Context) {
 			method := ctx.Request.Method
-			ctx.Writer.WriteHeader(200)
+			ctx.Writer.WriteHeader(test_status)
 			ctx.Writer.Write([]byte(method))
 		}
 
@@ -130,7 +132,7 @@ func TestServerRoutes(t *testing.T) {
 
 		res := rr.Result()
 		body, _ := io.ReadAll(res.Body)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, test_status, res.StatusCode)
 		assert.Equal(t, "GET", string(body))
 
 		req = httptest.NewRequest(http.MethodPost, "/get-and-post", nil)
@@ -139,7 +141,7 @@ func TestServerRoutes(t *testing.T) {
 
 		res = rr.Result()
 		body, _ = io.ReadAll(res.Body)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, test_status, res.StatusCode)
 		assert.Equal(t, "POST", string(body))
 
 	})
@@ -161,6 +163,12 @@ func TestMiddlewares(t *testing.T) {
 		return func(ctx *stk.Context) {
 			ctx.Writer.Header().Add("X-SecondMiddleware", "true")
 			next(ctx)
+		}
+	}
+
+	middlewareStatusCode := func(next stk.HandlerFunc) stk.HandlerFunc {
+		return func(ctx *stk.Context) {
+			ctx.Status(http.StatusBadRequest).JSONResponse("error")
 		}
 	}
 
@@ -225,6 +233,28 @@ func TestMiddlewares(t *testing.T) {
 
 		if resp.Header.Get("X-SecondMiddleware") != "" {
 			t.Error("Second middleware executed when it shouldn't")
+		}
+	})
+
+	t.Run("middleware can write status code", func(t *testing.T) {
+		config := &stk.ServerConfig{
+			Port:           "8080",
+			RequestLogging: true,
+		}
+		s := stk.NewServer(config)
+
+		s.Use(middlewareStatusCode)
+		s.Get("/", myHandler)
+
+		req := httptest.NewRequest("GET", "/", nil)
+		w := httptest.NewRecorder()
+
+		s.Router.ServeHTTP(w, req)
+
+		resp := w.Result()
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("Expected status badrequest, got %v", resp.Status)
 		}
 	})
 

@@ -19,6 +19,7 @@ type Context struct {
 	Logger *zap.Logger
 
 	ResponseStatus int
+	ResponseBody   []byte
 }
 
 type Map map[string]interface{}
@@ -39,11 +40,11 @@ func (c *Context) JSONResponse(data interface{}) {
 	// Check if there is an error in marshalling the JSON (internal server error)
 	if err != nil {
 		c.ResponseStatus = http.StatusInternalServerError
-		http.Error(c.Writer, ErrInternalServer.Error(), http.StatusInternalServerError)
+		c.ResponseBody = []byte(ErrInternalServer.Error())
 		return
 	}
 
-	c.Writer.Write(response)
+	c.ResponseBody = response
 }
 
 func (c *Context) GetParam(key string) string {

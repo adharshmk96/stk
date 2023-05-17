@@ -107,6 +107,12 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 		} else {
 			w.WriteHeader(http.StatusOK)
 		}
+
+		if handlerContext.ResponseBody != nil {
+			w.Write(handlerContext.ResponseBody)
+		} else {
+			w.Write([]byte(""))
+		}
 	}
 }
 

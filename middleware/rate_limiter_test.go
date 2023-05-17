@@ -45,6 +45,9 @@ func TestRateLimiter(t *testing.T) {
 
 	fmt.Println(rateLimiter.AccessCounter)
 	s.Router.ServeHTTP(respRec, req)
+	s.Router.ServeHTTP(respRec, req)
+	s.Router.ServeHTTP(respRec, req)
+	fmt.Println(respRec.Code)
 
 	if respRec.Code != http.StatusTooManyRequests {
 		t.Errorf("Expected 429 Too Many Requests, got: %d", respRec.Code)
