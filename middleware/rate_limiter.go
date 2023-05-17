@@ -8,29 +8,30 @@ import (
 	"github.com/adharshmk96/stk"
 )
 
-type rateLimiter struct {
+type RateLimiter struct {
 	requestsPerInterval int
 	interval            time.Duration
-	accessCounter       map[string]int
+	AccessCounter       map[string]int
 	mux                 *sync.Mutex
+	Middleware          stk.Middleware
 }
 
-func NewRateLimiter(requestsPerInterval int, interval time.Duration) stk.Middleware {
+func NewRateLimiter(requestsPerInterval int, interval time.Duration) *RateLimiter {
 
-	rl := &rateLimiter{
+	rl := &RateLimiter{
 		requestsPerInterval: requestsPerInterval,
 		interval:            interval,
-		accessCounter:       make(map[string]int),
+		AccessCounter:       make(map[string]int),
 		mux:                 &sync.Mutex{},
 	}
 
-	return func(next stk.HandlerFunc) stk.HandlerFunc {
+	middleware := func(next stk.HandlerFunc) stk.HandlerFunc {
 		return func(c *stk.Context) {
 			clientIP := c.Request.RemoteAddr
 			rl.mux.Lock()
 			defer rl.mux.Unlock()
 
-			if cnt, ok := rl.accessCounter[clientIP]; ok {
+			if cnt, ok := rl.AccessCounter[clientIP]; ok {
 				if cnt >= rl.requestsPerInterval {
 					c.Status(http.StatusTooManyRequests)
 					c.JSONResponse(stk.Map{
@@ -38,18 +39,23 @@ func NewRateLimiter(requestsPerInterval int, interval time.Duration) stk.Middlew
 					})
 					return
 				}
-				rl.accessCounter[clientIP]++
+				rl.AccessCounter[clientIP]++
 			} else {
-				rl.accessCounter[clientIP] = 1
+				rl.AccessCounter[clientIP] = 1
 				go func(ip string) {
 					time.Sleep(rl.interval)
 					rl.mux.Lock()
 					defer rl.mux.Unlock()
-					delete(rl.accessCounter, ip)
+					delete(rl.AccessCounter, ip)
 				}(clientIP)
 			}
 
 			next(c)
 		}
 	}
+
+	rl.Middleware = middleware
+
+	return rl
+
 }
