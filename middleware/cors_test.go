@@ -1,4 +1,4 @@
-package stk_test
+package middleware_test
 
 import (
 	"net/http"
@@ -6,43 +6,8 @@ import (
 	"testing"
 
 	"github.com/adharshmk96/stk"
+	"github.com/adharshmk96/stk/middleware"
 )
-
-func TestSecurityHeaders(t *testing.T) {
-	// Create a new server instance
-	config := &stk.ServerConfig{
-		Port:           "8080",
-		RequestLogging: true,
-	}
-	s := stk.NewServer(config)
-
-	// Register a test route and handler
-	s.Get("/", func(c *stk.Context) {
-		c.Status(http.StatusOK).JSONResponse("OK")
-	})
-
-	// Run the test request
-	req, _ := http.NewRequest("GET", "/", nil)
-	respRec := httptest.NewRecorder()
-
-	s.Router.ServeHTTP(respRec, req)
-
-	expectedHeaders := map[string]string{
-		"X-Content-Type-Options":            "nosniff",
-		"X-Frame-Options":                   "SAMEORIGIN",
-		"X-XSS-Protection":                  "1; mode=block",
-		"Content-Security-Policy":           "default-src 'self';",
-		"X-Permitted-Cross-Domain-Policies": "master-only",
-		"Strict-Transport-Security":         "max-age=31536000; includeSubDomains",
-		"Referrer-Policy":                   "strict-origin-when-cross-origin",
-	}
-
-	for header, expectedValue := range expectedHeaders {
-		if value := respRec.Header().Get(header); value != expectedValue {
-			t.Errorf("Expected %s header to be %q, but got %q", header, expectedValue, value)
-		}
-	}
-}
 
 func TestCORSDefault(t *testing.T) {
 	// Create a new server instance
@@ -51,6 +16,8 @@ func TestCORSDefault(t *testing.T) {
 		RequestLogging: true,
 	}
 	s := stk.NewServer(config)
+
+	s.Use(middleware.CORS)
 
 	// Register a test route and handler
 	s.Get("/", func(c *stk.Context) {
@@ -96,6 +63,8 @@ func TestCORSAllowedOrigin(t *testing.T) {
 	}
 	s := stk.NewServer(config)
 
+	s.Use(middleware.CORS)
+
 	// Register a test route and handler
 	s.Get("/", func(c *stk.Context) {
 		c.Status(http.StatusOK).JSONResponse("OK")
@@ -113,6 +82,10 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Origin":  "example.com",
 			"Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE, PATCH",
 			"Access-Control-Allow-Headers": "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization",
+		}
+
+		if respRec.Code != http.StatusOK {
+			t.Errorf("Expected response code %d, but got %d", http.StatusOK, respRec.Code)
 		}
 
 		for header, expectedValue := range expectedHeaders {
@@ -134,6 +107,10 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Origin":  "",
 			"Access-Control-Allow-Methods": "",
 			"Access-Control-Allow-Headers": "",
+		}
+
+		if respRec.Code != http.StatusForbidden {
+			t.Errorf("Expected response code %d, but got %d", http.StatusForbidden, respRec.Code)
 		}
 
 		for header, expectedValue := range expectedHeaders {
@@ -160,6 +137,10 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Headers": "",
 		}
 
+		if respRec.Code != http.StatusOK {
+			t.Errorf("Expected response code %d, but got %d", http.StatusOK, respRec.Code)
+		}
+
 		for header, expectedValue := range expectedHeaders {
 			if value := respRec.Header().Get(header); value != expectedValue {
 				t.Errorf("Expected %s header to be %q, but got %q", header, expectedValue, value)
@@ -180,6 +161,11 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Origin":  "",
 			"Access-Control-Allow-Methods": "",
 			"Access-Control-Allow-Headers": "",
+		}
+
+		// TODO - this should be checked later on
+		if respRec.Code != http.StatusOK {
+			t.Errorf("Expected response code %d, but got %d", http.StatusOK, respRec.Code)
 		}
 
 		for header, expectedValue := range expectedHeaders {
