@@ -35,23 +35,52 @@ func TestVerifyPassword(t *testing.T) {
 
 	hashedPassword, hashedSalt := HashPassword(password, salt)
 
-	isValid, err := VerifyPassword(hashedPassword, hashedSalt, password)
-	if err != nil {
-		t.Fatalf("VerifyPassword() error: %v", err)
-	}
+	t.Run("wrong password", func(t *testing.T) {
+		invalidPassword := "wrongpassword"
+		isValid, err := VerifyPassword(hashedPassword, hashedSalt, invalidPassword)
 
-	if !isValid {
-		t.Fatalf("VerifyPassword() failed to verify the correct password")
-	}
+		if err != nil {
+			t.Fatalf("VerifyPassword() error with invalid password: %v", err)
+		}
 
-	invalidPassword := "wrongpassword"
-	isValid, err = VerifyPassword(hashedPassword, hashedSalt, invalidPassword)
+		if isValid {
+			t.Fatalf("VerifyPassword() validated an incorrect password")
+		}
+	})
 
-	if err != nil {
-		t.Fatalf("VerifyPassword() error with invalid password: %v", err)
-	}
+	t.Run("Invalid hashed salt", func(t *testing.T) {
+		invalidHashedSalt := "invalidhashedsalt"
+		isValid, err := VerifyPassword(hashedPassword, invalidHashedSalt, password)
+		if err == nil {
+			t.Fatalf("VerifyPassword() did not return an error with an invalid hashed salt")
+		}
 
-	if isValid {
-		t.Fatalf("VerifyPassword() validated an incorrect password")
-	}
+		if isValid {
+			t.Fatalf("VerifyPassword() validated an invalid hashed salt")
+		}
+	})
+
+	t.Run("Invalid hashed password", func(t *testing.T) {
+		invalidHashedPassword := "invalidhashedpassword"
+		isValid, err := VerifyPassword(invalidHashedPassword, hashedSalt, password)
+		if err != nil {
+			t.Fatalf("VerifyPassword() error with a random password hash string: %v", err)
+		}
+
+		if isValid {
+			t.Fatalf("VerifyPassword() validated an invalid hashed password")
+		}
+	})
+
+	t.Run("valid password", func(t *testing.T) {
+		isValid, err := VerifyPassword(hashedPassword, hashedSalt, password)
+		if err != nil {
+			t.Fatalf("VerifyPassword() error: %v", err)
+		}
+
+		if !isValid {
+			t.Fatalf("VerifyPassword() failed to verify the correct password")
+		}
+	})
+
 }
