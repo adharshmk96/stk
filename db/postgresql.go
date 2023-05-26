@@ -41,7 +41,7 @@ func (pg *PGDatabase) GetPGConnection() (*pgx.Conn, error) {
 }
 
 func (pg *PGDatabase) GetPGPool() (*pgxpool.Pool, error) {
-	pool, err := pgxpool.Connect(context.Background(), pg.ConnectionString)
+	pool, err := pgxpool.New(context.Background(), pg.ConnectionString)
 	if err != nil {
 		return nil, fmt.Errorf("connection to PostgreSQL database failed: %w", err)
 	}
