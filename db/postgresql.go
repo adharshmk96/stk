@@ -66,7 +66,7 @@ func poolIfNil(pool *pgxpool.Pool, connString string) (*pgxpool.Pool, error) {
 		return pool, nil
 	}
 
-	pool, err := pgxpool.Connect(context.Background(), connString)
+	pool, err := pgxpool.New(context.Background(), connString)
 	if err != nil {
 		return nil, fmt.Errorf("connection to PostgreSQL database failed: %w", err)
 	}
