@@ -1,6 +1,6 @@
-# stk
+# STK
 
-Server tool kit - framework for developing server in golang
+Server toolkit - framework for developing server in golang
 
 ## what is included
 
