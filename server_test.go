@@ -1,7 +1,6 @@
 package stk_test
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -115,7 +114,7 @@ func TestServerRoutes(t *testing.T) {
 		assert.Equal(t, "404 page not found\n", string(body))
 	})
 
-	t.Run("testing server with same routes and different http methods", func(t *testing.T) {
+	t.Run("server handles same routes and different http methods", func(t *testing.T) {
 
 		sampleHandler := func(ctx *stk.Context) {
 			method := ctx.Request.Method
@@ -173,7 +172,7 @@ func TestMiddlewares(t *testing.T) {
 	}
 
 	myHandler := func(ctx *stk.Context) {
-		fmt.Fprintln(ctx.Writer, "Hello, world!")
+		ctx.Status(http.StatusOK).JSONResponse("ok")
 	}
 
 	t.Run("server with two middlewares", func(t *testing.T) {
@@ -194,17 +193,12 @@ func TestMiddlewares(t *testing.T) {
 		s.Router.ServeHTTP(w, req)
 
 		resp := w.Result()
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
 
-		if resp.Header.Get("X-FirstMiddleware") != "true" {
-			t.Error("First middleware not executed")
-		}
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-		if resp.Header.Get("X-SecondMiddleware") != "true" {
-			t.Error("Second middleware not executed")
-		}
+		assert.Equal(t, "true", resp.Header.Get("X-FirstMiddleware"))
+
+		assert.Equal(t, "true", resp.Header.Get("X-SecondMiddleware"))
 	})
 
 	t.Run("server with no middlewares", func(t *testing.T) {
@@ -223,20 +217,13 @@ func TestMiddlewares(t *testing.T) {
 
 		resp := w.Result()
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-		if resp.Header.Get("X-FirstMiddleware") != "" {
-			t.Error("First middleware executed when it shouldn't")
-		}
-
-		if resp.Header.Get("X-SecondMiddleware") != "" {
-			t.Error("Second middleware executed when it shouldn't")
-		}
+		assert.Equal(t, "", resp.Header.Get("X-FirstMiddleware"))
+		assert.Equal(t, "", resp.Header.Get("X-SecondMiddleware"))
 	})
 
-	t.Run("middleware can write status code", func(t *testing.T) {
+	t.Run("middleware can write status code and body", func(t *testing.T) {
 		config := &stk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: true,
@@ -253,9 +240,11 @@ func TestMiddlewares(t *testing.T) {
 
 		resp := w.Result()
 
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status badrequest, got %v", resp.Status)
-		}
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+		body, _ := io.ReadAll(resp.Body)
+		assert.Equal(t, "\"error\"", string(body))
+
 	})
 
 }

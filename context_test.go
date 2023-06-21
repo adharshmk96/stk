@@ -11,6 +11,7 @@ import (
 
 	"github.com/adharshmk96/stk"
 	"github.com/julienschmidt/httprouter"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStatus(t *testing.T) {
@@ -20,7 +21,7 @@ func TestStatus(t *testing.T) {
 	}
 	s := stk.NewServer(config)
 
-	t.Run("test status and jsonresponse methods by chaining", func(t *testing.T) {
+	t.Run("status and jsonresponse methods by chaining", func(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", "/", nil)
 		responseRec := httptest.NewRecorder()
@@ -31,13 +32,11 @@ func TestStatus(t *testing.T) {
 
 		s.Router.ServeHTTP(responseRec, request)
 
-		if responseRec.Code != http.StatusTeapot {
-			t.Errorf("Expected status code to be %d but got %d", http.StatusTeapot, responseRec.Code)
-		}
+		assert.Equal(t, http.StatusTeapot, responseRec.Code)
 
 	})
 
-	t.Run("test status method only", func(t *testing.T) {
+	t.Run("using status method only", func(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", "/st", nil)
 		responseRec := httptest.NewRecorder()
@@ -48,13 +47,11 @@ func TestStatus(t *testing.T) {
 
 		s.Router.ServeHTTP(responseRec, request)
 
-		if responseRec.Code != http.StatusTeapot {
-			t.Errorf("Expected status code to be %d but got %d", http.StatusTeapot, responseRec.Code)
-		}
+		assert.Equal(t, http.StatusTeapot, responseRec.Code)
 
 	})
 
-	t.Run("test status and json response method without chaining", func(t *testing.T) {
+	t.Run("status and json response method without chaining", func(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", "/js", nil)
 		responseRec := httptest.NewRecorder()
@@ -66,13 +63,11 @@ func TestStatus(t *testing.T) {
 
 		s.Router.ServeHTTP(responseRec, request)
 
-		if responseRec.Code != http.StatusBadGateway {
-			t.Errorf("Expected status code to be %d but got %d", http.StatusBadGateway, responseRec.Code)
-		}
+		assert.Equal(t, http.StatusBadGateway, responseRec.Code)
 
 	})
 
-	t.Run("test json response method individually gives 200", func(t *testing.T) {
+	t.Run("json response method individually gives 200", func(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", "/jso", nil)
 		responseRec := httptest.NewRecorder()
@@ -83,9 +78,23 @@ func TestStatus(t *testing.T) {
 
 		s.Router.ServeHTTP(responseRec, request)
 
-		if responseRec.Code != http.StatusOK {
-			t.Errorf("Expected status code to be %d but got %d", http.StatusOK, responseRec.Code)
-		}
+		assert.Equal(t, http.StatusOK, responseRec.Code)
+
+	})
+
+	t.Run("json response method befire status", func(t *testing.T) {
+
+		request, _ := http.NewRequest("GET", "/json", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Get("/json", func(c *stk.Context) {
+			c.JSONResponse("Hello, this is a JSON response!")
+			c.Status(http.StatusBadGateway)
+		})
+
+		s.Router.ServeHTTP(responseRec, request)
+
+		assert.Equal(t, http.StatusBadGateway, responseRec.Code)
 
 	})
 
@@ -108,12 +117,14 @@ func TestJSONResponse(t *testing.T) {
 		path        string
 		name        string
 		data        interface{}
+		status      int
 		expectedErr error
 	}{
 		{
 			path:        "/",
 			name:        "Invalid JSON",
 			data:        make(chan int),
+			status:      http.StatusInternalServerError,
 			expectedErr: stk.ErrInternalServer,
 		},
 		{
@@ -123,6 +134,7 @@ func TestJSONResponse(t *testing.T) {
 				Message: "Hello, this is a JSON response!",
 				Status:  http.StatusOK,
 			},
+			status:      http.StatusOK,
 			expectedErr: nil,
 		},
 		{
@@ -132,12 +144,14 @@ func TestJSONResponse(t *testing.T) {
 				"message": "Hello, this is a JSON response!",
 				"status":  http.StatusOK,
 			},
+			status:      http.StatusOK,
 			expectedErr: nil,
 		},
 		{
 			path:        "/n",
 			name:        "nil",
 			data:        nil,
+			status:      http.StatusOK,
 			expectedErr: nil,
 		},
 	}
@@ -149,22 +163,20 @@ func TestJSONResponse(t *testing.T) {
 			responseRec := httptest.NewRecorder()
 
 			s.Get(tc.path, func(c *stk.Context) {
-				c.JSONResponse(tc.data)
+				c.Status(tc.status).JSONResponse(tc.data)
 			})
 
 			s.Router.ServeHTTP(responseRec, request)
 
 			if tc.expectedErr != nil {
 				expectedErr := tc.expectedErr.Error()
-				if responseRec.Body.String() != string(expectedErr) {
-					t.Errorf("Expected error to be %q but got %q", expectedErr, responseRec.Body.String())
-				}
+				assert.Equal(t, responseRec.Body.String(), expectedErr)
 			} else {
 				expectedJSON, _ := json.Marshal(tc.data)
-				if responseRec.Body.String() != string(expectedJSON) {
-					t.Errorf("Expected JSON data to be %q but got %q", expectedJSON, responseRec.Body.String())
-				}
+				assert.Equal(t, responseRec.Body.String(), string(expectedJSON))
 			}
+
+			assert.Equal(t, tc.status, responseRec.Code)
 		})
 	}
 }

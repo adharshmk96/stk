@@ -7,6 +7,7 @@ import (
 
 	"github.com/adharshmk96/stk"
 	"github.com/adharshmk96/stk/middleware"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCORSDefault(t *testing.T) {
@@ -71,7 +72,7 @@ func TestCORSAllowedOrigin(t *testing.T) {
 	})
 
 	t.Run("Non-preflight request from example.com", func(t *testing.T) {
-		// Run the test request
+
 		req, _ := http.NewRequest("GET", "/", nil)
 		req.Header.Set("Host", "example.com")
 		respRec := httptest.NewRecorder()
@@ -84,19 +85,16 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Headers": "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization",
 		}
 
-		if respRec.Code != http.StatusOK {
-			t.Errorf("Expected response code %d, but got %d", http.StatusOK, respRec.Code)
-		}
+		assert.Equal(t, http.StatusOK, respRec.Code)
 
 		for header, expectedValue := range expectedHeaders {
-			if value := respRec.Header().Get(header); value != expectedValue {
-				t.Errorf("Expected %s header to be %q, but got %q", header, expectedValue, value)
-			}
+			value := respRec.Header().Get(header)
+			assert.Equal(t, expectedValue, value)
 		}
 	})
 
 	t.Run("Non-preflight request with invalid origin", func(t *testing.T) {
-		// Run the test request
+
 		req, _ := http.NewRequest("GET", "/", nil)
 		req.Header.Set("Host", "invalid.com")
 		respRec := httptest.NewRecorder()
@@ -109,19 +107,16 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Headers": "",
 		}
 
-		if respRec.Code != http.StatusForbidden {
-			t.Errorf("Expected response code %d, but got %d", http.StatusForbidden, respRec.Code)
-		}
+		assert.Equal(t, http.StatusForbidden, respRec.Code)
 
 		for header, expectedValue := range expectedHeaders {
-			if value := respRec.Header().Get(header); value != expectedValue {
-				t.Errorf("Expected %s header to be %q, but got %q", header, expectedValue, value)
-			}
+			value := respRec.Header().Get(header)
+			assert.Equal(t, expectedValue, value)
 		}
 	})
 
 	t.Run("Preflight request with example.com", func(t *testing.T) {
-		// Run the test request
+
 		req, _ := http.NewRequest("OPTIONS", "/", nil)
 		req.Header.Set("Host", "example.com")
 		req.Header.Set("Access-Control-Request-Method", "POST")
@@ -137,19 +132,16 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Headers": "",
 		}
 
-		if respRec.Code != http.StatusOK {
-			t.Errorf("Expected response code %d, but got %d", http.StatusOK, respRec.Code)
-		}
+		assert.Equal(t, http.StatusOK, respRec.Code)
 
 		for header, expectedValue := range expectedHeaders {
-			if value := respRec.Header().Get(header); value != expectedValue {
-				t.Errorf("Expected %s header to be %q, but got %q", header, expectedValue, value)
-			}
+			value := respRec.Header().Get(header)
+			assert.Equal(t, expectedValue, value)
 		}
 	})
 
 	t.Run("Preflight request with invalid origin", func(t *testing.T) {
-		// Run the test request
+
 		req, _ := http.NewRequest("OPTIONS", "/", nil)
 		req.Header.Set("Host", "invalid.com")
 		req.Header.Set("Access-Control-Request-Method", "POST")
@@ -164,14 +156,11 @@ func TestCORSAllowedOrigin(t *testing.T) {
 		}
 
 		// TODO - this should be checked later on
-		if respRec.Code != http.StatusOK {
-			t.Errorf("Expected response code %d, but got %d", http.StatusOK, respRec.Code)
-		}
+		assert.Equal(t, http.StatusOK, respRec.Code)
 
 		for header, expectedValue := range expectedHeaders {
-			if value := respRec.Header().Get(header); value != expectedValue {
-				t.Errorf("Expected %s header to be %q, but got %q", header, expectedValue, value)
-			}
+			value := respRec.Header().Get(header)
+			assert.Equal(t, expectedValue, value)
 		}
 	})
 

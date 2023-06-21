@@ -8,6 +8,7 @@ import (
 
 	"github.com/adharshmk96/stk"
 	"github.com/adharshmk96/stk/middleware"
+	"github.com/stretchr/testify/assert"
 )
 
 func dummyHandler(c *stk.Context) {
@@ -45,7 +46,5 @@ func TestRateLimiter(t *testing.T) {
 	respRec := httptest.NewRecorder()
 	s.Router.ServeHTTP(respRec, req)
 
-	if respRec.Code != http.StatusTooManyRequests {
-		t.Errorf("Expected 429 Too Many Requests, got: %d", respRec.Code)
-	}
+	assert.Equal(t, http.StatusTooManyRequests, respRec.Code)
 }
