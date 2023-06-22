@@ -330,3 +330,70 @@ func TestSetHeader(t *testing.T) {
 		assert.Equal(t, responseRec.Header().Get("X-Header"), "Added")
 	})
 }
+
+func TestContext(t *testing.T) {
+	t.Run("context is passed by reference", func(t *testing.T) {
+		config := &stk.ServerConfig{
+			Port:           "8080",
+			RequestLogging: false,
+		}
+		s1 := stk.NewServer(config)
+		s2 := stk.NewServer(config)
+
+		var context1 stk.Context
+		var context2 stk.Context
+		var context3 stk.Context
+		var context4 stk.Context
+
+		s1.Use(func(next stk.HandlerFunc) stk.HandlerFunc {
+			return func(c stk.Context) {
+				context1 = c
+				next(c)
+			}
+		})
+
+		s2.Use(func(next stk.HandlerFunc) stk.HandlerFunc {
+			return func(c stk.Context) {
+				context2 = c
+				next(c)
+			}
+		})
+
+		s1.Get("/", func(c stk.Context) {
+			context3 = c
+			c.SetHeader("X-Header", "Added")
+		})
+
+		s2.Get("/", func(c stk.Context) {
+			context4 = c
+		})
+
+		request, _ := http.NewRequest("GET", "/", nil)
+		responseRec1 := httptest.NewRecorder()
+		responseRec2 := httptest.NewRecorder()
+
+		s1.Router.ServeHTTP(responseRec1, request)
+		s2.Router.ServeHTTP(responseRec2, request)
+
+		if context1 != context3 {
+			t.Errorf("Expected context1 to be the same as context3")
+		}
+		if context2 != context4 {
+			t.Errorf("Expected context2 to be the same as context4")
+		}
+
+		if context1 == context2 {
+			t.Errorf("Expected context1 to be different from context2")
+		}
+		if context3 == context4 {
+			t.Errorf("Expected context3 to be different from context4")
+		}
+
+		if responseRec1.Header().Get("X-Header") != "Added" {
+			t.Errorf("Expected responseRec1 to have header 'X-Header'")
+		}
+		if responseRec2.Header().Get("X-Header") == "Added" {
+			t.Errorf("Expected responseRec2 to not have header 'X-Header'")
+		}
+	})
+}
