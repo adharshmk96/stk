@@ -1,21 +1,21 @@
 # STK
 
-Server toolkit - framework for developing server in golang
+Server toolkit - minimal and simple framework for developing server in golang
 
 ## what is included
 
 - [x] go's native http server wrapper
-  - use `net/http` package
+  - uses `net/http` package
   - Get, Post, Put, Delete, Patch methods
-- [x] Middleware support
-  - support middleware for all routes
-- [x] logger
-  - zap logger by uber go zap package
+- [x] httprouter for routing
+- [x] middleware support for all routes
+- [x] logger by uber go zap package
 - [x] utils
+  - db connection helpers
   - password hashing using argon2
   - loading env variables
     
-## usage
+## get started
 
 ```go
 package main
@@ -42,4 +42,22 @@ func main() {
 	// start server
 	server.Start()
 }
+```
+
+## middleware
+
+you can add any middleware by simply creating a function like this and adding it to server.Use()
+
+```go
+middleware := func(next stk.HandlerFunc) stk.HandlerFunc {
+	return func(c *stk.Context) {
+		if ctx.Request.URL.Path == "/blocked" {
+  			ctx.Status(http.StatusForbidden).JSONResponse("blocked")
+			return
+  		}
+		next(c)
+	}
+}
+
+server.Use(middleware)
 ```
