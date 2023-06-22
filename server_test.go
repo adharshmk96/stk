@@ -65,29 +65,29 @@ func TestServerRoutes(t *testing.T) {
 		statusCode int
 		expected   string
 	}{
-		{name: "testing get for 200", method: http.MethodGet, path: "/test-get", statusCode: test_status, expected: "GET"},
-		{name: "testing post for 200", method: http.MethodPost, path: "/test-post", statusCode: test_status, expected: "POST"},
-		{name: "testing put for 200", method: http.MethodPut, path: "/test-put", statusCode: test_status, expected: "PUT"},
-		{name: "testing delete for 200", method: http.MethodDelete, path: "/test-delete", statusCode: test_status, expected: "DELETE"},
-		{name: "testing patch for 200", method: http.MethodPatch, path: "/test-patch", statusCode: test_status, expected: "PATCH"},
+		{name: "get returns 200", method: http.MethodGet, path: "/test-get", statusCode: test_status, expected: "GET"},
+		{name: "post returns 200", method: http.MethodPost, path: "/test-post", statusCode: test_status, expected: "POST"},
+		{name: "put returns 200", method: http.MethodPut, path: "/test-put", statusCode: test_status, expected: "PUT"},
+		{name: "delete returns 200", method: http.MethodDelete, path: "/test-delete", statusCode: test_status, expected: "DELETE"},
+		{name: "patch returns 200", method: http.MethodPatch, path: "/test-patch", statusCode: test_status, expected: "PATCH"},
 
-		{name: "testing get with dynamic route", method: http.MethodGet, path: "/test/d/123", statusCode: test_status, expected: "123"},
-		{name: "testing post with dynamic route", method: http.MethodPost, path: "/test/d/123", statusCode: test_status, expected: "123"},
-		{name: "testing put with dynamic route", method: http.MethodPut, path: "/test/d/123", statusCode: test_status, expected: "123"},
-		{name: "testing delete with dynamic route", method: http.MethodDelete, path: "/test/d/123", statusCode: test_status, expected: "123"},
-		{name: "testing patch with dynamic route", method: http.MethodPatch, path: "/test/d/123", statusCode: test_status, expected: "123"},
+		{name: "get with dynamic route", method: http.MethodGet, path: "/test/d/123", statusCode: test_status, expected: "123"},
+		{name: "post with dynamic route", method: http.MethodPost, path: "/test/d/123", statusCode: test_status, expected: "123"},
+		{name: "put with dynamic route", method: http.MethodPut, path: "/test/d/123", statusCode: test_status, expected: "123"},
+		{name: "delete with dynamic route", method: http.MethodDelete, path: "/test/d/123", statusCode: test_status, expected: "123"},
+		{name: "patch with dynamic route", method: http.MethodPatch, path: "/test/d/123", statusCode: test_status, expected: "123"},
 
-		{name: "testing get with param name=adha", method: http.MethodGet, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
-		{name: "testing post with param name=adha", method: http.MethodPost, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
-		{name: "testing put with param name=adha", method: http.MethodPut, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
-		{name: "testing delete with param name=adha", method: http.MethodDelete, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
-		{name: "testing patch with param name=adha", method: http.MethodPatch, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
+		{name: "get with param name=adha", method: http.MethodGet, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
+		{name: "post with param name=adha", method: http.MethodPost, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
+		{name: "put with param name=adha", method: http.MethodPut, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
+		{name: "delete with param name=adha", method: http.MethodDelete, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
+		{name: "patch with param name=adha", method: http.MethodPatch, path: "/test/p?name=adha", statusCode: test_status, expected: "adha"},
 
-		{name: "testing GET route with POST method should return method not allowed 405", method: http.MethodPost, path: "/test-get", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
-		{name: "testing POST route with GET method should return method not allowed 405", method: http.MethodGet, path: "/test-post", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
-		{name: "testing PUT route with POST method should return method not allowed 405", method: http.MethodPost, path: "/test-put", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
-		{name: "testing DELETE route with GET method should return method not allowed 405", method: http.MethodGet, path: "/test-delete", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
-		{name: "testing PATCH route with PUT method should return method not allowed 405", method: http.MethodPut, path: "/test-patch", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
+		{name: "GET route with POST method should return method not allowed 405", method: http.MethodPost, path: "/test-get", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
+		{name: "POST route with GET method should return method not allowed 405", method: http.MethodGet, path: "/test-post", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
+		{name: "PUT route with POST method should return method not allowed 405", method: http.MethodPost, path: "/test-put", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
+		{name: "DELETE route with GET method should return method not allowed 405", method: http.MethodGet, path: "/test-delete", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
+		{name: "PATCH route with PUT method should return method not allowed 405", method: http.MethodPut, path: "/test-patch", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
 	}
 
 	for _, test := range testCases {
@@ -142,6 +142,74 @@ func TestServerRoutes(t *testing.T) {
 		body, _ = io.ReadAll(res.Body)
 		assert.Equal(t, test_status, res.StatusCode)
 		assert.Equal(t, "POST", string(body))
+
+	})
+
+	t.Run("server handles same routes and different http methods with dynamic routes", func(t *testing.T) {
+
+		sampleHandler := func(ctx *stk.Context) {
+			method := ctx.Request.Method
+			ctx.Writer.WriteHeader(test_status)
+			ctx.Writer.Write([]byte(method))
+		}
+
+		s.Get("/get-and-post/:id", sampleHandler)
+		s.Post("/get-and-post/:id", sampleHandler)
+
+		req := httptest.NewRequest(http.MethodGet, "/get-and-post/123", nil)
+		rr := httptest.NewRecorder()
+		serverHandler.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		body, _ := io.ReadAll(res.Body)
+		assert.Equal(t, test_status, res.StatusCode)
+		assert.Equal(t, "GET", string(body))
+
+		req = httptest.NewRequest(http.MethodPost, "/get-and-post/123", nil)
+		rr = httptest.NewRecorder()
+		serverHandler.ServeHTTP(rr, req)
+
+		res = rr.Result()
+		body, _ = io.ReadAll(res.Body)
+		assert.Equal(t, test_status, res.StatusCode)
+		assert.Equal(t, "POST", string(body))
+
+	})
+
+	t.Run("server with overlapping routes", func(t *testing.T) {
+
+		getHandler := func(ctx *stk.Context) {
+			response := "get"
+			ctx.Writer.WriteHeader(http.StatusOK)
+			ctx.Writer.Write([]byte(response))
+		}
+
+		getThatHandler := func(ctx *stk.Context) {
+			response := "get-that"
+			ctx.Writer.WriteHeader(http.StatusOK)
+			ctx.Writer.Write([]byte(response))
+		}
+
+		s.Get("/get", getHandler)
+		s.Get("/get/:that", getThatHandler)
+
+		req := httptest.NewRequest(http.MethodGet, "/get", nil)
+		rr := httptest.NewRecorder()
+		serverHandler.ServeHTTP(rr, req)
+
+		res := rr.Result()
+		body, _ := io.ReadAll(res.Body)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, "get", string(body))
+
+		req = httptest.NewRequest(http.MethodGet, "/get/that", nil)
+		rr = httptest.NewRecorder()
+		serverHandler.ServeHTTP(rr, req)
+
+		res = rr.Result()
+		body, _ = io.ReadAll(res.Body)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, "get-that", string(body))
 
 	})
 
