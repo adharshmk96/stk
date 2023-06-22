@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/adharshmk96/stk"
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +25,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/", func(c *stk.Context) {
+		s.Get("/", func(c stk.Context) {
 			c.Status(http.StatusTeapot).JSONResponse("Hello, this is a JSON response!")
 		})
 
@@ -41,7 +40,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/st", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/st", func(c *stk.Context) {
+		s.Get("/st", func(c stk.Context) {
 			c.Status(http.StatusTeapot)
 		})
 
@@ -56,7 +55,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/js", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/js", func(c *stk.Context) {
+		s.Get("/js", func(c stk.Context) {
 			c.Status(http.StatusBadGateway)
 			c.JSONResponse("Hello, this is a JSON response!")
 		})
@@ -72,7 +71,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/jso", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/jso", func(c *stk.Context) {
+		s.Get("/jso", func(c stk.Context) {
 			c.JSONResponse("Hello, this is a JSON response!")
 		})
 
@@ -87,7 +86,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/json", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/json", func(c *stk.Context) {
+		s.Get("/json", func(c stk.Context) {
 			c.JSONResponse("Hello, this is a JSON response!")
 			c.Status(http.StatusBadGateway)
 		})
@@ -162,7 +161,7 @@ func TestJSONResponse(t *testing.T) {
 			request, _ := http.NewRequest("GET", tc.path, nil)
 			responseRec := httptest.NewRecorder()
 
-			s.Get(tc.path, func(c *stk.Context) {
+			s.Get(tc.path, func(c stk.Context) {
 				c.Status(tc.status).JSONResponse(tc.data)
 			})
 
@@ -224,11 +223,7 @@ func TestDecodeJSONBody(t *testing.T) {
 			req := httptest.NewRequest("POST", "/", body)
 			resp := httptest.NewRecorder()
 
-			context := stk.Context{
-				Request: req,
-				Writer:  resp,
-				Params:  httprouter.Params{},
-			}
+			context := stk.NewContext(req, resp)
 
 			var res SampleStruct
 			err := context.DecodeJSONBody(&res)
@@ -254,14 +249,14 @@ func TestGetAllowedOrigins(t *testing.T) {
 		s := stk.NewServer(config)
 
 		interMiddleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-			return func(c *stk.Context) {
+			return func(c stk.Context) {
 				assert.Equal(t, c.GetAllowedOrigins(), config.AllowedOrigins)
 			}
 		}
 
 		s.Use(interMiddleware)
 
-		s.Get("/", func(c *stk.Context) {
+		s.Get("/", func(c stk.Context) {
 			assert.Equal(t, c.GetAllowedOrigins(), config.AllowedOrigins)
 		})
 
@@ -281,7 +276,7 @@ func TestRawResponse(t *testing.T) {
 		}
 		s := stk.NewServer(config)
 
-		s.Get("/", func(c *stk.Context) {
+		s.Get("/", func(c stk.Context) {
 			c.RawResponse([]byte("Hello, this is a raw response!"))
 		})
 
@@ -292,5 +287,46 @@ func TestRawResponse(t *testing.T) {
 
 		assert.Equal(t, "Hello, this is a raw response!", responseRec.Body.String())
 		assert.Equal(t, http.StatusOK, responseRec.Code)
+	})
+}
+
+func TestGetMethod(t *testing.T) {
+	t.Run("returns correct request method", func(t *testing.T) {
+		config := &stk.ServerConfig{
+			Port:           "8080",
+			RequestLogging: false,
+		}
+		s := stk.NewServer(config)
+
+		s.Get("/", func(c stk.Context) {
+			assert.Equal(t, http.MethodGet, c.GetRequest().Method)
+		})
+
+		request, _ := http.NewRequest("GET", "/", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Router.ServeHTTP(responseRec, request)
+
+	})
+}
+
+func TestSetHeader(t *testing.T) {
+	t.Run("adds header to the response", func(t *testing.T) {
+		config := &stk.ServerConfig{
+			Port:           "8080",
+			RequestLogging: false,
+		}
+		s := stk.NewServer(config)
+
+		s.Get("/", func(c stk.Context) {
+			c.SetHeader("X-Header", "Added")
+		})
+
+		request, _ := http.NewRequest("GET", "/", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Router.ServeHTTP(responseRec, request)
+
+		assert.Equal(t, responseRec.Header().Get("X-Header"), "Added")
 	})
 }

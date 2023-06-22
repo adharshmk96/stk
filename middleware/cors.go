@@ -17,10 +17,10 @@ const (
 )
 
 func CORS(next stk.HandlerFunc) stk.HandlerFunc {
-	return func(c *stk.Context) {
+	return func(c stk.Context) {
 		allowedOrigins := getAllowedOrigins(c.GetAllowedOrigins())
 
-		origin := c.Request.Header.Get("Host")
+		origin := c.GetRequest().Header.Get("Host")
 		// Check if the origin is in the allowedOrigins list
 		isAllowed := false
 		for _, allowedOrigin := range allowedOrigins {
@@ -32,13 +32,13 @@ func CORS(next stk.HandlerFunc) stk.HandlerFunc {
 
 		if !isAllowed {
 			c.Status(http.StatusForbidden)
-			c.Writer.Header().Set("Content-Type", "text/plain")
+			c.SetHeader("Content-Type", "text/plain")
 			c.RawResponse([]byte("Forbidden"))
 			return
 		}
 
 		// Set CORS headers
-		headers := c.Writer.Header()
+		headers := c.GetWriter().Header()
 		// TODO: Make this configurable
 		headers.Set(AccessControlAllowOrigin, origin)
 		headers.Set(AccessControlAllowMethods, defaultAllowMethods)

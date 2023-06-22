@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type HandlerFunc func(*Context)
+type HandlerFunc func(Context)
 
 type ServerConfig struct {
 	Port           string
@@ -93,11 +93,11 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 			)
 		}
 
-		handlerContext := &Context{
-			Params:         p,
-			Request:        r,
-			Writer:         w,
-			Logger:         config.Logger,
+		handlerContext := &context{
+			params:         p,
+			request:        r,
+			writer:         w,
+			logger:         config.Logger,
 			allowedOrigins: config.AllowedOrigins,
 		}
 		handler(handlerContext)

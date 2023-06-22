@@ -21,7 +21,7 @@ func TestSecurityHeaders(t *testing.T) {
 	s.Use(middleware.SecurityHeaders)
 
 	// Register a test route and handler
-	s.Get("/", func(c *stk.Context) {
+	s.Get("/", func(c stk.Context) {
 		c.Status(http.StatusOK).JSONResponse("OK")
 	})
 

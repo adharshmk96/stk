@@ -5,7 +5,7 @@ import (
 )
 
 func SecurityHeaders(next stk.HandlerFunc) stk.HandlerFunc {
-	return func(c *stk.Context) {
+	return func(c stk.Context) {
 		headers := map[string]string{
 			"X-Content-Type-Options":            "nosniff",
 			"X-Frame-Options":                   "SAMEORIGIN",
@@ -17,7 +17,7 @@ func SecurityHeaders(next stk.HandlerFunc) stk.HandlerFunc {
 		}
 
 		for key, value := range headers {
-			c.Writer.Header().Set(key, value)
+			c.SetHeader(key, value)
 		}
 
 		next(c)
