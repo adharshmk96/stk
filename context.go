@@ -45,13 +45,6 @@ type Context interface {
 	Logger() *zap.Logger
 }
 
-func NewContext(r *http.Request, w http.ResponseWriter) Context {
-	return &context{
-		request: r,
-		writer:  w,
-	}
-}
-
 func (c *context) GetRequest() *http.Request {
 	return c.request
 }

@@ -223,18 +223,23 @@ func TestDecodeJSONBody(t *testing.T) {
 			req := httptest.NewRequest("POST", "/", body)
 			resp := httptest.NewRecorder()
 
-			context := stk.NewContext(req, resp)
+			server := stk.NewServer(&stk.ServerConfig{})
 
-			var res SampleStruct
-			err := context.DecodeJSONBody(&res)
+			server.Post("/", func(c stk.Context) {
+				var res SampleStruct
+				err := c.DecodeJSONBody(&res)
 
-			if !errors.Is(err, tt.expectedErr) {
-				t.Errorf("Expected error to be '%v', got '%v'", tt.expectedErr, err)
-			}
+				if !errors.Is(err, tt.expectedErr) {
+					t.Errorf("Expected error to be '%v', got '%v'", tt.expectedErr, err)
+				}
 
-			if err == nil && res != tt.expectedResult {
-				t.Errorf("Expected result to be '%v', got '%v'", tt.expectedResult, res)
-			}
+				if err == nil && res != tt.expectedResult {
+					t.Errorf("Expected result to be '%v', got '%v'", tt.expectedResult, res)
+				}
+			})
+
+			server.Router.ServeHTTP(resp, req)
+
 		})
 	}
 }
