@@ -183,6 +183,12 @@ func TestJSONResponse(t *testing.T) {
 
 // TestDecodeJSONBody tests the DecodeJSONBody method in the Context struct.
 func TestDecodeJSONBody(t *testing.T) {
+
+	type SampleStruct struct {
+		Name string `json:"name"`
+		Age  int    `json:"age"`
+	}
+
 	tests := []struct {
 		name           string
 		reqBody        string
@@ -219,10 +225,9 @@ func TestDecodeJSONBody(t *testing.T) {
 			resp := httptest.NewRecorder()
 
 			context := stk.Context{
-				Request:        req,
-				Writer:         resp,
-				Params:         httprouter.Params{},
-				ResponseStatus: 0,
+				Request: req,
+				Writer:  resp,
+				Params:  httprouter.Params{},
 			}
 
 			var res SampleStruct
@@ -239,7 +244,53 @@ func TestDecodeJSONBody(t *testing.T) {
 	}
 }
 
-type SampleStruct struct {
-	Name string `json:"name"`
-	Age  int    `json:"age"`
+func TestGetAllowedOrigins(t *testing.T) {
+	t.Run("returns configured origins", func(t *testing.T) {
+		config := &stk.ServerConfig{
+			Port:           "8080",
+			RequestLogging: false,
+			AllowedOrigins: []string{"http://localhost:8080", "http://localhost:8081"},
+		}
+		s := stk.NewServer(config)
+
+		interMiddleware := func(next stk.HandlerFunc) stk.HandlerFunc {
+			return func(c *stk.Context) {
+				assert.Equal(t, c.GetAllowedOrigins(), config.AllowedOrigins)
+			}
+		}
+
+		s.Use(interMiddleware)
+
+		s.Get("/", func(c *stk.Context) {
+			assert.Equal(t, c.GetAllowedOrigins(), config.AllowedOrigins)
+		})
+
+		request, _ := http.NewRequest("GET", "/", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Router.ServeHTTP(responseRec, request)
+
+	})
+}
+
+func TestRawResponse(t *testing.T) {
+	t.Run("sets raw response", func(t *testing.T) {
+		config := &stk.ServerConfig{
+			Port:           "8080",
+			RequestLogging: false,
+		}
+		s := stk.NewServer(config)
+
+		s.Get("/", func(c *stk.Context) {
+			c.RawResponse([]byte("Hello, this is a raw response!"))
+		})
+
+		request, _ := http.NewRequest("GET", "/", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Router.ServeHTTP(responseRec, request)
+
+		assert.Equal(t, "Hello, this is a raw response!", responseRec.Body.String())
+		assert.Equal(t, http.StatusOK, responseRec.Code)
+	})
 }

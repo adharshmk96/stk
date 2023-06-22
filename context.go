@@ -10,23 +10,23 @@ import (
 )
 
 type Context struct {
-	Request        *http.Request
-	Writer         http.ResponseWriter
-	AllowedOrigins []string
+	Request *http.Request
+	Writer  http.ResponseWriter
 
 	Params httprouter.Params
 
 	Logger *zap.Logger
 
-	ResponseStatus int
-	ResponseBody   []byte
+	allowedOrigins []string
+	responseStatus int
+	responseBody   []byte
 }
 
 type Map map[string]interface{}
 
 // Status sets the status code of the response
 func (c *Context) Status(status int) *Context {
-	c.ResponseStatus = status
+	c.responseStatus = status
 	return c
 }
 
@@ -39,12 +39,12 @@ func (c *Context) JSONResponse(data interface{}) {
 
 	// Check if there is an error in marshalling the JSON (internal server error)
 	if err != nil {
-		c.ResponseStatus = http.StatusInternalServerError
-		c.ResponseBody = []byte(ErrInternalServer.Error())
+		c.responseStatus = http.StatusInternalServerError
+		c.responseBody = []byte(ErrInternalServer.Error())
 		return
 	}
 
-	c.ResponseBody = response
+	c.responseBody = response
 }
 
 func (c *Context) GetParam(key string) string {
@@ -86,4 +86,12 @@ func (c *Context) DecodeJSONBody(v interface{}) error {
 	}
 
 	return nil
+}
+
+func (c *Context) GetAllowedOrigins() []string {
+	return c.allowedOrigins
+}
+
+func (c *Context) RawResponse(raw []byte) {
+	c.responseBody = raw
 }

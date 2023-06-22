@@ -98,19 +98,19 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 			Request:        r,
 			Writer:         w,
 			Logger:         config.Logger,
-			AllowedOrigins: config.AllowedOrigins,
+			allowedOrigins: config.AllowedOrigins,
 		}
 		handler(handlerContext)
 
-		if handlerContext.ResponseStatus != 0 {
-			w.WriteHeader(handlerContext.ResponseStatus)
+		if handlerContext.responseStatus != 0 {
+			w.WriteHeader(handlerContext.responseStatus)
 		} else {
 			// Default to 200 OK
 			w.WriteHeader(http.StatusOK)
 		}
 
-		if handlerContext.ResponseBody != nil {
-			w.Write(handlerContext.ResponseBody)
+		if handlerContext.responseBody != nil {
+			w.Write(handlerContext.responseBody)
 		} else {
 			w.Write([]byte(""))
 		}

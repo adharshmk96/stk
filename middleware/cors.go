@@ -18,7 +18,7 @@ const (
 
 func CORS(next stk.HandlerFunc) stk.HandlerFunc {
 	return func(c *stk.Context) {
-		allowedOrigins := getAllowedOrigins(c)
+		allowedOrigins := getAllowedOrigins(c.GetAllowedOrigins())
 
 		origin := c.Request.Header.Get("Host")
 		// Check if the origin is in the allowedOrigins list
@@ -33,7 +33,7 @@ func CORS(next stk.HandlerFunc) stk.HandlerFunc {
 		if !isAllowed {
 			c.Status(http.StatusForbidden)
 			c.Writer.Header().Set("Content-Type", "text/plain")
-			c.ResponseBody = []byte("Forbidden")
+			c.RawResponse([]byte("Forbidden"))
 			return
 		}
 
@@ -48,13 +48,13 @@ func CORS(next stk.HandlerFunc) stk.HandlerFunc {
 	}
 }
 
-func getAllowedOrigins(c *stk.Context) []string {
+func getAllowedOrigins(origins []string) []string {
 	var allowedOrigins []string
 
-	if c.AllowedOrigins == nil {
+	if origins == nil || len(origins) == 0 {
 		allowedOrigins = []string{defaultCORSOrigin}
 	} else {
-		allowedOrigins = c.AllowedOrigins
+		allowedOrigins = origins
 	}
 	return allowedOrigins
 }
