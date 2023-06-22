@@ -105,6 +105,7 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 		if handlerContext.ResponseStatus != 0 {
 			w.WriteHeader(handlerContext.ResponseStatus)
 		} else {
+			// Default to 200 OK
 			w.WriteHeader(http.StatusOK)
 		}
 

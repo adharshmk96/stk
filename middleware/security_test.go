@@ -7,6 +7,7 @@ import (
 
 	"github.com/adharshmk96/stk"
 	"github.com/adharshmk96/stk/middleware"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSecurityHeaders(t *testing.T) {
@@ -41,8 +42,7 @@ func TestSecurityHeaders(t *testing.T) {
 	}
 
 	for header, expectedValue := range expectedHeaders {
-		if value := respRec.Header().Get(header); value != expectedValue {
-			t.Errorf("Expected %s header to be %q, but got %q", header, expectedValue, value)
-		}
+		value := respRec.Header().Get(header)
+		assert.Equal(t, expectedValue, value)
 	}
 }

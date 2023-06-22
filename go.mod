@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/jackc/pgx/v5 v5.3.1
 	github.com/julienschmidt/httprouter v1.3.0
+	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/stretchr/testify v1.8.1
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.7.0
