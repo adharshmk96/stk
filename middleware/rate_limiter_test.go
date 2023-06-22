@@ -19,7 +19,7 @@ func TestRateLimiter(t *testing.T) {
 	// Create a new server instance
 	config := &stk.ServerConfig{
 		Port:           "8080",
-		RequestLogging: true,
+		RequestLogging: false,
 	}
 	s := stk.NewServer(config)
 

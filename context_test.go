@@ -17,7 +17,7 @@ import (
 func TestStatus(t *testing.T) {
 	config := &stk.ServerConfig{
 		Port:           "8080",
-		RequestLogging: true,
+		RequestLogging: false,
 	}
 	s := stk.NewServer(config)
 
@@ -109,7 +109,7 @@ func TestJSONResponse(t *testing.T) {
 
 	config := &stk.ServerConfig{
 		Port:           "8080",
-		RequestLogging: true,
+		RequestLogging: false,
 	}
 	s := stk.NewServer(config)
 
