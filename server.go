@@ -1,13 +1,14 @@
 package stk
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/adharshmk96/stk/logging"
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
-	"go.uber.org/zap"
 )
 
 type HandlerFunc func(Context)
@@ -45,10 +46,10 @@ func NewServer(config *ServerConfig) *Server {
 // Start starts the server on the configured port
 func (s *Server) Start() {
 	startingPort := NormalizePort(s.Config.Port)
-	s.Logger.Info("starting server", zap.String("port", startingPort))
+	s.Logger.WithField("port", startingPort).Info("starting server")
 	err := http.ListenAndServe(startingPort, s.Router)
 	if err != nil {
-		s.Logger.Panic("error starting server", zap.Error(err))
+		s.Logger.WithError(err).Error("error starting server")
 		panic(err)
 	}
 }
@@ -87,11 +88,13 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
+		startTime := time.Now()
+
 		if config.RequestLogging {
-			config.Logger.Info("incoming request",
-				zap.String("method", r.Method),
-				zap.String("url", r.URL.String()),
-			)
+			config.Logger.WithFields(logrus.Fields{
+				"method": r.Method,
+				"url":    r.URL.String(),
+			}).Info("incoming request")
 		}
 
 		handlerContext := &context{
@@ -115,6 +118,15 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 		} else {
 			w.Write([]byte(""))
 		}
+
+		timeTaken := time.Since(startTime).Milliseconds()
+		config.Logger.WithFields(logrus.Fields{
+			"method":    r.Method,
+			"url":       r.URL.String(),
+			"status":    handlerContext.responseStatus,
+			"timeTaken": fmt.Sprintf("%d ms", timeTaken),
+		}).Info("request completed")
+
 	}
 }
 

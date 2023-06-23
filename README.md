@@ -9,7 +9,7 @@ Server toolkit - minimal and simple framework for developing server in golang
   - Get, Post, Put, Delete, Patch methods
 - [x] httprouter for routing
 - [x] middleware support for all routes
-- [x] logger by uber go zap package
+- [x] logger by uber go logrus package
 - [x] utils
   - db connection helpers
   - password hashing using argon2
