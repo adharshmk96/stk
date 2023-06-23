@@ -6,6 +6,7 @@ import (
 
 	"github.com/adharshmk96/stk/logging"
 	"github.com/julienschmidt/httprouter"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
@@ -15,20 +16,20 @@ type ServerConfig struct {
 	Port           string
 	RequestLogging bool
 	AllowedOrigins []string
-	Logger         *zap.Logger
+	Logger         *logrus.Logger
 }
 
 type Server struct {
 	Router      *httprouter.Router
 	Middlewares []Middleware
 	Config      *ServerConfig
-	Logger      *zap.Logger
+	Logger      *logrus.Logger
 }
 
 // NewServer creates a new server instance
 func NewServer(config *ServerConfig) *Server {
 	if config.Logger == nil {
-		config.Logger = logging.NewZapLogger()
+		config.Logger = logging.NewLogrusLogger()
 	}
 
 	newSTKServer := &Server{
