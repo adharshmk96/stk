@@ -119,13 +119,15 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 			w.Write([]byte(""))
 		}
 
-		timeTaken := time.Since(startTime).Milliseconds()
-		config.Logger.WithFields(logrus.Fields{
-			"method":    r.Method,
-			"url":       r.URL.String(),
-			"status":    handlerContext.responseStatus,
-			"timeTaken": fmt.Sprintf("%d ms", timeTaken),
-		}).Info("request completed")
+		if config.RequestLogging {
+			timeTaken := time.Since(startTime).Milliseconds()
+			config.Logger.WithFields(logrus.Fields{
+				"method":    r.Method,
+				"url":       r.URL.String(),
+				"status":    handlerContext.responseStatus,
+				"timeTaken": fmt.Sprintf("%d ms", timeTaken),
+			}).Info("request completed")
+		}
 
 	}
 }
