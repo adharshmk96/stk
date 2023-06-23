@@ -9,13 +9,13 @@ import (
 	"go.uber.org/zap"
 )
 
-type Context struct {
-	Request *http.Request
-	Writer  http.ResponseWriter
+type context struct {
+	request *http.Request
+	writer  http.ResponseWriter
 
-	Params httprouter.Params
+	params httprouter.Params
 
-	Logger *zap.Logger
+	logger *zap.Logger
 
 	allowedOrigins []string
 	responseStatus int
@@ -24,55 +24,67 @@ type Context struct {
 
 type Map map[string]interface{}
 
-// Status sets the status code of the response
-func (c *Context) Status(status int) *Context {
-	c.responseStatus = status
-	return c
+type Context interface {
+	// http objects
+	GetRequest() *http.Request
+	GetWriter() http.ResponseWriter
+
+	// get data from request
+	GetParam(key string) string
+	GetQueryParam(key string) string
+	GetAllowedOrigins() []string
+	DecodeJSONBody(v interface{}) error
+
+	// set data for response
+	Status(status int) Context
+	SetHeader(string, string)
+	RawResponse(raw []byte)
+	JSONResponse(data interface{})
+
+	// logger
+	Logger() *zap.Logger
 }
 
-// JSONResponse marshals the provided interface into JSON and writes it to the response writer
-// If there is an error in marshalling the JSON, an internal server error is returned
-func (c *Context) JSONResponse(data interface{}) {
-	response, err := json.Marshal(data)
-	// Set the content type to JSON
-	c.Writer.Header().Set("Content-Type", "application/json")
-
-	// Check if there is an error in marshalling the JSON (internal server error)
-	if err != nil {
-		c.responseStatus = http.StatusInternalServerError
-		c.responseBody = []byte(ErrInternalServer.Error())
-		return
-	}
-
-	c.responseBody = response
+func (c *context) GetRequest() *http.Request {
+	return c.request
 }
 
-func (c *Context) GetParam(key string) string {
-	return c.Params.ByName(key)
+func (c *context) GetWriter() http.ResponseWriter {
+	return c.writer
 }
 
-func (c *Context) GetQueryParam(key string) string {
-	return c.Request.URL.Query().Get(key)
+// GetParam gets the params within the path mentioned as a wildcard
+func (c *context) GetParam(key string) string {
+	return c.params.ByName(key)
 }
 
-func (c *Context) DecodeJSONBody(v interface{}) error {
+// GetQueryParam gets the query parameters passed eg: /?name=value
+func (c *context) GetQueryParam(key string) string {
+	return c.request.URL.Query().Get(key)
+}
+
+func (c *context) GetAllowedOrigins() []string {
+	return c.allowedOrigins
+}
+
+func (c *context) DecodeJSONBody(v interface{}) error {
 	bodySizeLimit := int64(1 << 20) // 1 MB
 
 	// Set a maximum limit for the request body size to avoid possible malicious requests
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, bodySizeLimit)
+	c.request.Body = http.MaxBytesReader(c.writer, c.request.Body, bodySizeLimit)
 
 	// Manually check if the request body size exceeds the limit
-	if c.Request.ContentLength > bodySizeLimit {
-		c.Writer.Header().Set("Content-Type", "application/json")
-		http.Error(c.Writer, ErrBodyTooLarge.Error(), http.StatusRequestEntityTooLarge)
+	if c.request.ContentLength > bodySizeLimit {
+		c.writer.Header().Set("Content-Type", "application/json")
+		http.Error(c.writer, ErrBodyTooLarge.Error(), http.StatusRequestEntityTooLarge)
 		return ErrBodyTooLarge
 	}
 
 	// Decode the JSON body into the provided interface
-	decoder := json.NewDecoder(c.Request.Body)
+	decoder := json.NewDecoder(c.request.Body)
 	err := decoder.Decode(v)
 
-	defer c.Request.Body.Close()
+	defer c.request.Body.Close()
 
 	// Check if there is an error in decoding the JSON, and return a user-friendly error message
 	if err != nil {
@@ -88,10 +100,39 @@ func (c *Context) DecodeJSONBody(v interface{}) error {
 	return nil
 }
 
-func (c *Context) GetAllowedOrigins() []string {
-	return c.allowedOrigins
+// Status sets the status code of the response
+func (c *context) Status(status int) Context {
+	c.responseStatus = status
+	return c
 }
 
-func (c *Context) RawResponse(raw []byte) {
+// sets response header key value
+func (c *context) SetHeader(key string, value string) {
+	c.writer.Header().Add(key, value)
+}
+
+// JSONResponse marshals the provided interface into JSON and writes it to the response writer
+// If there is an error in marshalling the JSON, an internal server error is returned
+func (c *context) JSONResponse(data interface{}) {
+	response, err := json.Marshal(data)
+	// Set the content type to JSON
+	c.writer.Header().Set("Content-Type", "application/json")
+
+	// Check if there is an error in marshalling the JSON (internal server error)
+	if err != nil {
+		c.responseStatus = http.StatusInternalServerError
+		c.responseBody = []byte(ErrInternalServer.Error())
+		return
+	}
+
+	c.responseBody = response
+}
+
+// sets response body as byte array
+func (c *context) RawResponse(raw []byte) {
 	c.responseBody = raw
+}
+
+func (c *context) Logger() *zap.Logger {
+	return c.logger
 }

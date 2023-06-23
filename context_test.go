@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/adharshmk96/stk"
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +25,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/", func(c *stk.Context) {
+		s.Get("/", func(c stk.Context) {
 			c.Status(http.StatusTeapot).JSONResponse("Hello, this is a JSON response!")
 		})
 
@@ -41,7 +40,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/st", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/st", func(c *stk.Context) {
+		s.Get("/st", func(c stk.Context) {
 			c.Status(http.StatusTeapot)
 		})
 
@@ -56,7 +55,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/js", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/js", func(c *stk.Context) {
+		s.Get("/js", func(c stk.Context) {
 			c.Status(http.StatusBadGateway)
 			c.JSONResponse("Hello, this is a JSON response!")
 		})
@@ -72,7 +71,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/jso", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/jso", func(c *stk.Context) {
+		s.Get("/jso", func(c stk.Context) {
 			c.JSONResponse("Hello, this is a JSON response!")
 		})
 
@@ -87,7 +86,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/json", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/json", func(c *stk.Context) {
+		s.Get("/json", func(c stk.Context) {
 			c.JSONResponse("Hello, this is a JSON response!")
 			c.Status(http.StatusBadGateway)
 		})
@@ -162,7 +161,7 @@ func TestJSONResponse(t *testing.T) {
 			request, _ := http.NewRequest("GET", tc.path, nil)
 			responseRec := httptest.NewRecorder()
 
-			s.Get(tc.path, func(c *stk.Context) {
+			s.Get(tc.path, func(c stk.Context) {
 				c.Status(tc.status).JSONResponse(tc.data)
 			})
 
@@ -224,22 +223,23 @@ func TestDecodeJSONBody(t *testing.T) {
 			req := httptest.NewRequest("POST", "/", body)
 			resp := httptest.NewRecorder()
 
-			context := stk.Context{
-				Request: req,
-				Writer:  resp,
-				Params:  httprouter.Params{},
-			}
+			server := stk.NewServer(&stk.ServerConfig{})
 
-			var res SampleStruct
-			err := context.DecodeJSONBody(&res)
+			server.Post("/", func(c stk.Context) {
+				var res SampleStruct
+				err := c.DecodeJSONBody(&res)
 
-			if !errors.Is(err, tt.expectedErr) {
-				t.Errorf("Expected error to be '%v', got '%v'", tt.expectedErr, err)
-			}
+				if !errors.Is(err, tt.expectedErr) {
+					t.Errorf("Expected error to be '%v', got '%v'", tt.expectedErr, err)
+				}
 
-			if err == nil && res != tt.expectedResult {
-				t.Errorf("Expected result to be '%v', got '%v'", tt.expectedResult, res)
-			}
+				if err == nil && res != tt.expectedResult {
+					t.Errorf("Expected result to be '%v', got '%v'", tt.expectedResult, res)
+				}
+			})
+
+			server.Router.ServeHTTP(resp, req)
+
 		})
 	}
 }
@@ -254,14 +254,14 @@ func TestGetAllowedOrigins(t *testing.T) {
 		s := stk.NewServer(config)
 
 		interMiddleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-			return func(c *stk.Context) {
+			return func(c stk.Context) {
 				assert.Equal(t, c.GetAllowedOrigins(), config.AllowedOrigins)
 			}
 		}
 
 		s.Use(interMiddleware)
 
-		s.Get("/", func(c *stk.Context) {
+		s.Get("/", func(c stk.Context) {
 			assert.Equal(t, c.GetAllowedOrigins(), config.AllowedOrigins)
 		})
 
@@ -281,7 +281,7 @@ func TestRawResponse(t *testing.T) {
 		}
 		s := stk.NewServer(config)
 
-		s.Get("/", func(c *stk.Context) {
+		s.Get("/", func(c stk.Context) {
 			c.RawResponse([]byte("Hello, this is a raw response!"))
 		})
 
@@ -292,5 +292,113 @@ func TestRawResponse(t *testing.T) {
 
 		assert.Equal(t, "Hello, this is a raw response!", responseRec.Body.String())
 		assert.Equal(t, http.StatusOK, responseRec.Code)
+	})
+}
+
+func TestGetMethod(t *testing.T) {
+	t.Run("returns correct request method", func(t *testing.T) {
+		config := &stk.ServerConfig{
+			Port:           "8080",
+			RequestLogging: false,
+		}
+		s := stk.NewServer(config)
+
+		s.Get("/", func(c stk.Context) {
+			assert.Equal(t, http.MethodGet, c.GetRequest().Method)
+		})
+
+		request, _ := http.NewRequest("GET", "/", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Router.ServeHTTP(responseRec, request)
+
+	})
+}
+
+func TestSetHeader(t *testing.T) {
+	t.Run("adds header to the response", func(t *testing.T) {
+		config := &stk.ServerConfig{
+			Port:           "8080",
+			RequestLogging: false,
+		}
+		s := stk.NewServer(config)
+
+		s.Get("/", func(c stk.Context) {
+			c.SetHeader("X-Header", "Added")
+		})
+
+		request, _ := http.NewRequest("GET", "/", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Router.ServeHTTP(responseRec, request)
+
+		assert.Equal(t, responseRec.Header().Get("X-Header"), "Added")
+	})
+}
+
+func TestContext(t *testing.T) {
+	t.Run("context is passed by reference", func(t *testing.T) {
+		config := &stk.ServerConfig{
+			Port:           "8080",
+			RequestLogging: false,
+		}
+		s1 := stk.NewServer(config)
+		s2 := stk.NewServer(config)
+
+		var context1 stk.Context
+		var context2 stk.Context
+		var context3 stk.Context
+		var context4 stk.Context
+
+		s1.Use(func(next stk.HandlerFunc) stk.HandlerFunc {
+			return func(c stk.Context) {
+				context1 = c
+				next(c)
+			}
+		})
+
+		s2.Use(func(next stk.HandlerFunc) stk.HandlerFunc {
+			return func(c stk.Context) {
+				context2 = c
+				next(c)
+			}
+		})
+
+		s1.Get("/", func(c stk.Context) {
+			context3 = c
+			c.SetHeader("X-Header", "Added")
+		})
+
+		s2.Get("/", func(c stk.Context) {
+			context4 = c
+		})
+
+		request, _ := http.NewRequest("GET", "/", nil)
+		responseRec1 := httptest.NewRecorder()
+		responseRec2 := httptest.NewRecorder()
+
+		s1.Router.ServeHTTP(responseRec1, request)
+		s2.Router.ServeHTTP(responseRec2, request)
+
+		if context1 != context3 {
+			t.Errorf("Expected context1 to be the same as context3")
+		}
+		if context2 != context4 {
+			t.Errorf("Expected context2 to be the same as context4")
+		}
+
+		if context1 == context2 {
+			t.Errorf("Expected context1 to be different from context2")
+		}
+		if context3 == context4 {
+			t.Errorf("Expected context3 to be different from context4")
+		}
+
+		if responseRec1.Header().Get("X-Header") != "Added" {
+			t.Errorf("Expected responseRec1 to have header 'X-Header'")
+		}
+		if responseRec2.Header().Get("X-Header") == "Added" {
+			t.Errorf("Expected responseRec2 to not have header 'X-Header'")
+		}
 	})
 }

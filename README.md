@@ -35,7 +35,7 @@ func main() {
 	server := stk.NewServer(&config)
 
 	// add routes
-	server.Get("/", func(c *stk.Context) {
+	server.Get("/", func(c stk.Context) {
 		c.Status(http.StatusOK).JSONResponse(stk.Map{"message": "Hello World"})
 	})
 
@@ -50,7 +50,7 @@ you can add any middleware by simply creating a function like this and adding it
 
 ```go
 middleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-	return func(c *stk.Context) {
+	return func(c stk.Context) {
 		if ctx.Request.URL.Path == "/blocked" {
   			ctx.Status(http.StatusForbidden).JSONResponse("blocked")
 			return

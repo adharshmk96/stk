@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func dummyHandler(c *stk.Context) {
+func dummyHandler(c stk.Context) {
 	c.Status(http.StatusOK).JSONResponse("OK")
 }
 

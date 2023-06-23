@@ -26,8 +26,8 @@ func NewRateLimiter(requestsPerInterval int, interval time.Duration) *RateLimite
 	}
 
 	middleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-		return func(c *stk.Context) {
-			clientIP := c.Request.RemoteAddr
+		return func(c stk.Context) {
+			clientIP := c.GetRequest().RemoteAddr
 			rl.mux.Lock()
 			defer rl.mux.Unlock()
 

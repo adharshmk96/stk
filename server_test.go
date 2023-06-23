@@ -22,10 +22,10 @@ func TestServerRoutes(t *testing.T) {
 
 	test_status := http.StatusNoContent
 
-	sampleHandler := func(ctx *stk.Context) {
-		method := ctx.Request.Method
-		ctx.Writer.WriteHeader(test_status)
-		ctx.Writer.Write([]byte(method))
+	sampleHandler := func(ctx stk.Context) {
+		method := ctx.GetRequest().Method
+		ctx.Status(test_status)
+		ctx.RawResponse([]byte(method))
 	}
 
 	s.Get("/test-get", sampleHandler)
@@ -34,9 +34,9 @@ func TestServerRoutes(t *testing.T) {
 	s.Delete("/test-delete", sampleHandler)
 	s.Patch("/test-patch", sampleHandler)
 
-	queryParamHandler := func(ctx *stk.Context) {
-		ctx.Writer.WriteHeader(test_status)
-		ctx.Writer.Write([]byte(ctx.GetQueryParam("name")))
+	queryParamHandler := func(ctx stk.Context) {
+		ctx.Status(test_status)
+		ctx.RawResponse([]byte(ctx.GetQueryParam("name")))
 	}
 
 	s.Get("/test/p", queryParamHandler)
@@ -45,9 +45,9 @@ func TestServerRoutes(t *testing.T) {
 	s.Delete("/test/p", queryParamHandler)
 	s.Patch("/test/p", queryParamHandler)
 
-	paramsHandler := func(ctx *stk.Context) {
-		ctx.Writer.WriteHeader(test_status)
-		ctx.Writer.Write([]byte(ctx.GetParam("id")))
+	paramsHandler := func(ctx stk.Context) {
+		ctx.Status(test_status)
+		ctx.RawResponse([]byte(ctx.GetParam("id")))
 	}
 
 	s.Get("/test/d/:id", paramsHandler)
@@ -116,10 +116,10 @@ func TestServerRoutes(t *testing.T) {
 
 	t.Run("server handles same routes and different http methods", func(t *testing.T) {
 
-		sampleHandler := func(ctx *stk.Context) {
-			method := ctx.Request.Method
-			ctx.Writer.WriteHeader(test_status)
-			ctx.Writer.Write([]byte(method))
+		sampleHandler := func(ctx stk.Context) {
+			method := ctx.GetRequest().Method
+			ctx.Status(test_status)
+			ctx.RawResponse([]byte(method))
 		}
 
 		s.Get("/get-and-post", sampleHandler)
@@ -147,10 +147,10 @@ func TestServerRoutes(t *testing.T) {
 
 	t.Run("server handles same routes and different http methods with dynamic routes", func(t *testing.T) {
 
-		sampleHandler := func(ctx *stk.Context) {
-			method := ctx.Request.Method
-			ctx.Writer.WriteHeader(test_status)
-			ctx.Writer.Write([]byte(method))
+		sampleHandler := func(ctx stk.Context) {
+			method := ctx.GetRequest().Method
+			ctx.Status(test_status)
+			ctx.RawResponse([]byte(method))
 		}
 
 		s.Get("/get-and-post/:id", sampleHandler)
@@ -178,16 +178,16 @@ func TestServerRoutes(t *testing.T) {
 
 	t.Run("server with overlapping routes", func(t *testing.T) {
 
-		getHandler := func(ctx *stk.Context) {
+		getHandler := func(ctx stk.Context) {
 			response := "get"
-			ctx.Writer.WriteHeader(http.StatusOK)
-			ctx.Writer.Write([]byte(response))
+			ctx.Status(http.StatusOK)
+			ctx.RawResponse([]byte(response))
 		}
 
-		getThatHandler := func(ctx *stk.Context) {
+		getThatHandler := func(ctx stk.Context) {
 			response := "get-that"
-			ctx.Writer.WriteHeader(http.StatusOK)
-			ctx.Writer.Write([]byte(response))
+			ctx.Status(http.StatusOK)
+			ctx.RawResponse([]byte(response))
 		}
 
 		s.Get("/get", getHandler)
@@ -220,26 +220,26 @@ func TestServerRoutes(t *testing.T) {
 func TestMiddlewares(t *testing.T) {
 
 	firstMiddleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-		return func(ctx *stk.Context) {
-			ctx.Writer.Header().Add("X-FirstMiddleware", "true")
+		return func(ctx stk.Context) {
+			ctx.SetHeader("X-FirstMiddleware", "true")
 			next(ctx)
 		}
 	}
 
 	secondMiddleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-		return func(ctx *stk.Context) {
-			ctx.Writer.Header().Add("X-SecondMiddleware", "true")
+		return func(ctx stk.Context) {
+			ctx.SetHeader("X-SecondMiddleware", "true")
 			next(ctx)
 		}
 	}
 
 	middlewareStatusCode := func(next stk.HandlerFunc) stk.HandlerFunc {
-		return func(ctx *stk.Context) {
+		return func(ctx stk.Context) {
 			ctx.Status(http.StatusBadRequest).JSONResponse("error")
 		}
 	}
 
-	myHandler := func(ctx *stk.Context) {
+	myHandler := func(ctx stk.Context) {
 		ctx.Status(http.StatusOK).JSONResponse("ok")
 	}
 
@@ -317,8 +317,8 @@ func TestMiddlewares(t *testing.T) {
 
 	t.Run("middleware blocks certain routes", func(t *testing.T) {
 		blockerMiddleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-			return func(ctx *stk.Context) {
-				if ctx.Request.URL.Path == "/blocked" {
+			return func(ctx stk.Context) {
+				if ctx.GetRequest().URL.Path == "/blocked" {
 					ctx.Status(http.StatusForbidden).JSONResponse("blocked")
 					return
 				}

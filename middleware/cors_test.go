@@ -21,7 +21,7 @@ func TestCORSDefault(t *testing.T) {
 	s.Use(middleware.CORS)
 
 	// Register a test route and handler
-	s.Get("/", func(c *stk.Context) {
+	s.Get("/", func(c stk.Context) {
 		c.Status(http.StatusOK).JSONResponse("OK")
 	})
 
@@ -67,7 +67,7 @@ func TestCORSAllowedOrigin(t *testing.T) {
 	s.Use(middleware.CORS)
 
 	// Register a test route and handler
-	s.Get("/", func(c *stk.Context) {
+	s.Get("/", func(c stk.Context) {
 		c.Status(http.StatusOK).JSONResponse("OK")
 	})
 
