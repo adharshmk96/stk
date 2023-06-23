@@ -1,45 +1,36 @@
 package logging
 
 import (
-	"encoding/json"
-
 	"github.com/adharshmk96/stk/utils"
-	"go.uber.org/zap"
+	"github.com/sirupsen/logrus"
 )
 
 const (
 	EnvLogLevel = "LOG_LEVEL"
 )
 
-func NewZapLogger() *zap.Logger {
+func setLoggingLevel(logger *logrus.Logger) {
+	logLevel := utils.GetEnvOrDefault(EnvLogLevel, "info")
 
-	var err error
-	var logger *zap.Logger
-
-	rawJSON := []byte(`{
-		"level": "` + utils.GetEnvOrDefault(EnvLogLevel, "info") + `",
-		"encoding": "json",
-		"outputPaths": ["stdout"],
-		"errorOutputPaths": ["stderr"],
-		"encoderConfig": {
-		  "messageKey": "message",
-		  "levelKey": "level",
-		  "levelEncoder": "lowercase",
-		  "timeKey": "ts",
-		  "timeEncoder": "iso8601"
-		}
-	  }`)
-
-	var cfg zap.Config
-
-	if err = json.Unmarshal(rawJSON, &cfg); err != nil {
-		panic(err)
+	switch logLevel {
+	case "debug":
+		logger.SetLevel(logrus.DebugLevel)
+	case "info":
+		logger.SetLevel(logrus.InfoLevel)
+	case "warn":
+		logger.SetLevel(logrus.WarnLevel)
+	case "error":
+		logger.SetLevel(logrus.ErrorLevel)
+	default:
+		logger.SetLevel(logrus.InfoLevel)
 	}
+}
 
-	logger, err = cfg.Build()
+func NewLogrusLogger() *logrus.Logger {
+	logger := logrus.New()
 
-	if err != nil {
-		panic(err)
-	}
+	setLoggingLevel(logger)
+	logger.SetFormatter(&logrus.JSONFormatter{})
+
 	return logger
 }

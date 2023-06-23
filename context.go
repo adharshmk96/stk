@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"go.uber.org/zap"
+	"github.com/sirupsen/logrus"
 )
 
 type context struct {
@@ -15,7 +15,7 @@ type context struct {
 
 	params httprouter.Params
 
-	logger *zap.Logger
+	logger *logrus.Logger
 
 	allowedOrigins []string
 	responseStatus int
@@ -42,7 +42,7 @@ type Context interface {
 	JSONResponse(data interface{})
 
 	// logger
-	Logger() *zap.Logger
+	Logger() *logrus.Logger
 }
 
 func (c *context) GetRequest() *http.Request {
@@ -133,6 +133,6 @@ func (c *context) RawResponse(raw []byte) {
 	c.responseBody = raw
 }
 
-func (c *context) Logger() *zap.Logger {
+func (c *context) Logger() *logrus.Logger {
 	return c.logger
 }
