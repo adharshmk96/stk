@@ -37,3 +37,8 @@ func GetPGPool(host, port, database, user, password string) *pgxpool.Pool {
 	})
 	return poolInstance
 }
+
+func ResetPGConnection() {
+	pgInstance = nil
+	pgOnce = sync.Once{}
+}

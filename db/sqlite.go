@@ -7,18 +7,25 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// Define Singleton sqlite_instance
-var sqlite_instance *sql.DB
-var sqliteOnce sync.Once
+var (
+	sqliteInstance *sql.DB
+	sqliteOnce     sync.Once
+)
 
-// DB returns a singleton database connection
+// GetSqliteConnection returns a singleton database connection
 func GetSqliteConnection(filepath string) *sql.DB {
 	sqliteOnce.Do(func() {
 		db, err := sql.Open("sqlite3", filepath)
 		if err != nil {
 			panic(err)
 		}
-		sqlite_instance = db
+		sqliteInstance = db
 	})
-	return sqlite_instance
+	return sqliteInstance
+}
+
+// ResetSqliteConnection resets the singleton database connection
+func ResetSqliteConnection() {
+	sqliteInstance = nil
+	sqliteOnce = sync.Once{}
 }
