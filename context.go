@@ -41,6 +41,8 @@ type Context interface {
 	RawResponse(raw []byte)
 	JSONResponse(data interface{})
 
+	SetCookie(cookie *http.Cookie)
+
 	// logger
 	Logger() *logrus.Logger
 }
@@ -135,4 +137,8 @@ func (c *context) RawResponse(raw []byte) {
 
 func (c *context) Logger() *logrus.Logger {
 	return c.logger
+}
+
+func (c *context) SetCookie(cookie *http.Cookie) {
+	http.SetCookie(c.writer, cookie)
 }
