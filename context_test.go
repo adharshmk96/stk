@@ -402,3 +402,32 @@ func TestContext(t *testing.T) {
 		}
 	})
 }
+
+func TestSetCookie(t *testing.T) {
+	t.Run("adds cookie to the response", func(t *testing.T) {
+		config := &stk.ServerConfig{
+			Port:           "8080",
+			RequestLogging: false,
+		}
+		s := stk.NewServer(config)
+
+		cookie := &http.Cookie{
+			Name:     "X-Cookie",
+			Value:    "Added",
+			Path:     "/",
+			HttpOnly: true,
+		}
+
+		s.Get("/", func(c stk.Context) {
+			c.SetCookie(cookie)
+		})
+
+		request, _ := http.NewRequest("GET", "/", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Router.ServeHTTP(responseRec, request)
+
+		assert.Equal(t, responseRec.Header().Get("Set-Cookie"), "X-Cookie=Added; Path=/; HttpOnly")
+
+	})
+}
