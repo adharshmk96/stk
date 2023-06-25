@@ -39,15 +39,6 @@ define tag
         echo "Tag $(NEW_TAG) already exists. reapplying the tag."; \
         git tag -d $(NEW_TAG); \
     fi
-    $(call update_file)
     @git tag $(NEW_TAG)
     @echo "created new version $(NEW_TAG)."
-endef
-
-define update_file
-    @echo "updating files to version $(NEW_TAG)"
-    @sed -i.bak "s/var version = \"[^\"]*\"/var version = \"$(NEW_TAG)\"/g" ./cmd/root.go
-    @rm cmd/root.go.bak
-    @git add cmd/root.go
-    @git commit -m "bump version to $(NEW_TAG)" > /dev/null
 endef
