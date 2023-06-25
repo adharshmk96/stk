@@ -412,9 +412,10 @@ func TestSetCookie(t *testing.T) {
 		s := stk.NewServer(config)
 
 		cookie := &http.Cookie{
-			Name:  "X-Cookie",
-			Value: "Added",
-			Path:  "/",
+			Name:     "X-Cookie",
+			Value:    "Added",
+			Path:     "/",
+			HttpOnly: true,
 		}
 
 		s.Get("/", func(c stk.Context) {
@@ -426,6 +427,7 @@ func TestSetCookie(t *testing.T) {
 
 		s.Router.ServeHTTP(responseRec, request)
 
-		assert.Equal(t, responseRec.Header().Get("Set-Cookie"), "X-Cookie=Added; Path=/")
+		assert.Equal(t, responseRec.Header().Get("Set-Cookie"), "X-Cookie=Added; Path=/; HttpOnly")
+
 	})
 }
