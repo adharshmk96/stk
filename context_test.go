@@ -414,6 +414,7 @@ func TestSetCookie(t *testing.T) {
 		cookie := &http.Cookie{
 			Name:  "X-Cookie",
 			Value: "Added",
+			Path:  "/",
 		}
 
 		s.Get("/", func(c stk.Context) {
