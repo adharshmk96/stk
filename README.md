@@ -61,3 +61,13 @@ middleware := func(next stk.HandlerFunc) stk.HandlerFunc {
 
 server.Use(middleware)
 ```
+
+## publish new version
+
+```bash
+make patch / minor / major 
+```
+
+```bash
+make publish
+```
