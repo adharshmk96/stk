@@ -20,7 +20,7 @@ func TestStatus(t *testing.T) {
 	}
 	s := stk.NewServer(config)
 
-	t.Run("status and jsonresponse methods by chaining", func(t *testing.T) {
+	t.Run("sets status and jsonresponse methods by chaining", func(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", "/", nil)
 		responseRec := httptest.NewRecorder()
@@ -35,7 +35,7 @@ func TestStatus(t *testing.T) {
 
 	})
 
-	t.Run("using status method only", func(t *testing.T) {
+	t.Run("using status method sets http response", func(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", "/st", nil)
 		responseRec := httptest.NewRecorder()
@@ -50,7 +50,7 @@ func TestStatus(t *testing.T) {
 
 	})
 
-	t.Run("status and json response method without chaining", func(t *testing.T) {
+	t.Run("set status and json response without chaining", func(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", "/js", nil)
 		responseRec := httptest.NewRecorder()
@@ -66,7 +66,7 @@ func TestStatus(t *testing.T) {
 
 	})
 
-	t.Run("json response method individually gives 200", func(t *testing.T) {
+	t.Run("json response method default gives 200", func(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", "/jso", nil)
 		responseRec := httptest.NewRecorder()
@@ -81,7 +81,7 @@ func TestStatus(t *testing.T) {
 
 	})
 
-	t.Run("json response method befire status", func(t *testing.T) {
+	t.Run("json response method used before status gives proper response", func(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", "/json", nil)
 		responseRec := httptest.NewRecorder()
@@ -121,14 +121,14 @@ func TestJSONResponse(t *testing.T) {
 	}{
 		{
 			path:        "/",
-			name:        "Invalid JSON",
+			name:        "returns error for invalid data",
 			data:        make(chan int),
 			status:      http.StatusInternalServerError,
 			expectedErr: stk.ErrInternalServer,
 		},
 		{
 			path: "/s",
-			name: "Struct data",
+			name: "structure data is parsed",
 			data: TestPayload{
 				Message: "Hello, this is a JSON response!",
 				Status:  http.StatusOK,
@@ -138,7 +138,7 @@ func TestJSONResponse(t *testing.T) {
 		},
 		{
 			path: "/m",
-			name: "Map data",
+			name: "map data is parsed",
 			data: map[string]interface{}{
 				"message": "Hello, this is a JSON response!",
 				"status":  http.StatusOK,
@@ -148,7 +148,7 @@ func TestJSONResponse(t *testing.T) {
 		},
 		{
 			path:        "/n",
-			name:        "nil",
+			name:        "nil data is parsed",
 			data:        nil,
 			status:      http.StatusOK,
 			expectedErr: nil,
@@ -195,7 +195,7 @@ func TestDecodeJSONBody(t *testing.T) {
 		expectedResult SampleStruct
 	}{
 		{
-			name:        "Valid JSON",
+			name:        "decodes valid json",
 			reqBody:     `{"name":"John","age":30}`,
 			expectedErr: nil,
 			expectedResult: SampleStruct{
@@ -204,13 +204,13 @@ func TestDecodeJSONBody(t *testing.T) {
 			},
 		},
 		{
-			name:           "Invalid JSON",
+			name:           "returns error on invalid json",
 			reqBody:        `{"name":"John",,,"age":30}`,
 			expectedErr:    stk.ErrInvalidJSON,
 			expectedResult: SampleStruct{},
 		},
 		{
-			name:           "Empty JSON",
+			name:           "decodes to empty struct on empty json",
 			reqBody:        "",
 			expectedErr:    stk.ErrInvalidJSON,
 			expectedResult: SampleStruct{},
@@ -295,7 +295,7 @@ func TestRawResponse(t *testing.T) {
 	})
 }
 
-func TestGetMethod(t *testing.T) {
+func TestGetRequestMethod(t *testing.T) {
 	t.Run("returns correct request method", func(t *testing.T) {
 		config := &stk.ServerConfig{
 			Port:           "8080",
@@ -337,13 +337,17 @@ func TestSetHeader(t *testing.T) {
 }
 
 func TestContext(t *testing.T) {
-	t.Run("context is passed by reference", func(t *testing.T) {
+	t.Run("context is desn't overlap between handlers", func(t *testing.T) {
 		config := &stk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: false,
 		}
 		s1 := stk.NewServer(config)
 		s2 := stk.NewServer(config)
+
+		if s1 == s2 {
+			t.Errorf("Servers should be different")
+		}
 
 		var context1 stk.Context
 		var context2 stk.Context
@@ -403,13 +407,15 @@ func TestContext(t *testing.T) {
 	})
 }
 
-func TestSetCookie(t *testing.T) {
-	t.Run("adds cookie to the response", func(t *testing.T) {
-		config := &stk.ServerConfig{
-			Port:           "8080",
-			RequestLogging: false,
-		}
-		s := stk.NewServer(config)
+func TestCookie(t *testing.T) {
+
+	config := &stk.ServerConfig{
+		Port:           "8080",
+		RequestLogging: false,
+	}
+	s := stk.NewServer(config)
+
+	t.Run("SetCookie adds cookie to the response", func(t *testing.T) {
 
 		cookie := &http.Cookie{
 			Name:     "X-Cookie",
@@ -430,4 +436,41 @@ func TestSetCookie(t *testing.T) {
 		assert.Equal(t, responseRec.Header().Get("Set-Cookie"), "X-Cookie=Added; Path=/; HttpOnly")
 
 	})
+
+	t.Run("GetCookie gets cookie from the request", func(t *testing.T) {
+
+		cookie := &http.Cookie{
+			Name:  "X-Cookie",
+			Value: "Added",
+			Path:  "/",
+		}
+
+		request, _ := http.NewRequest("GET", "/c", nil)
+		request.AddCookie(cookie)
+		responseRec := httptest.NewRecorder()
+
+		s.Get("/c", func(c stk.Context) {
+			reqCookie, _ := c.GetCookie("X-Cookie")
+			assert.Equal(t, cookie.Value, reqCookie.Value)
+			assert.Equal(t, cookie.Name, reqCookie.Name)
+		})
+
+		s.Router.ServeHTTP(responseRec, request)
+
+	})
+
+	t.Run("GetCookie returns error if cookie is not found", func(t *testing.T) {
+
+		request, _ := http.NewRequest("GET", "/ce", nil)
+		responseRec := httptest.NewRecorder()
+
+		s.Get("/ce", func(c stk.Context) {
+			_, err := c.GetCookie("X-Cookie")
+			assert.Error(t, err)
+		})
+
+		s.Router.ServeHTTP(responseRec, request)
+
+	})
+
 }
