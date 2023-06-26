@@ -9,7 +9,7 @@ NEW_TAG_PATCH := $(MAJOR).$(MINOR).$(NEW_PATCH)
 NEW_TAG_MINOR := $(MAJOR).$(NEW_MINOR).0
 NEW_TAG_MAJOR := $(NEW_MAJOR).0.0
 
-.PHONY: patch minor major build test publish keygen serve init moddownload migrate
+.PHONY: patch minor major build test publish
 
 ##########################
 ### Manage Commands
@@ -36,13 +36,9 @@ build:
 test:
 	@go test -v ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
 
-serve:
-	@go run . serve -p 8080
-
 ##########################
 ### Helpers
 ##########################
-
 define tag
 	@echo "current version is $(VERSION)"
     $(eval EXISTING_TAG := $(shell git tag -l $(NEW_TAG) 2>/dev/null))
