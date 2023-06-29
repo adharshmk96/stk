@@ -1,4 +1,4 @@
-package stk_test
+package gsk_test
 
 import (
 	"bytes"
@@ -9,23 +9,23 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/adharshmk96/stk"
+	"github.com/adharshmk96/stk/gsk"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestStatus(t *testing.T) {
-	config := &stk.ServerConfig{
+	config := &gsk.ServerConfig{
 		Port:           "8080",
 		RequestLogging: false,
 	}
-	s := stk.NewServer(config)
+	s := gsk.NewServer(config)
 
 	t.Run("sets status and jsonresponse methods by chaining", func(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", "/", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/", func(c stk.Context) {
+		s.Get("/", func(c gsk.Context) {
 			c.Status(http.StatusTeapot).JSONResponse("Hello, this is a JSON response!")
 		})
 
@@ -40,7 +40,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/st", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/st", func(c stk.Context) {
+		s.Get("/st", func(c gsk.Context) {
 			c.Status(http.StatusTeapot)
 		})
 
@@ -55,7 +55,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/js", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/js", func(c stk.Context) {
+		s.Get("/js", func(c gsk.Context) {
 			c.Status(http.StatusBadGateway)
 			c.JSONResponse("Hello, this is a JSON response!")
 		})
@@ -71,7 +71,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/jso", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/jso", func(c stk.Context) {
+		s.Get("/jso", func(c gsk.Context) {
 			c.JSONResponse("Hello, this is a JSON response!")
 		})
 
@@ -86,7 +86,7 @@ func TestStatus(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/json", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/json", func(c stk.Context) {
+		s.Get("/json", func(c gsk.Context) {
 			c.JSONResponse("Hello, this is a JSON response!")
 			c.Status(http.StatusBadGateway)
 		})
@@ -106,11 +106,11 @@ type TestPayload struct {
 
 func TestJSONResponse(t *testing.T) {
 
-	config := &stk.ServerConfig{
+	config := &gsk.ServerConfig{
 		Port:           "8080",
 		RequestLogging: false,
 	}
-	s := stk.NewServer(config)
+	s := gsk.NewServer(config)
 
 	testCases := []struct {
 		path        string
@@ -124,7 +124,7 @@ func TestJSONResponse(t *testing.T) {
 			name:        "returns error for invalid data",
 			data:        make(chan int),
 			status:      http.StatusInternalServerError,
-			expectedErr: stk.ErrInternalServer,
+			expectedErr: gsk.ErrInternalServer,
 		},
 		{
 			path: "/s",
@@ -161,7 +161,7 @@ func TestJSONResponse(t *testing.T) {
 			request, _ := http.NewRequest("GET", tc.path, nil)
 			responseRec := httptest.NewRecorder()
 
-			s.Get(tc.path, func(c stk.Context) {
+			s.Get(tc.path, func(c gsk.Context) {
 				c.Status(tc.status).JSONResponse(tc.data)
 			})
 
@@ -206,13 +206,13 @@ func TestDecodeJSONBody(t *testing.T) {
 		{
 			name:           "returns error on invalid json",
 			reqBody:        `{"name":"John",,,"age":30}`,
-			expectedErr:    stk.ErrInvalidJSON,
+			expectedErr:    gsk.ErrInvalidJSON,
 			expectedResult: SampleStruct{},
 		},
 		{
 			name:           "decodes to empty struct on empty json",
 			reqBody:        "",
-			expectedErr:    stk.ErrInvalidJSON,
+			expectedErr:    gsk.ErrInvalidJSON,
 			expectedResult: SampleStruct{},
 		},
 	}
@@ -223,9 +223,9 @@ func TestDecodeJSONBody(t *testing.T) {
 			req := httptest.NewRequest("POST", "/", body)
 			resp := httptest.NewRecorder()
 
-			server := stk.NewServer(&stk.ServerConfig{})
+			server := gsk.NewServer(&gsk.ServerConfig{})
 
-			server.Post("/", func(c stk.Context) {
+			server.Post("/", func(c gsk.Context) {
 				var res SampleStruct
 				err := c.DecodeJSONBody(&res)
 
@@ -246,22 +246,22 @@ func TestDecodeJSONBody(t *testing.T) {
 
 func TestGetAllowedOrigins(t *testing.T) {
 	t.Run("returns configured origins", func(t *testing.T) {
-		config := &stk.ServerConfig{
+		config := &gsk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: false,
 			AllowedOrigins: []string{"http://localhost:8080", "http://localhost:8081"},
 		}
-		s := stk.NewServer(config)
+		s := gsk.NewServer(config)
 
-		interMiddleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-			return func(c stk.Context) {
+		interMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
+			return func(c gsk.Context) {
 				assert.Equal(t, c.GetAllowedOrigins(), config.AllowedOrigins)
 			}
 		}
 
 		s.Use(interMiddleware)
 
-		s.Get("/", func(c stk.Context) {
+		s.Get("/", func(c gsk.Context) {
 			assert.Equal(t, c.GetAllowedOrigins(), config.AllowedOrigins)
 		})
 
@@ -275,13 +275,13 @@ func TestGetAllowedOrigins(t *testing.T) {
 
 func TestRawResponse(t *testing.T) {
 	t.Run("sets raw response", func(t *testing.T) {
-		config := &stk.ServerConfig{
+		config := &gsk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: false,
 		}
-		s := stk.NewServer(config)
+		s := gsk.NewServer(config)
 
-		s.Get("/", func(c stk.Context) {
+		s.Get("/", func(c gsk.Context) {
 			c.RawResponse([]byte("Hello, this is a raw response!"))
 		})
 
@@ -297,13 +297,13 @@ func TestRawResponse(t *testing.T) {
 
 func TestGetRequestMethod(t *testing.T) {
 	t.Run("returns correct request method", func(t *testing.T) {
-		config := &stk.ServerConfig{
+		config := &gsk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: false,
 		}
-		s := stk.NewServer(config)
+		s := gsk.NewServer(config)
 
-		s.Get("/", func(c stk.Context) {
+		s.Get("/", func(c gsk.Context) {
 			assert.Equal(t, http.MethodGet, c.GetRequest().Method)
 		})
 
@@ -317,13 +317,13 @@ func TestGetRequestMethod(t *testing.T) {
 
 func TestSetHeader(t *testing.T) {
 	t.Run("adds header to the response", func(t *testing.T) {
-		config := &stk.ServerConfig{
+		config := &gsk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: false,
 		}
-		s := stk.NewServer(config)
+		s := gsk.NewServer(config)
 
-		s.Get("/", func(c stk.Context) {
+		s.Get("/", func(c gsk.Context) {
 			c.SetHeader("X-Header", "Added")
 		})
 
@@ -338,42 +338,42 @@ func TestSetHeader(t *testing.T) {
 
 func TestContext(t *testing.T) {
 	t.Run("context is desn't overlap between handlers", func(t *testing.T) {
-		config := &stk.ServerConfig{
+		config := &gsk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: false,
 		}
-		s1 := stk.NewServer(config)
-		s2 := stk.NewServer(config)
+		s1 := gsk.NewServer(config)
+		s2 := gsk.NewServer(config)
 
 		if s1 == s2 {
 			t.Errorf("Servers should be different")
 		}
 
-		var context1 stk.Context
-		var context2 stk.Context
-		var context3 stk.Context
-		var context4 stk.Context
+		var context1 gsk.Context
+		var context2 gsk.Context
+		var context3 gsk.Context
+		var context4 gsk.Context
 
-		s1.Use(func(next stk.HandlerFunc) stk.HandlerFunc {
-			return func(c stk.Context) {
+		s1.Use(func(next gsk.HandlerFunc) gsk.HandlerFunc {
+			return func(c gsk.Context) {
 				context1 = c
 				next(c)
 			}
 		})
 
-		s2.Use(func(next stk.HandlerFunc) stk.HandlerFunc {
-			return func(c stk.Context) {
+		s2.Use(func(next gsk.HandlerFunc) gsk.HandlerFunc {
+			return func(c gsk.Context) {
 				context2 = c
 				next(c)
 			}
 		})
 
-		s1.Get("/", func(c stk.Context) {
+		s1.Get("/", func(c gsk.Context) {
 			context3 = c
 			c.SetHeader("X-Header", "Added")
 		})
 
-		s2.Get("/", func(c stk.Context) {
+		s2.Get("/", func(c gsk.Context) {
 			context4 = c
 		})
 
@@ -409,11 +409,11 @@ func TestContext(t *testing.T) {
 
 func TestCookie(t *testing.T) {
 
-	config := &stk.ServerConfig{
+	config := &gsk.ServerConfig{
 		Port:           "8080",
 		RequestLogging: false,
 	}
-	s := stk.NewServer(config)
+	s := gsk.NewServer(config)
 
 	t.Run("SetCookie adds cookie to the response", func(t *testing.T) {
 
@@ -424,7 +424,7 @@ func TestCookie(t *testing.T) {
 			HttpOnly: true,
 		}
 
-		s.Get("/", func(c stk.Context) {
+		s.Get("/", func(c gsk.Context) {
 			c.SetCookie(cookie)
 		})
 
@@ -449,7 +449,7 @@ func TestCookie(t *testing.T) {
 		request.AddCookie(cookie)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/c", func(c stk.Context) {
+		s.Get("/c", func(c gsk.Context) {
 			reqCookie, _ := c.GetCookie("X-Cookie")
 			assert.Equal(t, cookie.Value, reqCookie.Value)
 			assert.Equal(t, cookie.Name, reqCookie.Name)
@@ -464,7 +464,7 @@ func TestCookie(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/ce", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Get("/ce", func(c stk.Context) {
+		s.Get("/ce", func(c gsk.Context) {
 			_, err := c.GetCookie("X-Cookie")
 			assert.Error(t, err)
 		})

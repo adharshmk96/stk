@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/adharshmk96/stk"
+	"github.com/adharshmk96/stk/gsk"
 )
 
 type RateLimiter struct {
@@ -13,7 +13,7 @@ type RateLimiter struct {
 	interval            time.Duration
 	accessCounter       map[string]int
 	mux                 *sync.Mutex
-	Middleware          stk.Middleware
+	Middleware          gsk.Middleware
 }
 
 func NewRateLimiter(requestsPerInterval int, interval time.Duration) *RateLimiter {
@@ -25,15 +25,15 @@ func NewRateLimiter(requestsPerInterval int, interval time.Duration) *RateLimite
 		mux:                 &sync.Mutex{},
 	}
 
-	middleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-		return func(c stk.Context) {
+	middleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
+		return func(c gsk.Context) {
 			clientIP := c.GetRequest().RemoteAddr
 			rl.mux.Lock()
 			defer rl.mux.Unlock()
 
 			if cnt, ok := rl.accessCounter[clientIP]; ok {
 				if cnt >= rl.requestsPerInterval {
-					c.Status(http.StatusTooManyRequests).JSONResponse(stk.Map{
+					c.Status(http.StatusTooManyRequests).JSONResponse(gsk.Map{
 						"error": "Too many requests. Please try again later.",
 					})
 					return

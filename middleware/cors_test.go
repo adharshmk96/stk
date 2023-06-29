@@ -5,23 +5,23 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/adharshmk96/stk"
+	"github.com/adharshmk96/stk/gsk"
 	"github.com/adharshmk96/stk/middleware"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCORSDefault(t *testing.T) {
 	// Create a new server instance
-	config := &stk.ServerConfig{
+	config := &gsk.ServerConfig{
 		Port:           "8080",
 		RequestLogging: false,
 	}
-	s := stk.NewServer(config)
+	s := gsk.NewServer(config)
 
 	s.Use(middleware.CORS)
 
 	// Register a test route and handler
-	s.Get("/", func(c stk.Context) {
+	s.Get("/", func(c gsk.Context) {
 		c.Status(http.StatusOK).JSONResponse("OK")
 	})
 
@@ -55,19 +55,19 @@ func TestCORSDefault(t *testing.T) {
 
 func TestCORSAllowedOrigin(t *testing.T) {
 	// Create a new server instance
-	config := &stk.ServerConfig{
+	config := &gsk.ServerConfig{
 		Port:           "8080",
 		RequestLogging: false,
 		AllowedOrigins: []string{
 			"example.com",
 		},
 	}
-	s := stk.NewServer(config)
+	s := gsk.NewServer(config)
 
 	s.Use(middleware.CORS)
 
 	// Register a test route and handler
-	s.Get("/", func(c stk.Context) {
+	s.Get("/", func(c gsk.Context) {
 		c.Status(http.StatusOK).JSONResponse("OK")
 	})
 

@@ -1,11 +1,9 @@
 package middleware
 
-import (
-	"github.com/adharshmk96/stk"
-)
+import "github.com/adharshmk96/stk/gsk"
 
-func SecurityHeaders(next stk.HandlerFunc) stk.HandlerFunc {
-	return func(c stk.Context) {
+func SecurityHeaders(next gsk.HandlerFunc) gsk.HandlerFunc {
+	return func(c gsk.Context) {
 		headers := map[string]string{
 			"X-Content-Type-Options":            "nosniff",
 			"X-Frame-Options":                   "SAMEORIGIN",

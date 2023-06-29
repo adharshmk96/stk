@@ -1,4 +1,4 @@
-package stk_test
+package gsk_test
 
 import (
 	"io"
@@ -8,21 +8,21 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/adharshmk96/stk"
+	"github.com/adharshmk96/stk/gsk"
 )
 
 // Test server routes
 
 func TestServerRoutes(t *testing.T) {
-	config := &stk.ServerConfig{
+	config := &gsk.ServerConfig{
 		Port:           "8080",
 		RequestLogging: false,
 	}
-	s := stk.NewServer(config)
+	s := gsk.NewServer(config)
 
 	test_status := http.StatusNoContent
 
-	sampleHandler := func(ctx stk.Context) {
+	sampleHandler := func(ctx gsk.Context) {
 		method := ctx.GetRequest().Method
 		ctx.Status(test_status)
 		ctx.RawResponse([]byte(method))
@@ -34,7 +34,7 @@ func TestServerRoutes(t *testing.T) {
 	s.Delete("/test-delete", sampleHandler)
 	s.Patch("/test-patch", sampleHandler)
 
-	queryParamHandler := func(ctx stk.Context) {
+	queryParamHandler := func(ctx gsk.Context) {
 		ctx.Status(test_status)
 		ctx.RawResponse([]byte(ctx.GetQueryParam("name")))
 	}
@@ -45,7 +45,7 @@ func TestServerRoutes(t *testing.T) {
 	s.Delete("/test/p", queryParamHandler)
 	s.Patch("/test/p", queryParamHandler)
 
-	paramsHandler := func(ctx stk.Context) {
+	paramsHandler := func(ctx gsk.Context) {
 		ctx.Status(test_status)
 		ctx.RawResponse([]byte(ctx.GetParam("id")))
 	}
@@ -116,7 +116,7 @@ func TestServerRoutes(t *testing.T) {
 
 	t.Run("server handles same routes and different http methods", func(t *testing.T) {
 
-		sampleHandler := func(ctx stk.Context) {
+		sampleHandler := func(ctx gsk.Context) {
 			method := ctx.GetRequest().Method
 			ctx.Status(test_status)
 			ctx.RawResponse([]byte(method))
@@ -147,7 +147,7 @@ func TestServerRoutes(t *testing.T) {
 
 	t.Run("server handles same routes and different http methods with dynamic routes", func(t *testing.T) {
 
-		sampleHandler := func(ctx stk.Context) {
+		sampleHandler := func(ctx gsk.Context) {
 			method := ctx.GetRequest().Method
 			ctx.Status(test_status)
 			ctx.RawResponse([]byte(method))
@@ -178,13 +178,13 @@ func TestServerRoutes(t *testing.T) {
 
 	t.Run("server with overlapping routes", func(t *testing.T) {
 
-		getHandler := func(ctx stk.Context) {
+		getHandler := func(ctx gsk.Context) {
 			response := "get"
 			ctx.Status(http.StatusOK)
 			ctx.RawResponse([]byte(response))
 		}
 
-		getThatHandler := func(ctx stk.Context) {
+		getThatHandler := func(ctx gsk.Context) {
 			response := "get-that"
 			ctx.Status(http.StatusOK)
 			ctx.RawResponse([]byte(response))
@@ -219,36 +219,36 @@ func TestServerRoutes(t *testing.T) {
 
 func TestMiddlewares(t *testing.T) {
 
-	firstMiddleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-		return func(ctx stk.Context) {
+	firstMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
+		return func(ctx gsk.Context) {
 			ctx.SetHeader("X-FirstMiddleware", "true")
 			next(ctx)
 		}
 	}
 
-	secondMiddleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-		return func(ctx stk.Context) {
+	secondMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
+		return func(ctx gsk.Context) {
 			ctx.SetHeader("X-SecondMiddleware", "true")
 			next(ctx)
 		}
 	}
 
-	middlewareStatusCode := func(next stk.HandlerFunc) stk.HandlerFunc {
-		return func(ctx stk.Context) {
+	middlewareStatusCode := func(next gsk.HandlerFunc) gsk.HandlerFunc {
+		return func(ctx gsk.Context) {
 			ctx.Status(http.StatusBadRequest).JSONResponse("error")
 		}
 	}
 
-	myHandler := func(ctx stk.Context) {
+	myHandler := func(ctx gsk.Context) {
 		ctx.Status(http.StatusOK).JSONResponse("ok")
 	}
 
 	t.Run("server with two middlewares", func(t *testing.T) {
-		config := &stk.ServerConfig{
+		config := &gsk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: false,
 		}
-		s := stk.NewServer(config)
+		s := gsk.NewServer(config)
 
 		s.Use(firstMiddleware)
 		s.Use(secondMiddleware)
@@ -270,11 +270,11 @@ func TestMiddlewares(t *testing.T) {
 	})
 
 	t.Run("server with no middlewares", func(t *testing.T) {
-		config := &stk.ServerConfig{
+		config := &gsk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: false,
 		}
-		s := stk.NewServer(config)
+		s := gsk.NewServer(config)
 
 		s.Get("/", myHandler)
 
@@ -292,11 +292,11 @@ func TestMiddlewares(t *testing.T) {
 	})
 
 	t.Run("middleware can write status code and body", func(t *testing.T) {
-		config := &stk.ServerConfig{
+		config := &gsk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: false,
 		}
-		s := stk.NewServer(config)
+		s := gsk.NewServer(config)
 
 		s.Use(middlewareStatusCode)
 		s.Get("/", myHandler)
@@ -316,8 +316,8 @@ func TestMiddlewares(t *testing.T) {
 	})
 
 	t.Run("middleware blocks certain routes", func(t *testing.T) {
-		blockerMiddleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-			return func(ctx stk.Context) {
+		blockerMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
+			return func(ctx gsk.Context) {
 				if ctx.GetRequest().URL.Path == "/blocked" {
 					ctx.Status(http.StatusForbidden).JSONResponse("blocked")
 					return
@@ -326,12 +326,12 @@ func TestMiddlewares(t *testing.T) {
 			}
 		}
 
-		config := &stk.ServerConfig{
+		config := &gsk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: false,
 		}
 
-		s := stk.NewServer(config)
+		s := gsk.NewServer(config)
 
 		s.Use(blockerMiddleware)
 		s.Get("/", myHandler)
@@ -364,11 +364,11 @@ func TestMiddlewares(t *testing.T) {
 
 func TestServerLogger(t *testing.T) {
 	t.Run("Server initializes logger without passing one", func(t *testing.T) {
-		config := &stk.ServerConfig{
+		config := &gsk.ServerConfig{
 			Port:           "8080",
 			RequestLogging: false,
 		}
-		s := stk.NewServer(config)
+		s := gsk.NewServer(config)
 
 		assert.NotNil(t, s.Logger)
 	})
@@ -386,7 +386,7 @@ func TestNormalizePort(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.input, func(t *testing.T) {
-			result := stk.NormalizePort(tc.input)
+			result := gsk.NormalizePort(tc.input)
 			if result != tc.expected {
 				t.Errorf("For input %s, expected %s, but got %s", tc.input, tc.expected, result)
 			}

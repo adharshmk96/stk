@@ -1,4 +1,4 @@
-package stk
+package gsk
 
 import (
 	"fmt"
