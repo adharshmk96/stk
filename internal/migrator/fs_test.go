@@ -10,21 +10,21 @@ import (
 )
 
 var upFileNames = []string{
-	"1_up.sql",
-	"2_up.sql",
-	"000004_up.sql",
-	"000005_up.sql",
-	"1000001_create_table_up.sql",
-	"1000002_create_table2_up.sql",
+	"1_up",
+	"2_up",
+	"000004_up",
+	"000005_up",
+	"1000001_create_table_up",
+	"1000002_create_table2_up",
 }
 
 var downFileNames = []string{
-	"1_down.sql",
-	"2_down.sql",
-	"000004_down.sql",
-	"000005_down.sql",
-	"1000001_create_table_down.sql",
-	"1000002_create_table2_down.sql",
+	"1_down",
+	"2_down",
+	"000004_down",
+	"000005_down",
+	"1000001_create_table_down",
+	"1000002_create_table2_down",
 }
 
 var noiseFiles = []string{
@@ -41,7 +41,7 @@ func setupDir() {
 
 	// create all upFileNames
 	for _, name := range upFileNames {
-		f, err := os.Create(filepath.Join(testDir, name))
+		f, err := os.Create(filepath.Join(testDir, name+".sql"))
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -50,7 +50,7 @@ func setupDir() {
 
 	// create all downFileNames
 	for _, name := range downFileNames {
-		f, err := os.Create(filepath.Join(testDir, name))
+		f, err := os.Create(filepath.Join(testDir, name+".sql"))
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -59,7 +59,7 @@ func setupDir() {
 
 	// create all noiseFiles
 	for _, name := range noiseFiles {
-		f, err := os.Create(filepath.Join(testDir, name))
+		f, err := os.Create(filepath.Join(testDir, name+".sql"))
 		if err != nil {
 			fmt.Println(err)
 		}

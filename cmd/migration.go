@@ -1,27 +1,27 @@
 /*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
+Copyright © 2023 Adharsh M dev@adharsh.in
 */
 package cmd
 
 import (
-	"github.com/adharshmk96/stk/cmd/migration"
+	"github.com/adharshmk96/stk/cmd/migrator"
 	"github.com/spf13/cobra"
 )
 
 var rootFolder string
 var database string
 
-// migrationCmd represents the generate command
-var migrationCmd = &cobra.Command{
-	Use:   "migration",
-	Short: "database migration commands",
+// migratorCmd represents the generate command
+var migratorCmd = &cobra.Command{
+	Use:   "migrator",
+	Short: "database migrator commands",
 }
 
 func init() {
-	migrationCmd.PersistentFlags().StringVarP(&rootFolder, "path", "p", "./migration", "migration folder path (default ./migration))")
-	migrationCmd.PersistentFlags().StringVarP(&database, "database", "d", "sqlite", "database type ( default sqlite )")
+	migratorCmd.PersistentFlags().StringVarP(&rootFolder, "path", "p", "./stk-migrations", "migrator folder path (default ./migrator))")
+	migratorCmd.PersistentFlags().StringVarP(&database, "database", "d", "sqlite", "database type ( default sqlite )")
 
-	migrationCmd.AddCommand(migration.GenerateCmd)
+	migratorCmd.AddCommand(migrator.GenerateCmd)
 
-	rootCmd.AddCommand(migrationCmd)
+	rootCmd.AddCommand(migratorCmd)
 }

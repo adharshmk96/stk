@@ -35,24 +35,6 @@ func SelectDatabase(database string) Database {
 	}
 }
 
-func OpenDirectory(database Database) string {
-	var directory string
-	switch database {
-	case PostgresDB:
-		directory = "postgres"
-	case MySQLDB:
-		directory = "mysql"
-	case SQLiteDB:
-		directory = "sqlite"
-	default:
-		directory = "sqlite"
-	}
-
-	MkPathIfNotExists(directory)
-
-	return directory
-}
-
 func GetExtention(database Database) string {
 	var ext string
 	switch database {
@@ -160,5 +142,5 @@ func GenerateNextMigrations(lastNumber int, name string, total int) []*Migration
 
 func MigrationToFilename(migration *Migration) string {
 	migration.Name = strings.ReplaceAll(migration.Name, " ", "_")
-	return fmt.Sprintf("%d_%s_%s", migration.Number, migration.Name, migration.Type)
+	return fmt.Sprintf("%06d_%s_%s", migration.Number, migration.Name, migration.Type)
 }

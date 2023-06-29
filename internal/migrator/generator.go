@@ -1,36 +1,53 @@
 package migrator
 
+import "log"
+
 type GeneratorConfig struct {
 	RootDirectory string
 	Database      string
 	Name          string
 	NumToGenerate int
+	DryRun        bool
 }
 
 func Generate(config GeneratorConfig) error {
 	// Select based on the database
 	database := SelectDatabase(config.Database)
-	subDirectory := OpenDirectory(database)
+	log.Println("selected database: ", database)
+	workDirectory := OpenDirectory(config.RootDirectory, database)
+	log.Println("workdir: ", workDirectory)
 
-	fileNames, err := GetMigrationFileGroup(subDirectory, MigrationUp)
+	fileNames, err := GetMigrationFileGroup(workDirectory, MigrationUp)
 	if err != nil {
 		return ErrReadingFileNames
 	}
 
-	migrations, err := ParseMigrationsFromFilenames(fileNames)
-	if err != nil {
-		return ErrParsingMigrations
+	lastMigrationNumber := 0
+
+	if len(fileNames) > 0 {
+		migrations, err := ParseMigrationsFromFilenames(fileNames)
+		if err != nil {
+			return ErrParsingMigrations
+		}
+
+		SortMigrations(migrations)
+
+		lastMigrationNumber = migrations[len(migrations)-1].Number
+
 	}
-
-	SortMigrations(migrations)
-
-	lastMigrationNumber := migrations[len(migrations)-1].Number
 
 	nextMigrations := GenerateNextMigrations(lastMigrationNumber, config.Name, config.NumToGenerate)
 
 	for _, migration := range nextMigrations {
 		fileName := MigrationToFilename(migration) + "." + GetExtention(database)
-		err := CreateMigrationFile(subDirectory, fileName)
+
+		if config.DryRun {
+			log.Println("dry run: ", fileName)
+			continue
+		}
+
+		log.Println("generating file: ", fileName)
+		err := CreateMigrationFile(workDirectory, fileName)
 		if err != nil {
 			return ErrCreatingMigrationFile
 		}

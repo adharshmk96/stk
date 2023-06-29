@@ -6,6 +6,25 @@ import (
 	"strings"
 )
 
+func OpenDirectory(root string, database Database) string {
+	var subDirectory string
+	switch database {
+	case PostgresDB:
+		subDirectory = "postgres"
+	case MySQLDB:
+		subDirectory = "mysql"
+	case SQLiteDB:
+		subDirectory = "sqlite"
+	default:
+		subDirectory = "sqlite"
+	}
+
+	directory := filepath.Join(root, subDirectory)
+	MkPathIfNotExists(directory)
+
+	return directory
+}
+
 func GetMigrationFileGroup(dir string, migrationType MigrationType) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -17,8 +36,8 @@ func GetMigrationFileGroup(dir string, migrationType MigrationType) ([]string, e
 		// check the string ends with "down"
 		if !entry.IsDir() {
 			filenameWithoutExt := fileNameWithoutExtension(entry.Name())
-			if !strings.HasSuffix(filenameWithoutExt, string(migrationType)) {
-				migrationFiles = append(migrationFiles, entry.Name())
+			if strings.HasSuffix(filenameWithoutExt, string(migrationType)) {
+				migrationFiles = append(migrationFiles, filenameWithoutExt)
 			}
 		}
 	}
@@ -32,7 +51,7 @@ func fileNameWithoutExtension(fileName string) string {
 
 func MkPathIfNotExists(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		return os.MkdirAll(dir, 0700)
+		return os.MkdirAll(dir, os.ModePerm)
 	}
 	return nil
 }
