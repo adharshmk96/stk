@@ -9,18 +9,63 @@ import (
 	"github.com/adharshmk96/stk/internal/migrator"
 )
 
-func setupDir() []string {
-	testDir := "test_dir"
+var upFileNames = []string{
+	"1_up.sql",
+	"2_up.sql",
+	"000004_up.sql",
+	"000005_up.sql",
+	"1000001_create_table_up.sql",
+	"1000002_create_table2_up.sql",
+}
+
+var downFileNames = []string{
+	"1_down.sql",
+	"2_down.sql",
+	"000004_down.sql",
+	"000005_down.sql",
+	"1000001_create_table_down.sql",
+	"1000002_create_table2_down.sql",
+}
+
+var noiseFiles = []string{
+	"1.txt",
+	"2.txt",
+	"000004.txt",
+	"whatever.txt",
+}
+
+var testDir = "test_dir"
+
+func setupDir() {
 	os.MkdirAll(testDir, 0700)
 
-	fileNames := []string{}
-	for i := 0; i < 10; i++ {
-		fileName := "test_file" + fmt.Sprintf("%d", i)
-		fileNames = append(fileNames, fileName)
-		path := filepath.Join(testDir, fileName+".sql")
-		os.Create(path)
+	// create all upFileNames
+	for _, name := range upFileNames {
+		f, err := os.Create(filepath.Join(testDir, name))
+		if err != nil {
+			fmt.Println(err)
+		}
+		f.Close()
 	}
-	return fileNames
+
+	// create all downFileNames
+	for _, name := range downFileNames {
+		f, err := os.Create(filepath.Join(testDir, name))
+		if err != nil {
+			fmt.Println(err)
+		}
+		f.Close()
+	}
+
+	// create all noiseFiles
+	for _, name := range noiseFiles {
+		f, err := os.Create(filepath.Join(testDir, name))
+		if err != nil {
+			fmt.Println(err)
+		}
+		f.Close()
+	}
+
 }
 
 func teardownDir() {
@@ -37,17 +82,54 @@ func contains(s []string, e string) bool {
 }
 
 func TestGetFilenamesWithoutExtension(t *testing.T) {
-	existingNames := setupDir()
+	setupDir()
 	defer teardownDir()
-	t.Run("get filenames without extension", func(t *testing.T) {
-		filenames, err := migrator.GetFilenamesWithoutExtension("test_dir")
+	t.Run("get up filenames without extension", func(t *testing.T) {
+		filenames, err := migrator.GetMigrationFileGroup("test_dir", migrator.MigrationUp)
 		if err != nil {
 			t.Error(err)
 		}
-		for _, name := range existingNames {
+		for _, name := range upFileNames {
 			if !contains(filenames, name) {
 				t.Errorf("expected %s to be in filenames", name)
 			}
 		}
+
+		for _, name := range downFileNames {
+			if contains(filenames, name) {
+				t.Errorf("expected %s to not be in filenames", name)
+			}
+		}
+
+		for _, name := range noiseFiles {
+			if contains(filenames, name) {
+				t.Errorf("expected %s to not be in filenames", name)
+			}
+		}
 	})
+
+	t.Run("get down filenames without extension", func(t *testing.T) {
+		filenames, err := migrator.GetMigrationFileGroup("test_dir", migrator.MigrationDown)
+		if err != nil {
+			t.Error(err)
+		}
+		for _, name := range downFileNames {
+			if !contains(filenames, name) {
+				t.Errorf("expected %s to be in filenames", name)
+			}
+		}
+
+		for _, name := range upFileNames {
+			if contains(filenames, name) {
+				t.Errorf("expected %s to not be in filenames", name)
+			}
+		}
+
+		for _, name := range noiseFiles {
+			if contains(filenames, name) {
+				t.Errorf("expected %s to not be in filenames", name)
+			}
+		}
+	})
+
 }
