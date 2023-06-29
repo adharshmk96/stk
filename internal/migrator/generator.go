@@ -25,14 +25,10 @@ func Generate(config GeneratorConfig) error {
 	lastMigrationNumber := 0
 
 	if len(fileNames) > 0 {
-		migrations, err := ParseMigrationsFromFilenames(fileNames)
+		lastMigrationNumber, err = getLastMigrationNumber(fileNames)
 		if err != nil {
-			return ErrParsingMigrations
+			return err
 		}
-
-		SortMigrations(migrations)
-
-		lastMigrationNumber = migrations[len(migrations)-1].Number
 
 	}
 
@@ -55,4 +51,16 @@ func Generate(config GeneratorConfig) error {
 
 	return nil
 
+}
+
+func getLastMigrationNumber(fileNames []string) (int, error) {
+	migrations, err := ParseMigrationsFromFilenames(fileNames)
+	if err != nil {
+		return 0, ErrParsingMigrations
+	}
+
+	SortMigrations(migrations)
+
+	lastMigrationNumber := migrations[len(migrations)-1].Number
+	return lastMigrationNumber, nil
 }
