@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	svr "github.com/adharshmk96/stk/svr"
+	gsk "github.com/adharshmk96/stk/gsk"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -13,7 +13,7 @@ type HandlerFunc struct {
 }
 
 // Execute provides a mock function with given fields: _a0
-func (_m *HandlerFunc) Execute(_a0 svr.Context) {
+func (_m *HandlerFunc) Execute(_a0 gsk.Context) {
 	_m.Called(_a0)
 }
 
