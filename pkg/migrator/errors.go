@@ -10,6 +10,7 @@ var (
 	ErrParsingMigrations     = errors.New("error_parsing_migrations")
 	ErrCreatingMigrationFile = errors.New("error_creating_migration_file")
 
+	ErrNoMigrationsToApply         = errors.New("error_no_migrations_to_apply")
 	ErrReadingLastAppliedMigration = errors.New("error_reading_last_applied_migration")
 
 	// Storage

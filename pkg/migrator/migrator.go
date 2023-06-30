@@ -29,57 +29,85 @@ func MigrateUp(config *MigratorConfig) (err error) {
 		return ErrReadingLastAppliedMigration
 	}
 
-	// Read all migrations from file system
+	// Read and parse all migrations from directory
+	migrations, err := loadMigrationsFromFile(config, database)
+	if err != nil {
+		return err
+	}
+	log.Println("loaded migrations: ")
+	for _, v := range migrations {
+		log.Println(" - ", v.Number, v.Name)
+	}
+
+	log.Println("last applied migration : ", lastAppliedMigration)
+
+	// Find the next migrations to apply
+	migrationsToApply := findUpMigrationsToApply(lastAppliedMigration, migrations, config.NumToMigrate)
+
+	// Read migration queries from files
+	readMigrationQueries(migrationsToApply)
+
+	// Apply migrations and add entries to database
+	err = applyMigrations(config, migrationsToApply)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func loadMigrationsFromFile(config *MigratorConfig, database Database) ([]*Migration, error) {
 	workDirectory := openDirectory(config.RootDirectory, database)
 	log.Println("workdir: ", workDirectory)
 
 	filePaths, err := getMigrationFilePathsByGroup(workDirectory, MigrationUp)
-	// if len(filePaths) == 0 {
-	// 	log.Println("no migrations to apply...")
-	// 	return nil
-	// }
+	if len(filePaths) == 0 {
+		log.Println("no migrations to apply...")
+		return nil, ErrNoMigrationsToApply
+	}
 	if err != nil {
-		return ErrReadingFileNames
+		return nil, ErrReadingFileNames
 	}
 
-	log.Println("filenames: ", filePaths)
+	log.Println("files found: ")
+	for _, v := range filePaths {
+		log.Println(" - ", v)
+	}
 
-	// Parse migrations from file paths
 	migrations, err := parseMigrationsFromFilePaths(filePaths)
 	if err != nil {
-		return ErrParsingMigrations
+		return nil, ErrParsingMigrations
 	}
 
 	// Sort the migrations
 	sortMigrations(migrations)
 
-	log.Println("migrations: ", migrations)
-	log.Println("last : ", lastAppliedMigration)
+	return migrations, nil
+}
 
-	// Find the next migrations to apply
-	migrationsToApply := findUpMigrationsToApply(lastAppliedMigration, migrations, config.NumToMigrate)
-	// Read migration queries from files
-	readMigrationQueries(migrationsToApply)
-
+// TODO: apply all as one transaction ?. if one fails, rollback all
+func applyMigrations(config *MigratorConfig, migrationsToApply []*Migration) error {
 	if config.DryRun {
 		log.Println("dry run: ")
 		for _, migration := range migrationsToApply {
-			log.Println(migration.Name)
+			log.Println(" - ", migration.Number, migration.Name)
 		}
 		return nil
 	}
 
-	// Apply migrations and add entries to database
-	// TODO: apply all as one transaction. if one fails, rollback all
 	for _, migration := range migrationsToApply {
-		err = config.DBRepo.ApplyMigration(migration)
+		log.Println("applying migrations: ")
+		for _, migration := range migrationsToApply {
+			log.Println(" - ", migration.Number, migration.Name)
+		}
+		err := config.DBRepo.ApplyMigration(migration)
 		if err != nil {
 			log.Fatalln("error applying migration: ", migration.Number, err)
+			return err
 		}
 	}
-
 	return nil
-
 }
 
 func findNextMigrationIndex(migrations []*Migration, number int) int {
