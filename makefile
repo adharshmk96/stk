@@ -9,6 +9,8 @@ NEW_TAG_PATCH := v$(MAJOR).$(MINOR).$(NEW_PATCH)
 NEW_TAG_MINOR := v$(MAJOR).$(NEW_MINOR).0
 NEW_TAG_MAJOR := v$(NEW_MAJOR).0.0
 
+current_branch := $(shell git branch --show-current)
+
 .PHONY: patch minor major build test publish
 
 ##########################
@@ -38,6 +40,12 @@ test:
 
 clean-branch:
 	@git branch | grep -v "main" | xargs git branch -D
+
+
+set_upstream:
+	@current_branch=$(shell git branch --show-current); git branch --set-upstream-to=origin/$$current_branch $$current_branch
+
+
 
 ##########################
 ### Helpers
