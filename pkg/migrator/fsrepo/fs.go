@@ -22,6 +22,9 @@ func NewFSRepo(workDir, ext string) migrator.FileRepo {
 }
 
 func (f *fileSystem) LoadMigrationsFromFile(migrationType migrator.MigrationType) ([]*migrator.Migration, error) {
+	if err := f.OpenDirectory(); err != nil {
+		return nil, err
+	}
 	filePaths, err := f.GetMigrationFilePathsByType(migrationType)
 	if err != nil {
 		return nil, err
@@ -70,7 +73,7 @@ func (f *fileSystem) GetMigrationFilePathsByType(migrationType migrator.Migratio
 
 func (f *fileSystem) CreateMigrationFile(migration *migrator.Migration) error {
 	fileName := migrator.MigrationToFilename(migration)
-	filePath := filepath.Join(f.workDir, fileName, f.ext)
+	filePath := filepath.Join(f.workDir, addExtension(fileName, f.ext))
 	migration.Path = filePath
 
 	file, err := os.Create(filePath)
@@ -142,4 +145,19 @@ func sortDescMigrations(migrations []*migrator.Migration) {
 	sort.Slice(migrations, func(i, j int) bool {
 		return migrations[i].Number > migrations[j].Number
 	})
+}
+
+func addExtension(filename, extension string) string {
+	// Remove existing extension if there is one
+	currentExtension := filepath.Ext(filename)
+	if currentExtension != "" {
+		filename = strings.TrimSuffix(filename, currentExtension)
+	}
+
+	// Ensure the new extension starts with a dot
+	if !strings.HasPrefix(extension, ".") {
+		extension = "." + extension
+	}
+
+	return filename + extension
 }

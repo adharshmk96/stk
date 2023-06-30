@@ -201,7 +201,8 @@ func TestCreateMigrationFile(t *testing.T) {
 	defer teardownFSDir()
 
 	ext := migrator.GetExtention(migrator.SQLiteDB)
-	fsRepo := NewFSRepo("test_dir", ext)
+	// subDir := migrator.SelectSubDirectory(migrator.SQLiteDB)
+	fsRepo := NewFSRepo(testDir, ext)
 
 	t.Run("create up migration file", func(t *testing.T) {
 		migration := &migrator.Migration{
