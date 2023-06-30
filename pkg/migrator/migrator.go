@@ -83,6 +83,9 @@ func findUpMigrationsToApply(lastMigration *Migration, migrations []*Migration, 
 		lastIdx = min(startIdx+numberToMigrate, len(migrations))
 	} else {
 		idx := findNextMigrationIndex(migrations, lastMigration.Number)
+		if idx < 0 {
+			return []*Migration{}
+		}
 		if lastMigration.Type == MigrationDown {
 			startIdx = max(idx-1, 0)
 			lastIdx = min(startIdx+numberToMigrate, len(migrations))

@@ -114,10 +114,24 @@ func Test_findUpMigrationsToApply(t *testing.T) {
 			},
 			want: migrations[:2],
 		},
+		{
+			name: "last migration is the last migration in the list",
+			args: args{
+				lastMigration:   migrations[len(migrations)-1],
+				migrations:      migrations,
+				numberToMigrate: 2,
+			},
+			want: []*Migration{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := findUpMigrationsToApply(tt.args.lastMigration, tt.args.migrations, tt.args.numberToMigrate)
+
+			if tt.name == "last migration is the last migration in the list" {
+				assert.Equal(t, 0, len(got))
+				return
+			}
 
 			assert.Equal(t, len(tt.want), len(got))
 
