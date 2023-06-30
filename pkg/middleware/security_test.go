@@ -5,23 +5,23 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/adharshmk96/stk"
-	"github.com/adharshmk96/stk/middleware"
+	"github.com/adharshmk96/stk/gsk"
+	"github.com/adharshmk96/stk/pkg/middleware"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSecurityHeaders(t *testing.T) {
 	// Create a new server instance
-	config := &stk.ServerConfig{
+	config := &gsk.ServerConfig{
 		Port:           "8080",
 		RequestLogging: false,
 	}
-	s := stk.NewServer(config)
+	s := gsk.NewServer(config)
 
 	s.Use(middleware.SecurityHeaders)
 
 	// Register a test route and handler
-	s.Get("/", func(c stk.Context) {
+	s.Get("/", func(c gsk.Context) {
 		c.Status(http.StatusOK).JSONResponse("OK")
 	})
 

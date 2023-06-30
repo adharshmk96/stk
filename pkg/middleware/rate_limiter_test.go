@@ -6,22 +6,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/adharshmk96/stk"
-	"github.com/adharshmk96/stk/middleware"
+	"github.com/adharshmk96/stk/gsk"
+	"github.com/adharshmk96/stk/pkg/middleware"
 	"github.com/stretchr/testify/assert"
 )
 
-func dummyHandler(c stk.Context) {
+func dummyHandler(c gsk.Context) {
 	c.Status(http.StatusOK).JSONResponse("OK")
 }
 
 func TestRateLimiter(t *testing.T) {
 	// Create a new server instance
-	config := &stk.ServerConfig{
+	config := &gsk.ServerConfig{
 		Port:           "8080",
 		RequestLogging: false,
 	}
-	s := stk.NewServer(config)
+	s := gsk.NewServer(config)
 
 	// rate limiter middleware
 	requestsPerInterval := 5

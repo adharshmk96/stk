@@ -1,4 +1,4 @@
-package stk
+package gsk
 
 // This implementation of middleware will enable middleware chaining
 type Middleware func(HandlerFunc) HandlerFunc

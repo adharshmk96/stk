@@ -3,7 +3,7 @@ package db_test
 import (
 	"testing"
 
-	"github.com/adharshmk96/stk/db"
+	"github.com/adharshmk96/stk/pkg/db"
 	"github.com/stretchr/testify/assert"
 )
 

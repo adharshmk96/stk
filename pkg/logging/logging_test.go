@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/adharshmk96/stk/logging"
+	"github.com/adharshmk96/stk/pkg/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,7 +16,7 @@ func TestGetLoggerLogrus(t *testing.T) {
 	})
 
 	t.Run("set log level to 'error'", func(t *testing.T) {
-		os.Setenv(logging.EnvLogLevel, "error")
+		os.Setenv(logging.ENV_LOG_LEVEL, "error")
 		logger := logging.NewLogrusLogger()
 		assert.NotNil(t, logger, "logger should not be nil")
 
@@ -30,8 +30,8 @@ func TestGetLoggerLogrus(t *testing.T) {
 
 	t.Run("set log level to 'debug'", func(t *testing.T) {
 
-		os.Setenv(logging.EnvLogLevel, "debug")
-		defer os.Unsetenv(logging.EnvLogLevel)
+		os.Setenv(logging.ENV_LOG_LEVEL, "debug")
+		defer os.Unsetenv(logging.ENV_LOG_LEVEL)
 
 		logger := logging.NewLogrusLogger()
 		assert.NotNil(t, logger, "logger should not be nil")
@@ -43,8 +43,8 @@ func TestGetLoggerLogrus(t *testing.T) {
 
 	t.Run("default log level", func(t *testing.T) {
 
-		os.Setenv(logging.EnvLogLevel, "")
-		defer os.Unsetenv(logging.EnvLogLevel)
+		os.Setenv(logging.ENV_LOG_LEVEL, "")
+		defer os.Unsetenv(logging.ENV_LOG_LEVEL)
 
 		logger := logging.NewLogrusLogger()
 		assert.NotNil(t, logger, "logger should not be nil")

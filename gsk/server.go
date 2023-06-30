@@ -1,4 +1,4 @@
-package stk
+package gsk
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adharshmk96/stk/logging"
+	"github.com/adharshmk96/stk/pkg/logging"
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
 )

@@ -1,7 +1,7 @@
 /*
 Copyright © 2023 Adharsh M dev@adharsh.in
 */
-package stk
+package main
 
 import "github.com/adharshmk96/stk/cmd"
 

@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/adharshmk96/stk"
+	"github.com/adharshmk96/stk/gsk"
 )
 
 const (
@@ -16,8 +16,8 @@ const (
 	AccessControlAllowHeaders = "Access-Control-Allow-Headers"
 )
 
-func CORS(next stk.HandlerFunc) stk.HandlerFunc {
-	return func(c stk.Context) {
+func CORS(next gsk.HandlerFunc) gsk.HandlerFunc {
+	return func(c gsk.Context) {
 		allowedOrigins := getAllowedOrigins(c.GetAllowedOrigins())
 
 		origin := c.GetRequest().Header.Get("Host")
