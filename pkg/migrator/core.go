@@ -2,7 +2,6 @@ package migrator
 
 import (
 	"fmt"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -75,7 +74,7 @@ func parseMigrationType(s string) (MigrationType, error) {
 	}
 }
 
-func parseMigrationFromString(s string) (*Migration, error) {
+func ParseMigrationFromString(s string) (*Migration, error) {
 	parts := strings.Split(s, "_")
 	if len(parts) < 2 {
 		return nil, ErrInvalidFormat
@@ -110,39 +109,20 @@ func parseMigrationFromString(s string) (*Migration, error) {
 	}, nil
 }
 
-func parseMigrationsFromFilePaths(filePaths []string) ([]*Migration, error) {
-	migrations := make([]*Migration, 0, len(filePaths))
-	for _, filePath := range filePaths {
-		nameWithExt := filepath.Base(filePath)
-		ext := filepath.Ext(nameWithExt)
-		nameWithoutExt := strings.TrimSuffix(nameWithExt, ext)
-		migration, err := parseMigrationFromString(nameWithoutExt)
-		if err != nil {
-			return nil, err
-		}
-		migration.Path = filePath
-		if err != nil {
-			return nil, err
-		}
-
-		migrations = append(migrations, migration)
-	}
-
-	return migrations, nil
-}
-
 func sortMigrations(migrations []*Migration) {
 	sort.Slice(migrations, func(i, j int) bool {
 		return migrations[i].Number < migrations[j].Number
 	})
 }
 
-func migrationToFilename(migration *Migration) string {
+func MigrationToFilename(migration *Migration) string {
 	migration.Name = strings.ReplaceAll(migration.Name, " ", "_")
 	return fmt.Sprintf("%06d_%s_%s", migration.Number, migration.Name, migration.Type)
 }
 
 type DatabaseRepo interface {
+	// Loads last applied migration entry from database
+	LoadLastAppliedMigration() (*Migration, error)
 	// Create a migration table if not exists
 	CreateMigrationTableIfNotExists() error
 	// Get the last applied migration from the migration table
@@ -157,13 +137,15 @@ type DatabaseRepo interface {
 
 type FileRepo interface {
 	// Create a migration directory if not exists
-	OpenDirectory(path string) error
+	OpenDirectory() error
+	// Load migrations from directoryy
+	LoadMigrationsFromFile(migrationType MigrationType) ([]*Migration, error)
 	// Read all the files from the migration directory
-	GetMigrationFilePathsByType(path string, migrationType MigrationType) ([]string, error)
+	GetMigrationFilePathsByType(migrationType MigrationType) ([]string, error)
 	// Create a migration file
-	CreateMigrationFile(path string, migration *Migration) error
+	CreateMigrationFile(migration *Migration) error
 	// Write to File
-	WriteMigrationToFile(path string, migration *Migration) error
+	WriteMigrationToFile(migration *Migration) error
 	// Read Query from File
-	ReadMigrationQueryFromFile(path string) (string, error)
+	LoadMigrationQuery(migration *Migration) error
 }

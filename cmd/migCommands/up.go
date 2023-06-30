@@ -5,10 +5,12 @@ package migCommands
 
 import (
 	"log"
+	"path/filepath"
 
 	"github.com/adharshmk96/stk/pkg/db"
 	"github.com/adharshmk96/stk/pkg/migrator"
-	"github.com/adharshmk96/stk/pkg/migrator/database"
+	"github.com/adharshmk96/stk/pkg/migrator/dbrepo"
+	"github.com/adharshmk96/stk/pkg/migrator/fsrepo"
 	"github.com/spf13/cobra"
 )
 
@@ -20,20 +22,30 @@ var UpCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		rootDirectory := cmd.Flag("path").Value.String()
 		dbChoice := cmd.Flag("database").Value.String()
+
 		dryRun := cmd.Flag("dry-run").Value.String() == "true"
+
 		numToMigrate := getNumberFromArgs(args, 1)
 
+		// Select based on the database
+		dbType := migrator.SelectDatabase(dbChoice)
+		log.Println("selected database: ", dbType)
+
+		extention := migrator.GetExtention(dbType)
+		subDirectory := migrator.SelectSubDirectory(dbType)
+		fsRepo := fsrepo.NewFSRepo(filepath.Join(rootDirectory, subDirectory), extention)
+
 		conn := db.GetSqliteConnection("migration.db")
-		dbRepo := database.NewSqliteRepo(conn)
+		dbRepo := dbrepo.NewSqliteRepo(conn)
 
 		log.Println("Generating migration files...")
 
 		config := &migrator.MigratorConfig{
-			RootDirectory: rootDirectory,
-			Database:      dbChoice,
-			NumToMigrate:  numToMigrate,
-			DryRun:        dryRun,
-			DBRepo:        dbRepo,
+			NumToMigrate: numToMigrate,
+			DryRun:       dryRun,
+
+			FSRepo: fsRepo,
+			DBRepo: dbRepo,
 		}
 
 		_, err := migrator.MigrateUp(config)

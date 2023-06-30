@@ -14,6 +14,8 @@ var (
 	ErrReadingLastAppliedMigration = errors.New("error_reading_last_applied_migration")
 
 	// Storage
+	ErrLoadingMigrations = errors.New("error_loading_migrations")
+
 	ErrMigrationTableDoesNotExist = errors.New("error_migration_table_does_not_exist")
 	ErrDatabaseNotInitialized     = errors.New("error_database_not_initialized")
 )

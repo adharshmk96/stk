@@ -97,7 +97,7 @@ func TestParseStringToMigration(t *testing.T) {
 
 		for _, c := range tc {
 			t.Run(c.fileName, func(t *testing.T) {
-				actual, _ := parseMigrationFromString(c.fileName)
+				actual, _ := ParseMigrationFromString(c.fileName)
 
 				assert.Equal(t, c.expected.Number, actual.Number)
 				assert.Equal(t, c.expected.Name, actual.Name)
@@ -133,7 +133,7 @@ func TestParseStringToMigration(t *testing.T) {
 
 		for _, c := range tc {
 			t.Run(c.fileName, func(t *testing.T) {
-				mig, err := parseMigrationFromString(c.fileName)
+				mig, err := ParseMigrationFromString(c.fileName)
 				t.Log(mig)
 
 				assert.Equal(t, c.expected, err)
@@ -308,62 +308,11 @@ func TestMigrationToFilename(t *testing.T) {
 
 		for _, c := range tc {
 			t.Run(c.expected, func(t *testing.T) {
-				actual := migrationToFilename(c.migration)
+				actual := MigrationToFilename(c.migration)
 
 				assert.Equal(t, c.expected, actual)
 			})
 		}
 	})
 
-}
-
-func TestParseMigrationsFromFilePaths(t *testing.T) {
-	t.Run("parses migrations from file paths", func(t *testing.T) {
-		var filepaths []string
-		expected := make([]*Migration, 0)
-
-		for i := 1; i <= 10; i++ {
-			name := fmt.Sprintf("create_users_table%d", i)
-
-			up := fmt.Sprintf("%06d_%s_up.sql", i, name)
-			down := fmt.Sprintf("%06d_%s_down.sql", i, name)
-			filepaths = append(filepaths, up)
-			filepaths = append(filepaths, down)
-
-			expected = append(expected, &Migration{
-				Number: i,
-				Name:   name,
-				Type:   MigrationUp,
-				Path:   up,
-			})
-			expected = append(expected, &Migration{
-				Number: i,
-				Name:   name,
-				Type:   MigrationDown,
-				Path:   down,
-			})
-		}
-
-		actual, err := parseMigrationsFromFilePaths(filepaths)
-
-		assert.NoError(t, err)
-
-		for i := range filepaths {
-			assert.Equal(t, expected[i].Number, actual[i].Number)
-			assert.Equal(t, expected[i].Name, actual[i].Name)
-			assert.Equal(t, expected[i].Type, actual[i].Type)
-			assert.Equal(t, expected[i].Path, actual[i].Path)
-		}
-
-	})
-
-	t.Run("returns error if file path is invalid", func(t *testing.T) {
-		filepaths := []string{
-			"invalid",
-		}
-
-		_, err := parseMigrationsFromFilePaths(filepaths)
-
-		assert.Error(t, err)
-	})
 }

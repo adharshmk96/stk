@@ -5,9 +5,11 @@ package migCommands
 
 import (
 	"log"
+	"path/filepath"
 	"strconv"
 
 	"github.com/adharshmk96/stk/pkg/migrator"
+	"github.com/adharshmk96/stk/pkg/migrator/fsrepo"
 	"github.com/spf13/cobra"
 )
 
@@ -30,20 +32,30 @@ var GenerateCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		rootDirectory := cmd.Flag("path").Value.String()
-		database := cmd.Flag("database").Value.String()
+		dbChoice := cmd.Flag("database").Value.String()
+
 		dryRun := cmd.Flag("dry-run").Value.String() == "true"
 		fill := cmd.Flag("fill").Value.String() == "true"
+
 		numToGenerate := getNumberFromArgs(args, 1)
+
+		// Select based on the database
+		database := migrator.SelectDatabase(dbChoice)
+		log.Println("selected database: ", database)
+
+		extention := migrator.GetExtention(database)
+		subDirectory := migrator.SelectSubDirectory(database)
+		fsRepo := fsrepo.NewFSRepo(filepath.Join(rootDirectory, subDirectory), extention)
 
 		log.Println("Generating migration files...")
 
 		config := migrator.GeneratorConfig{
-			RootDirectory: rootDirectory,
 			Database:      database,
 			Name:          migrationName,
 			NumToGenerate: numToGenerate,
 			DryRun:        dryRun,
 			Fill:          fill,
+			FSRepo:        fsRepo,
 		}
 
 		err := migrator.Generate(config)

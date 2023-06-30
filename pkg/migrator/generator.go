@@ -3,81 +3,89 @@ package migrator
 import (
 	"fmt"
 	"log"
-	"path/filepath"
 )
 
 type GeneratorConfig struct {
-	RootDirectory string
-	Database      string
 	Name          string
 	NumToGenerate int
 	DryRun        bool
 	Fill          bool
+	Database      Database
+	FSRepo        FileRepo
 }
 
 func Generate(config GeneratorConfig) error {
-	// Select based on the database
-	database := SelectDatabase(config.Database)
-	log.Println("selected database: ", database)
-	workDirectory := openDirectory(config.RootDirectory, database)
-	log.Println("workdir: ", workDirectory)
+
+	fsRepo := config.FSRepo
 
 	// load migration from files
-	filePaths, err := getMigrationFilePathsByGroup(workDirectory, MigrationUp)
+	migrations, err := fsRepo.LoadMigrationsFromFile(MigrationUp)
 	if err != nil {
-		return ErrReadingFileNames
-	}
-
-	migrations, err := parseMigrationsFromFilePaths(filePaths)
-	if err != nil {
-		return ErrParsingMigrations
+		log.Fatalln("error loading migrations from file: ", err)
+		return ErrLoadingMigrations
 	}
 
 	sortMigrations(migrations)
 
-	lastMigrationNumber := migrations[len(migrations)-1].Number
+	var lastMigrationNumber int
 
-	if len(filePaths) > 0 {
-		lastMigrationNumber, err = getLastMigrationNumber(filePaths)
-		if err != nil {
-			return err
-		}
-
+	if len(migrations) == 0 {
+		lastMigrationNumber = 0
+	} else {
+		lastMigrationNumber = migrations[len(migrations)-1].Number
 	}
 
 	nextMigrations := generateNextMigrations(lastMigrationNumber, config.Name, config.NumToGenerate)
 
-	// refactor: populate migration struct with filepath instead.
-	for _, migration := range nextMigrations {
-		fileName := migrationToFilename(migration) + "." + GetExtention(database)
+	if config.DryRun {
+		dryRunGeneration(nextMigrations)
+		return nil
+	}
 
-		if config.DryRun {
-			log.Println("dry run: ", fileName)
-			continue
-		}
+	generateMigrationFiles(fsRepo, nextMigrations)
 
-		log.Println("generating file: ", filepath.Join(workDirectory, fileName))
-		err := createMigrationFile(workDirectory, fileName)
-		if err != nil {
-			return ErrCreatingMigrationFile
-		}
-
-		if config.Fill {
-			var content string
-			if migration.Type == MigrationUp {
-				content = fmt.Sprintf("CREATE TABLE %d_%s_%s (id INT PRIMARY KEY)", migration.Number, config.Name, migration.Type)
-			} else {
-				content = fmt.Sprintf("DROP TABLE %d_%s_%s", migration.Number, config.Name, migration.Type)
-			}
-			err = writeToMigrationFile(workDirectory, fileName, content)
-			if err != nil {
-				return ErrCreatingMigrationFile
-			}
-		}
+	if config.Fill {
+		fillMigrationFiles(fsRepo, config, nextMigrations)
 	}
 
 	return nil
 
+}
+
+func dryRunGeneration(migrations []*Migration) {
+	for _, migration := range migrations {
+		fileName := MigrationToFilename(migration)
+		log.Println("dry run: ", fileName)
+	}
+}
+
+func generateMigrationFiles(fsRepo FileRepo, migrations []*Migration) error {
+	for _, migration := range migrations {
+		err := fsRepo.CreateMigrationFile(migration)
+		log.Println("generating file: ", migration.Path)
+		if err != nil {
+			return ErrCreatingMigrationFile
+		}
+	}
+	return nil
+}
+
+func fillMigrationFiles(fsRepo FileRepo, config GeneratorConfig, migrations []*Migration) error {
+	for _, migration := range migrations {
+		var content string
+		if migration.Type == MigrationUp {
+			content = fmt.Sprintf("CREATE TABLE %d_%s_%s (id INT PRIMARY KEY)", migration.Number, config.Name, migration.Type)
+			migration.Query = content
+		} else {
+			content = fmt.Sprintf("DROP TABLE %d_%s_%s", migration.Number, config.Name, migration.Type)
+			migration.Query = content
+		}
+		err := fsRepo.WriteMigrationToFile(migration)
+		if err != nil {
+			return ErrCreatingMigrationFile
+		}
+	}
+	return nil
 }
 
 func generateNextMigrations(lastNumber int, name string, total int) []*Migration {
@@ -95,21 +103,4 @@ func generateNextMigrations(lastNumber int, name string, total int) []*Migration
 		})
 	}
 	return migrations
-}
-
-func getLastMigrationNumber(filePaths []string) (int, error) {
-	migrations, err := parseMigrationsFromFilePaths(filePaths)
-	if err != nil {
-		return 0, ErrParsingMigrations
-	}
-
-	sortMigrations(migrations)
-
-	lastMigrationNumber := migrations[len(migrations)-1].Number
-	return lastMigrationNumber, nil
-}
-
-func writeToMigrationFile(dir string, migrationFileName string, content string) error {
-	path := filepath.Join(dir, migrationFileName)
-	return writeToFile(path, content)
 }

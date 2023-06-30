@@ -1,4 +1,4 @@
-package database
+package dbrepo
 
 import (
 	"database/sql"
@@ -32,6 +32,15 @@ func NewSqliteRepo(conn *sql.DB) migrator.DatabaseRepo {
 	return &sqliteRepo{
 		conn: conn,
 	}
+}
+
+func (s *sqliteRepo) LoadLastAppliedMigration() (*migrator.Migration, error) {
+	err := s.CreateMigrationTableIfNotExists()
+	if err != nil {
+		return nil, err
+	}
+
+	return s.GetLastAppliedMigration()
 }
 
 func (s *sqliteRepo) CreateMigrationTableIfNotExists() error {
