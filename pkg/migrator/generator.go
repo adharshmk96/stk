@@ -74,10 +74,10 @@ func fillMigrationFiles(fsRepo FileRepo, config GeneratorConfig, migrations []*M
 	for _, migration := range migrations {
 		var content string
 		if migration.Type == MigrationUp {
-			content = fmt.Sprintf("CREATE TABLE %d_%s_%s (id INT PRIMARY KEY)", migration.Number, config.Name, migration.Type)
+			content = fmt.Sprintf("CREATE TABLE table_%d_%s (id INT PRIMARY KEY)", migration.Number, config.Name)
 			migration.Query = content
 		} else {
-			content = fmt.Sprintf("DROP TABLE %d_%s_%s", migration.Number, config.Name, migration.Type)
+			content = fmt.Sprintf("DROP TABLE table_%d_%s", migration.Number, config.Name)
 			migration.Query = content
 		}
 		err := fsRepo.WriteMigrationToFile(migration)

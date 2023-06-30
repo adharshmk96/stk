@@ -12,12 +12,13 @@ const (
 	sqlMigrationTable = "migdb_migration"
 
 	sqliteMigrationTableExists      = "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?;"
-	sqliteSelectMigrationEntries    = "SELECT name, migtype, created FROM " + sqlMigrationTable + " ORDER BY id ASC"
+	sqliteSelectMigrationEntries    = "SELECT number, name, migtype, created FROM " + sqlMigrationTable + " ORDER BY id ASC"
 	sqliteDropMigrationTable        = "DROP TABLE IF EXISTS " + sqlMigrationTable
-	sqliteLastAppliedMigrationEntry = "SELECT name, migtype, created FROM " + sqlMigrationTable + " ORDER BY id DESC LIMIT 1"
-	sqliteInsertMigrationEntry      = "INSERT INTO " + sqlMigrationTable + " (name, migtype) VALUES ($1, $2)"
+	sqliteLastAppliedMigrationEntry = "SELECT number, name, migtype, created FROM " + sqlMigrationTable + " ORDER BY id DESC LIMIT 1"
+	sqliteInsertMigrationEntry      = "INSERT INTO " + sqlMigrationTable + " (number, name, migtype) VALUES ($1, $2, $3)"
 	sqliteMigrationSchema           = `CREATE TABLE IF NOT EXISTS migdb_migration (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		number INTEGER NOT NULL,
 		name VARCHAR(255) NOT NULL,
 		migtype VARCHAR(5) NOT NULL,
 		created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -108,7 +109,7 @@ func (s *sqliteRepo) GetLastAppliedMigration() (*migrator.Migration, error) {
 	}
 	migType := migrator.MigrationType(migtype)
 	return &migrator.Migration{
-		Number:  0,
+		Number:  migrationNumber,
 		Name:    migrationName,
 		Type:    migType,
 		Created: migCreated,
@@ -125,7 +126,7 @@ func (s *sqliteRepo) ApplyMigration(mig *migrator.Migration) error {
 
 	migrationQuery := mig.Query
 
-	_, err = tx.Exec(sqliteInsertMigrationEntry, mig.Name, mig.Type)
+	_, err = tx.Exec(sqliteInsertMigrationEntry, mig.Number, mig.Name, mig.Type)
 	if err != nil {
 		tx.Rollback()
 		log.Fatal(err)

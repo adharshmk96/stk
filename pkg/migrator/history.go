@@ -2,7 +2,7 @@ package migrator
 
 import (
 	"fmt"
-	"time"
+	"strings"
 )
 
 func MigrationHistory(dbRepo DatabaseRepo) error {
@@ -11,27 +11,39 @@ func MigrationHistory(dbRepo DatabaseRepo) error {
 		return err
 	}
 
-	displayMigrations(migrations)
+	printTable(migrations)
 
 	return nil
 }
 
-func displayMigrations(migrations []*Migration) {
+func printTable(data []*Migration) {
+	header := []string{"Number", "Name", "Type", "Created"}
+	entries := make([][]string, len(data)+1)
+	columns := len(header)
 
-	if len(migrations) == 0 {
-		fmt.Println("No migrations found...")
-		return
+	entries[0] = header
+
+	for i, entry := range data {
+		entries[i+1] = []string{fmt.Sprintf("%06d", entry.Number), entry.Name, string(entry.Type), entry.Created.Format("2006-01-02")}
 	}
 
-	// Print headers
-	fmt.Printf("%-10s %-20s %-10s %-30s\n", "Number", "Name", "Type", "Created")
+	maxWidths := make([]int, columns)
 
-	// Print each migration
-	for _, migration := range migrations {
-		fmt.Printf("%-10d %-20s %-10s %-30s\n",
-			migration.Number,
-			migration.Name,
-			string(migration.Type),
-			migration.Created.Format(time.RFC3339))
+	for _, row := range entries {
+		for i, item := range row {
+			if len(item) > maxWidths[i] {
+				maxWidths[i] = len(item)
+			}
+		}
+	}
+
+	for _, row := range entries {
+		sb := strings.Builder{}
+
+		for i, item := range row {
+			sb.WriteString(item + strings.Repeat(" ", maxWidths[i]-len(item)+2))
+		}
+
+		fmt.Println(sb.String())
 	}
 }
