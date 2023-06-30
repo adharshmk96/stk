@@ -13,11 +13,11 @@ type DatabaseRepo struct {
 }
 
 // ApplyMigration provides a mock function with given fields: migration
-func (_m *DatabaseRepo) ApplyMigration(migration *migrator.MigrationWithQuery) error {
+func (_m *DatabaseRepo) ApplyMigration(migration *migrator.Migration) error {
 	ret := _m.Called(migration)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*migrator.MigrationWithQuery) error); ok {
+	if rf, ok := ret.Get(0).(func(*migrator.Migration) error); ok {
 		r0 = rf(migration)
 	} else {
 		r0 = ret.Error(0)
@@ -55,19 +55,19 @@ func (_m *DatabaseRepo) DeleteMigrationTable() error {
 }
 
 // GetLastAppliedMigration provides a mock function with given fields:
-func (_m *DatabaseRepo) GetLastAppliedMigration() (*migrator.MigrationEntry, error) {
+func (_m *DatabaseRepo) GetLastAppliedMigration() (*migrator.Migration, error) {
 	ret := _m.Called()
 
-	var r0 *migrator.MigrationEntry
+	var r0 *migrator.Migration
 	var r1 error
-	if rf, ok := ret.Get(0).(func() (*migrator.MigrationEntry, error)); ok {
+	if rf, ok := ret.Get(0).(func() (*migrator.Migration, error)); ok {
 		return rf()
 	}
-	if rf, ok := ret.Get(0).(func() *migrator.MigrationEntry); ok {
+	if rf, ok := ret.Get(0).(func() *migrator.Migration); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*migrator.MigrationEntry)
+			r0 = ret.Get(0).(*migrator.Migration)
 		}
 	}
 
@@ -81,19 +81,19 @@ func (_m *DatabaseRepo) GetLastAppliedMigration() (*migrator.MigrationEntry, err
 }
 
 // GetMigrationEntries provides a mock function with given fields:
-func (_m *DatabaseRepo) GetMigrationEntries() (*[]migrator.MigrationEntry, error) {
+func (_m *DatabaseRepo) GetMigrationEntries() ([]*migrator.Migration, error) {
 	ret := _m.Called()
 
-	var r0 *[]migrator.MigrationEntry
+	var r0 []*migrator.Migration
 	var r1 error
-	if rf, ok := ret.Get(0).(func() (*[]migrator.MigrationEntry, error)); ok {
+	if rf, ok := ret.Get(0).(func() ([]*migrator.Migration, error)); ok {
 		return rf()
 	}
-	if rf, ok := ret.Get(0).(func() *[]migrator.MigrationEntry); ok {
+	if rf, ok := ret.Get(0).(func() []*migrator.Migration); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*[]migrator.MigrationEntry)
+			r0 = ret.Get(0).([]*migrator.Migration)
 		}
 	}
 

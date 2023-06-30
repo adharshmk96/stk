@@ -56,10 +56,12 @@ func GetExtention(database Database) string {
 }
 
 type Migration struct {
-	Number int
-	Name   string
-	Type   MigrationType
-	Path   string
+	Number  int
+	Name    string
+	Type    MigrationType
+	Path    string
+	Query   string
+	Created time.Time
 }
 
 func parseMigrationType(s string) (MigrationType, error) {
@@ -140,27 +142,15 @@ func migrationToFilename(migration *Migration) string {
 	return fmt.Sprintf("%06d_%s_%s", migration.Number, migration.Name, migration.Type)
 }
 
-type MigrationWithQuery struct {
-	Migration *Migration
-	Query     string
-}
-
-type MigrationEntry struct {
-	Number  int
-	Name    string
-	Type    MigrationType
-	Created time.Time
-}
-
 type DatabaseRepo interface {
 	// Create a migration table if not exists
 	CreateMigrationTableIfNotExists() error
 	// Get the last applied migration from the migration table
-	GetLastAppliedMigration() (*MigrationEntry, error)
+	GetLastAppliedMigration() (*Migration, error)
 	// Apply a migration to the database and add an entry to the migration table
-	ApplyMigration(migration *MigrationWithQuery) error
+	ApplyMigration(migration *Migration) error
 	// Get all the migration entries from the migration table
-	GetMigrationEntries() (*[]MigrationEntry, error)
+	GetMigrationEntries() ([]*Migration, error)
 	// Delete the migration table
 	DeleteMigrationTable() error
 }

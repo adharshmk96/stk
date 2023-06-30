@@ -30,6 +30,19 @@
                 "project",
                 "generate",
             ]
-        }
+        },
+        {
+            "name": "stk migrator up --dry-run",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/main.go",
+            "env": {},
+            "args": [
+                "migrator",
+                "up",
+                "--dry-run"
+            ]
+        },
     ]
 }

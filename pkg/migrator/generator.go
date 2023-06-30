@@ -1,6 +1,10 @@
 package migrator
 
-import "log"
+import (
+	"fmt"
+	"log"
+	"path/filepath"
+)
 
 type GeneratorConfig struct {
 	RootDirectory string
@@ -8,6 +12,7 @@ type GeneratorConfig struct {
 	Name          string
 	NumToGenerate int
 	DryRun        bool
+	Fill          bool
 }
 
 func Generate(config GeneratorConfig) error {
@@ -42,10 +47,23 @@ func Generate(config GeneratorConfig) error {
 			continue
 		}
 
-		log.Println("generating file: ", fileName)
+		log.Println("generating file: ", filepath.Join(workDirectory, fileName))
 		err := createMigrationFile(workDirectory, fileName)
 		if err != nil {
 			return ErrCreatingMigrationFile
+		}
+
+		if config.Fill {
+			var content string
+			if migration.Type == MigrationUp {
+				content = fmt.Sprintf("CREATE TABLE %d_%s_%s (id INT PRIMARY KEY)", migration.Number, config.Name, migration.Type)
+			} else {
+				content = fmt.Sprintf("DROP TABLE %d_%s_%s", migration.Number, config.Name, migration.Type)
+			}
+			err = writeToMigrationFile(workDirectory, fileName, content)
+			if err != nil {
+				return ErrCreatingMigrationFile
+			}
 		}
 	}
 
@@ -80,4 +98,9 @@ func getLastMigrationNumber(filePaths []string) (int, error) {
 
 	lastMigrationNumber := migrations[len(migrations)-1].Number
 	return lastMigrationNumber, nil
+}
+
+func writeToMigrationFile(dir string, migrationFileName string, content string) error {
+	path := filepath.Join(dir, migrationFileName)
+	return writeToFile(path, content)
 }

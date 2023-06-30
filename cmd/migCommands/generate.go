@@ -1,7 +1,7 @@
 /*
 Copyright © 2023 Adharsh M dev@adharsh.in
 */
-package migrator
+package migCommands
 
 import (
 	"log"
@@ -27,11 +27,12 @@ func getNumberFromArgs(args []string, defaultValue int) int {
 var GenerateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "generate migration files",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		rootDirectory := cmd.Flag("path").Value.String()
 		database := cmd.Flag("database").Value.String()
 		dryRun := cmd.Flag("dry-run").Value.String() == "true"
+		fill := cmd.Flag("fill").Value.String() == "true"
 		numToGenerate := getNumberFromArgs(args, 1)
 
 		log.Println("Generating migration files...")
@@ -42,6 +43,7 @@ var GenerateCmd = &cobra.Command{
 			Name:          migrationName,
 			NumToGenerate: numToGenerate,
 			DryRun:        dryRun,
+			Fill:          fill,
 		}
 
 		err := migrator.Generate(config)
@@ -57,4 +59,5 @@ var GenerateCmd = &cobra.Command{
 func init() {
 	GenerateCmd.Flags().StringVarP(&migrationName, "name", "n", "", "migration name")
 	GenerateCmd.Flags().Bool("dry-run", false, "dry run, do not generate files")
+	GenerateCmd.Flags().Bool("fill", false, "fill the created files with sample content")
 }

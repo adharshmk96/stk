@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
@@ -43,7 +42,7 @@ func (s *sqliteRepo) CreateMigrationTableIfNotExists() error {
 	return nil
 }
 
-func (s *sqliteRepo) GetLastAppliedMigration() (*migrator.MigrationEntry, error) {
+func (s *sqliteRepo) GetLastAppliedMigration() (*migrator.Migration, error) {
 	var migrationNumber int
 	var migrationName string
 	var migtype string
@@ -56,7 +55,7 @@ func (s *sqliteRepo) GetLastAppliedMigration() (*migrator.MigrationEntry, error)
 		return nil, err
 	}
 	migType := migrator.MigrationType(migtype)
-	return &migrator.MigrationEntry{
+	return &migrator.Migration{
 		Number:  0,
 		Name:    migrationName,
 		Type:    migType,
@@ -65,7 +64,7 @@ func (s *sqliteRepo) GetLastAppliedMigration() (*migrator.MigrationEntry, error)
 
 }
 
-func (s *sqliteRepo) ApplyMigration(mig *migrator.MigrationWithQuery) error {
+func (s *sqliteRepo) ApplyMigration(mig *migrator.Migration) error {
 
 	tx, err := s.conn.Begin()
 	if err != nil {
@@ -75,7 +74,7 @@ func (s *sqliteRepo) ApplyMigration(mig *migrator.MigrationWithQuery) error {
 
 	migrationQuery := mig.Query
 
-	_, err = tx.Exec(sqliteInsertMigrationEntry, mig.Migration.Name, mig.Migration.Type)
+	_, err = tx.Exec(sqliteInsertMigrationEntry, mig.Name, mig.Type)
 	if err != nil {
 		tx.Rollback()
 		log.Fatal(err)
@@ -100,12 +99,12 @@ func (s *sqliteRepo) ApplyMigration(mig *migrator.MigrationWithQuery) error {
 	return nil
 }
 
-func (s *sqliteRepo) GetMigrationEntries() (*[]migrator.MigrationEntry, error) {
+func (s *sqliteRepo) GetMigrationEntries() ([]*migrator.Migration, error) {
 	var exists bool
 	err := s.conn.QueryRow(sqliteMigrationTableExists, sqlMigrationTable).Scan(&exists)
 
 	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("migration table does not exist")
+		return nil, migrator.ErrMigrationTableDoesNotExist
 	} else if err != nil {
 		return nil, err
 	}
@@ -115,7 +114,7 @@ func (s *sqliteRepo) GetMigrationEntries() (*[]migrator.MigrationEntry, error) {
 		return nil, err
 	}
 
-	var history []migrator.MigrationEntry
+	var history []*migrator.Migration
 
 	for rows.Next() {
 		var migrationNumber int
@@ -132,7 +131,7 @@ func (s *sqliteRepo) GetMigrationEntries() (*[]migrator.MigrationEntry, error) {
 			return nil, err
 		}
 		migType := migrator.MigrationType(migtype)
-		history = append(history, migrator.MigrationEntry{
+		history = append(history, &migrator.Migration{
 			Number:  migrationNumber,
 			Name:    migrationName,
 			Type:    migType,
@@ -140,7 +139,7 @@ func (s *sqliteRepo) GetMigrationEntries() (*[]migrator.MigrationEntry, error) {
 		})
 	}
 
-	return &history, nil
+	return history, nil
 }
 
 func (s *sqliteRepo) DeleteMigrationTable() error {

@@ -1,6 +1,7 @@
 package migrator
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,6 +22,8 @@ func openDirectory(root string, database Database) string {
 
 	directory := filepath.Join(root, subDirectory)
 	mkPathIfNotExists(directory)
+
+	fmt.Println(directory)
 
 	return directory
 }
@@ -93,4 +96,21 @@ func createFile(path string) error {
 func createMigrationFile(dir string, migrationFileName string) error {
 	path := filepath.Join(dir, migrationFileName)
 	return createFile(path)
+}
+
+func writeToFile(path string, content string) error {
+	err := os.WriteFile(path, []byte(content), 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func readFileContents(path string) (string, error) {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	return string(content), nil
 }
