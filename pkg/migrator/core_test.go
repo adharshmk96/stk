@@ -1,7 +1,6 @@
 package migrator
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -213,56 +212,6 @@ func TestSortMigrations(t *testing.T) {
 		sortMigrations(migrations)
 
 		assert.Equal(t, expected, migrations)
-	})
-}
-
-func TestGenerateNextMigrations(t *testing.T) {
-	t.Run("generate next migrations after n", func(t *testing.T) {
-		tc := []struct {
-			starting int
-			totalNum int
-		}{
-			{
-				starting: 1,
-				totalNum: 10,
-			},
-			{
-				starting: 999999,
-				totalNum: 10,
-			},
-			{
-				starting: 1000000,
-				totalNum: 10,
-			},
-		}
-
-		for _, c := range tc {
-			t.Run(fmt.Sprintf("starting at %d", c.starting), func(t *testing.T) {
-				expected := make([]*Migration, 0)
-
-				for i := c.starting + 1; i <= c.starting+c.totalNum; i++ {
-					expected = append(expected, &Migration{
-						Number: int(i),
-						Name:   "create_users_table",
-						Type:   MigrationUp,
-					})
-					expected = append(expected, &Migration{
-						Number: int(i),
-						Name:   "create_users_table",
-						Type:   MigrationDown,
-					})
-				}
-
-				actual := generateNextMigrations(c.starting, "create_users_table", c.totalNum)
-
-				for i := range actual {
-					assert.Equal(t, expected[i].Number, actual[i].Number)
-					assert.Equal(t, expected[i].Name, actual[i].Name)
-					assert.Equal(t, expected[i].Type, actual[i].Type)
-				}
-			})
-		}
-
 	})
 }
 

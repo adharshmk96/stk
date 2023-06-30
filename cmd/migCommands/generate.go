@@ -38,7 +38,6 @@ var GenerateCmd = &cobra.Command{
 		log.Println("Generating migration files...")
 
 		config := migrator.GeneratorConfig{
-			Database:      database,
 			Name:          migrationName,
 			NumToGenerate: numToGenerate,
 			DryRun:        dryRun,

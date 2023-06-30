@@ -80,8 +80,34 @@ func (_m *DatabaseRepo) GetLastAppliedMigration() (*migrator.Migration, error) {
 	return r0, r1
 }
 
-// GetMigrationEntries provides a mock function with given fields:
-func (_m *DatabaseRepo) GetMigrationEntries() ([]*migrator.Migration, error) {
+// LoadLastAppliedMigration provides a mock function with given fields:
+func (_m *DatabaseRepo) LoadLastAppliedMigration() (*migrator.Migration, error) {
+	ret := _m.Called()
+
+	var r0 *migrator.Migration
+	var r1 error
+	if rf, ok := ret.Get(0).(func() (*migrator.Migration, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() *migrator.Migration); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*migrator.Migration)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// LoadMigrations provides a mock function with given fields:
+func (_m *DatabaseRepo) LoadMigrations() ([]*migrator.Migration, error) {
 	ret := _m.Called()
 
 	var r0 []*migrator.Migration

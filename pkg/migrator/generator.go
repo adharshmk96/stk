@@ -10,7 +10,6 @@ type GeneratorConfig struct {
 	NumToGenerate int
 	DryRun        bool
 	Fill          bool
-	Database      Database
 	FSRepo        FileRepo
 }
 
@@ -21,11 +20,9 @@ func Generate(config GeneratorConfig) error {
 	// load migration from files
 	migrations, err := fsRepo.LoadMigrationsFromFile(MigrationUp)
 	if err != nil {
-		log.Fatalln("error loading migrations from file: ", err)
+		log.Println("error loading migrations from file: ", err)
 		return ErrLoadingMigrations
 	}
-
-	sortMigrations(migrations)
 
 	var lastMigrationNumber int
 
@@ -35,17 +32,17 @@ func Generate(config GeneratorConfig) error {
 		lastMigrationNumber = migrations[len(migrations)-1].Number
 	}
 
-	nextMigrations := generateNextMigrations(lastMigrationNumber, config.Name, config.NumToGenerate)
+	nextMigrations := GenerateNextMigrations(lastMigrationNumber, config.Name, config.NumToGenerate)
 
 	if config.DryRun {
 		dryRunGeneration(nextMigrations)
 		return nil
 	}
 
-	generateMigrationFiles(fsRepo, nextMigrations)
+	GenerateMigrationFiles(fsRepo, nextMigrations)
 
 	if config.Fill {
-		fillMigrationFiles(fsRepo, config, nextMigrations)
+		FillMigrationFiles(fsRepo, config, nextMigrations)
 	}
 
 	return nil
@@ -59,7 +56,7 @@ func dryRunGeneration(migrations []*Migration) {
 	}
 }
 
-func generateMigrationFiles(fsRepo FileRepo, migrations []*Migration) error {
+func GenerateMigrationFiles(fsRepo FileRepo, migrations []*Migration) error {
 	for _, migration := range migrations {
 		err := fsRepo.CreateMigrationFile(migration)
 		log.Println("generating file: ", migration.Path)
@@ -70,7 +67,7 @@ func generateMigrationFiles(fsRepo FileRepo, migrations []*Migration) error {
 	return nil
 }
 
-func fillMigrationFiles(fsRepo FileRepo, config GeneratorConfig, migrations []*Migration) error {
+func FillMigrationFiles(fsRepo FileRepo, config GeneratorConfig, migrations []*Migration) error {
 	for _, migration := range migrations {
 		var content string
 		if migration.Type == MigrationUp {
@@ -88,7 +85,7 @@ func fillMigrationFiles(fsRepo FileRepo, config GeneratorConfig, migrations []*M
 	return nil
 }
 
-func generateNextMigrations(lastNumber int, name string, total int) []*Migration {
+func GenerateNextMigrations(lastNumber int, name string, total int) []*Migration {
 	migrations := make([]*Migration, 0, total)
 	for i := 0; i < total; i++ {
 		migrations = append(migrations, &Migration{
