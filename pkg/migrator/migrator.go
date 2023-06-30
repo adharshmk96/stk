@@ -10,30 +10,33 @@ type MigratorConfig struct {
 	DBRepo        DatabaseRepo
 }
 
-func MigrateUp(config *MigratorConfig) (err error) {
+func MigrateUp(config *MigratorConfig) ([]*Migration, error) {
 	// Select based on the database
 	database := SelectDatabase(config.Database)
 	log.Println("selected database: ", database)
 
 	if config.DBRepo == nil {
 		log.Fatalf("database is not initialized")
-		return ErrDatabaseNotInitialized
+		return nil, ErrDatabaseNotInitialized
 	}
 	// Read last applied migration from database
-	err = config.DBRepo.CreateMigrationTableIfNotExists()
+	err := config.DBRepo.CreateMigrationTableIfNotExists()
 	if err != nil {
-		return ErrMigrationTableDoesNotExist
+		return nil, ErrMigrationTableDoesNotExist
 	}
 	lastAppliedMigration, err := config.DBRepo.GetLastAppliedMigration()
 	if err != nil {
-		return ErrReadingLastAppliedMigration
+		return nil, ErrReadingLastAppliedMigration
 	}
 
 	// Read and parse all migrations from directory
 	migrations, err := loadMigrationsFromFile(config, database)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	// Sort the migrations
+	sortMigrations(migrations)
+
 	log.Println("loaded migrations: ")
 	for _, v := range migrations {
 		log.Println(" - ", v.Number, v.Name)
@@ -50,10 +53,10 @@ func MigrateUp(config *MigratorConfig) (err error) {
 	// Apply migrations and add entries to database
 	err = applyMigrations(config, migrationsToApply)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return migrationsToApply, nil
 
 }
 
@@ -79,9 +82,6 @@ func loadMigrationsFromFile(config *MigratorConfig, database Database) ([]*Migra
 	if err != nil {
 		return nil, ErrParsingMigrations
 	}
-
-	// Sort the migrations
-	sortMigrations(migrations)
 
 	return migrations, nil
 }
@@ -134,20 +134,21 @@ func max(a int, b int) int {
 }
 
 func findUpMigrationsToApply(lastMigration *Migration, migrations []*Migration, numberToMigrate int) []*Migration {
+	var startIdx, lastIdx int
 	if lastMigration == nil {
-		return migrations
-	}
-	idx := findNextMigrationIndex(migrations, lastMigration.Number)
-	if lastMigration.Type == MigrationDown {
-		startIdx := max(idx-1, 0)
-		lastIdx := min(startIdx+numberToMigrate, len(migrations))
-		return migrations[startIdx:lastIdx]
+		startIdx = 0
+		lastIdx = min(startIdx+numberToMigrate, len(migrations))
 	} else {
-		startIdx := max(idx, 0)
-		lastIdx := min(startIdx+numberToMigrate, len(migrations))
-		return migrations[startIdx:lastIdx]
-
+		idx := findNextMigrationIndex(migrations, lastMigration.Number)
+		if lastMigration.Type == MigrationDown {
+			startIdx = max(idx-1, 0)
+			lastIdx = min(startIdx+numberToMigrate, len(migrations))
+		} else {
+			startIdx = max(idx, 0)
+			lastIdx = min(startIdx+numberToMigrate, len(migrations))
+		}
 	}
+	return migrations[startIdx:lastIdx]
 }
 
 func readMigrationQuery(migration *Migration) string {

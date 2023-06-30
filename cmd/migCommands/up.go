@@ -36,7 +36,7 @@ var UpCmd = &cobra.Command{
 			DBRepo:        dbRepo,
 		}
 
-		err := migrator.MigrateUp(config)
+		_, err := migrator.MigrateUp(config)
 		if err != nil {
 			log.Fatal(err)
 			return

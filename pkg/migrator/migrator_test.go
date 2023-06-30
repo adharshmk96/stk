@@ -105,6 +105,15 @@ func Test_findUpMigrationsToApply(t *testing.T) {
 			},
 			want: migrations,
 		},
+		{
+			name: "return all migrations if last migration is nil",
+			args: args{
+				lastMigration:   nil,
+				migrations:      migrations,
+				numberToMigrate: 2,
+			},
+			want: migrations[:2],
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

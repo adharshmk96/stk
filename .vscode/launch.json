@@ -41,6 +41,7 @@
             "args": [
                 "migrator",
                 "up",
+                "2",
                 "--dry-run"
             ]
         },
