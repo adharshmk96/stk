@@ -22,12 +22,20 @@ func Generate(config GeneratorConfig) error {
 	workDirectory := openDirectory(config.RootDirectory, database)
 	log.Println("workdir: ", workDirectory)
 
+	// load migration from files
 	filePaths, err := getMigrationFilePathsByGroup(workDirectory, MigrationUp)
 	if err != nil {
 		return ErrReadingFileNames
 	}
 
-	lastMigrationNumber := 0
+	migrations, err := parseMigrationsFromFilePaths(filePaths)
+	if err != nil {
+		return ErrParsingMigrations
+	}
+
+	sortMigrations(migrations)
+
+	lastMigrationNumber := migrations[len(migrations)-1].Number
 
 	if len(filePaths) > 0 {
 		lastMigrationNumber, err = getLastMigrationNumber(filePaths)
@@ -39,6 +47,7 @@ func Generate(config GeneratorConfig) error {
 
 	nextMigrations := generateNextMigrations(lastMigrationNumber, config.Name, config.NumToGenerate)
 
+	// refactor: populate migration struct with filepath instead.
 	for _, migration := range nextMigrations {
 		fileName := migrationToFilename(migration) + "." + GetExtention(database)
 

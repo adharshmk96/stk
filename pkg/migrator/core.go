@@ -154,3 +154,16 @@ type DatabaseRepo interface {
 	// Delete the migration table
 	DeleteMigrationTable() error
 }
+
+type FileRepo interface {
+	// Create a migration directory if not exists
+	OpenDirectory(path string) error
+	// Read all the files from the migration directory
+	GetMigrationFilePathsByType(path string, migrationType MigrationType) ([]string, error)
+	// Create a migration file
+	CreateMigrationFile(path string, migration *Migration) error
+	// Write to File
+	WriteMigrationToFile(path string, migration *Migration) error
+	// Read Query from File
+	ReadMigrationQueryFromFile(path string) (string, error)
+}

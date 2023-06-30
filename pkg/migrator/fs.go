@@ -51,6 +51,7 @@ func getMigrationFilePathsByGroup(dir string, migrationType MigrationType) ([]st
 	return migrationFilePaths, nil
 }
 
+// TODO Remove this.
 func getMigrationFileNamesByGroup(dir string, migrationType MigrationType) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
