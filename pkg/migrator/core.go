@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type MigrationType string
@@ -143,4 +144,29 @@ func generateNextMigrations(lastNumber int, name string, total int) []*Migration
 func migrationToFilename(migration *Migration) string {
 	migration.Name = strings.ReplaceAll(migration.Name, " ", "_")
 	return fmt.Sprintf("%06d_%s_%s", migration.Number, migration.Name, migration.Type)
+}
+
+type MigrationWithQuery struct {
+	Migration *Migration
+	Query     string
+}
+
+type MigrationEntry struct {
+	Number  int
+	Name    string
+	Type    MigrationType
+	Created time.Time
+}
+
+type DatabaseRepo interface {
+	// Create a migration table if not exists
+	OpenMigrationTable() error
+	// Get the last applied migration from the migration table
+	GetLastAppliedMigrationFromDatabase() (*Migration, error)
+	// Apply a migration to the database and add an entry to the migration table
+	ApplyMigration(migration *MigrationWithQuery) error
+	// Get all the migration entries from the migration table
+	GetMigrationEntries() (*[]MigrationEntry, error)
+	// Delete the migration table
+	DeleteMigrationTable() error
 }
