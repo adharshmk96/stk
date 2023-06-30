@@ -7,7 +7,7 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/adharshmk96/stk/internal/migrator"
+	"github.com/adharshmk96/stk/pkg/migrator"
 	"github.com/spf13/cobra"
 )
 

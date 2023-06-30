@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/adharshmk96/stk/gsk"
-	"github.com/adharshmk96/stk/middleware"
+	"github.com/adharshmk96/stk/pkg/middleware"
 	"github.com/stretchr/testify/assert"
 )
 

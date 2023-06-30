@@ -1,16 +1,20 @@
 package logging
 
 import (
-	"github.com/adharshmk96/stk/utils"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 const (
-	EnvLogLevel = "LOG_LEVEL"
+	ENV_LOG_LEVEL = "LOG_LEVEL"
+
+	DEFAULT_LOG_LEVEL = "info"
 )
 
 func setLoggingLevel(logger *logrus.Logger) {
-	logLevel := utils.GetEnvOrDefault(EnvLogLevel, "info")
+	viper.SetDefault(ENV_LOG_LEVEL, DEFAULT_LOG_LEVEL)
+	viper.AutomaticEnv()
+	logLevel := viper.GetString(ENV_LOG_LEVEL)
 
 	switch logLevel {
 	case "debug":

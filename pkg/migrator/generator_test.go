@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/adharshmk96/stk/internal/migrator"
+	"github.com/adharshmk96/stk/pkg/migrator"
 	"github.com/stretchr/testify/assert"
 )
 

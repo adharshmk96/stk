@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/adharshmk96/stk/internal/migrator"
+	"github.com/adharshmk96/stk/pkg/migrator"
 )
 
 var upFileNames = []string{
