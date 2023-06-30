@@ -57,7 +57,7 @@ type Migration struct {
 	Type   MigrationType
 }
 
-func ParseMigrationType(s string) (MigrationType, error) {
+func parseMigrationType(s string) (MigrationType, error) {
 	switch s {
 	case "up":
 		return MigrationUp, nil
@@ -68,7 +68,7 @@ func ParseMigrationType(s string) (MigrationType, error) {
 	}
 }
 
-func ParseMigration(s string) (*Migration, error) {
+func parseMigration(s string) (*Migration, error) {
 	parts := strings.Split(s, "_")
 	if len(parts) < 2 {
 		return nil, ErrInvalidFormat
@@ -85,7 +85,7 @@ func ParseMigration(s string) (*Migration, error) {
 
 	// parse last part for migration type
 	mType := parts[len(parts)-1]
-	migrationType, err := ParseMigrationType(mType)
+	migrationType, err := parseMigrationType(mType)
 	if err != nil {
 		return nil, ErrInvalidFormat
 	}
@@ -103,10 +103,10 @@ func ParseMigration(s string) (*Migration, error) {
 	}, nil
 }
 
-func ParseMigrationsFromFilenames(filenames []string) ([]*Migration, error) {
+func parseMigrationsFromFilenames(filenames []string) ([]*Migration, error) {
 	migrations := make([]*Migration, 0, len(filenames))
 	for _, filename := range filenames {
-		migration, err := ParseMigration(filename)
+		migration, err := parseMigration(filename)
 		if err != nil {
 			return nil, err
 		}
@@ -117,13 +117,13 @@ func ParseMigrationsFromFilenames(filenames []string) ([]*Migration, error) {
 	return migrations, nil
 }
 
-func SortMigrations(migrations []*Migration) {
+func sortMigrations(migrations []*Migration) {
 	sort.Slice(migrations, func(i, j int) bool {
 		return migrations[i].Number < migrations[j].Number
 	})
 }
 
-func GenerateNextMigrations(lastNumber int, name string, total int) []*Migration {
+func generateNextMigrations(lastNumber int, name string, total int) []*Migration {
 	migrations := make([]*Migration, 0, total)
 	for i := 0; i < total; i++ {
 		migrations = append(migrations, &Migration{
@@ -140,7 +140,7 @@ func GenerateNextMigrations(lastNumber int, name string, total int) []*Migration
 	return migrations
 }
 
-func MigrationToFilename(migration *Migration) string {
+func migrationToFilename(migration *Migration) string {
 	migration.Name = strings.ReplaceAll(migration.Name, " ", "_")
 	return fmt.Sprintf("%06d_%s_%s", migration.Number, migration.Name, migration.Type)
 }

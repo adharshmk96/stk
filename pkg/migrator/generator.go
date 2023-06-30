@@ -14,10 +14,10 @@ func Generate(config GeneratorConfig) error {
 	// Select based on the database
 	database := SelectDatabase(config.Database)
 	log.Println("selected database: ", database)
-	workDirectory := OpenDirectory(config.RootDirectory, database)
+	workDirectory := openDirectory(config.RootDirectory, database)
 	log.Println("workdir: ", workDirectory)
 
-	fileNames, err := GetMigrationFileGroup(workDirectory, MigrationUp)
+	fileNames, err := getMigrationFileGroup(workDirectory, MigrationUp)
 	if err != nil {
 		return ErrReadingFileNames
 	}
@@ -32,10 +32,10 @@ func Generate(config GeneratorConfig) error {
 
 	}
 
-	nextMigrations := GenerateNextMigrations(lastMigrationNumber, config.Name, config.NumToGenerate)
+	nextMigrations := generateNextMigrations(lastMigrationNumber, config.Name, config.NumToGenerate)
 
 	for _, migration := range nextMigrations {
-		fileName := MigrationToFilename(migration) + "." + GetExtention(database)
+		fileName := migrationToFilename(migration) + "." + GetExtention(database)
 
 		if config.DryRun {
 			log.Println("dry run: ", fileName)
@@ -43,7 +43,7 @@ func Generate(config GeneratorConfig) error {
 		}
 
 		log.Println("generating file: ", fileName)
-		err := CreateMigrationFile(workDirectory, fileName)
+		err := createMigrationFile(workDirectory, fileName)
 		if err != nil {
 			return ErrCreatingMigrationFile
 		}
@@ -54,12 +54,12 @@ func Generate(config GeneratorConfig) error {
 }
 
 func getLastMigrationNumber(fileNames []string) (int, error) {
-	migrations, err := ParseMigrationsFromFilenames(fileNames)
+	migrations, err := parseMigrationsFromFilenames(fileNames)
 	if err != nil {
 		return 0, ErrParsingMigrations
 	}
 
-	SortMigrations(migrations)
+	sortMigrations(migrations)
 
 	lastMigrationNumber := migrations[len(migrations)-1].Number
 	return lastMigrationNumber, nil

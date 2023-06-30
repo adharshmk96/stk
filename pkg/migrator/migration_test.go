@@ -1,10 +1,9 @@
-package migrator_test
+package migrator
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/adharshmk96/stk/pkg/migrator"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,93 +11,93 @@ func TestParseStringToMigration(t *testing.T) {
 	t.Run("parse string to migration", func(t *testing.T) {
 		tc := []struct {
 			fileName string
-			expected *migrator.Migration
+			expected *Migration
 		}{
 			{
 				fileName: "1000002_up",
-				expected: &migrator.Migration{
+				expected: &Migration{
 					Number: 1000002,
 					Name:   "",
-					Type:   migrator.MigrationUp,
+					Type:   MigrationUp,
 				},
 			},
 			{
 				fileName: "1000002__down",
-				expected: &migrator.Migration{
+				expected: &Migration{
 					Number: 1000002,
 					Name:   "",
-					Type:   migrator.MigrationDown,
+					Type:   MigrationDown,
 				},
 			},
 			{
 				fileName: "2__up",
-				expected: &migrator.Migration{
+				expected: &Migration{
 					Number: 2,
 					Name:   "",
-					Type:   migrator.MigrationUp,
+					Type:   MigrationUp,
 				},
 			},
 			{
 				fileName: "2_down",
-				expected: &migrator.Migration{
+				expected: &Migration{
 					Number: 2,
 					Name:   "",
-					Type:   migrator.MigrationDown,
+					Type:   MigrationDown,
 				},
 			},
 			{
 				fileName: "1_create_users_table_up",
-				expected: &migrator.Migration{
+				expected: &Migration{
 					Number: 1,
 					Name:   "create_users_table",
-					Type:   migrator.MigrationUp,
+					Type:   MigrationUp,
 				},
 			},
 			{
 				fileName: "1_create_users_table_down",
-				expected: &migrator.Migration{
+				expected: &Migration{
 					Number: 1,
 					Name:   "create_users_table",
-					Type:   migrator.MigrationDown,
+					Type:   MigrationDown,
 				},
 			},
 			{
 				fileName: "000002_create_posts_table_up",
-				expected: &migrator.Migration{
+				expected: &Migration{
 					Number: 2,
 					Name:   "create_posts_table",
-					Type:   migrator.MigrationUp,
+					Type:   MigrationUp,
 				},
 			},
 			{
 				fileName: "000002_create_posts_table_down",
-				expected: &migrator.Migration{
+				expected: &Migration{
 					Number: 2,
 					Name:   "create_posts_table",
-					Type:   migrator.MigrationDown,
+					Type:   MigrationDown,
 				},
 			},
 			{
 				fileName: "1000002_create_posts_table_up",
-				expected: &migrator.Migration{
+				expected: &Migration{
 					Number: 1000002,
 					Name:   "create_posts_table",
-					Type:   migrator.MigrationUp,
+					Type:   MigrationUp,
 				},
 			},
 			{
 				fileName: "1000002_create_posts_table_down",
-				expected: &migrator.Migration{
+				expected: &Migration{
 					Number: 1000002,
 					Name:   "create_posts_table",
-					Type:   migrator.MigrationDown,
+					Type:   MigrationDown,
 				},
 			},
 		}
 
 		for _, c := range tc {
 			t.Run(c.fileName, func(t *testing.T) {
-				actual, _ := migrator.ParseMigration(c.fileName)
+				actual, _ := parseMigration(c.fileName)
 
 				assert.Equal(t, c.expected.Number, actual.Number)
 				assert.Equal(t, c.expected.Name, actual.Name)
@@ -116,25 +115,25 @@ func TestParseStringToMigration(t *testing.T) {
 		}{
 			{
 				fileName: "1000002",
-				expected: migrator.ErrInvalidFormat,
+				expected: ErrInvalidFormat,
 			},
 			{
 				fileName: "1000002_",
-				expected: migrator.ErrInvalidFormat,
+				expected: ErrInvalidFormat,
 			},
 			{
 				fileName: "up",
-				expected: migrator.ErrInvalidFormat,
+				expected: ErrInvalidFormat,
 			},
 			{
 				fileName: "a_b",
-				expected: migrator.ErrInvalidFormat,
+				expected: ErrInvalidFormat,
 			},
 		}
 
 		for _, c := range tc {
 			t.Run(c.fileName, func(t *testing.T) {
-				mig, err := migrator.ParseMigration(c.fileName)
+				mig, err := parseMigration(c.fileName)
 				t.Log(mig)
 
 				assert.Equal(t, c.expected, err)
@@ -152,30 +151,30 @@ func TestParseMigrationsFromFilenames(t *testing.T) {
 			"1000001_create_users_table_down",
 		}
 
-		expected := []*migrator.Migration{
+		expected := []*Migration{
 			{
 				Number: 1000002,
 				Name:   "",
-				Type:   migrator.MigrationUp,
+				Type:   MigrationUp,
 			},
 			{
 				Number: 1000002,
 				Name:   "",
-				Type:   migrator.MigrationDown,
+				Type:   MigrationDown,
 			},
 			{
 				Number: 1000001,
 				Name:   "create_users_table",
-				Type:   migrator.MigrationUp,
+				Type:   MigrationUp,
 			},
 			{
 				Number: 1000001,
 				Name:   "create_users_table",
-				Type:   migrator.MigrationDown,
+				Type:   MigrationDown,
 			},
 		}
 
-		actual, _ := migrator.ParseMigrationsFromFilenames(fileNames)
+		actual, _ := parseMigrationsFromFilenames(fileNames)
 
 		assert.Equal(t, expected, actual)
 	})
@@ -183,73 +182,73 @@ func TestParseMigrationsFromFilenames(t *testing.T) {
 
 func TestSortMigrations(t *testing.T) {
 	t.Run("sorts migration objects", func(t *testing.T) {
-		migrations := []*migrator.Migration{
+		migrations := []*Migration{
 			{
 				Number: 1000002,
 				Name:   "",
-				Type:   migrator.MigrationUp,
+				Type:   MigrationUp,
 			},
 			{
 				Number: 1000002,
 				Name:   "",
-				Type:   migrator.MigrationDown,
+				Type:   MigrationDown,
 			},
 			{
 				Number: 1000001,
 				Name:   "create_users_table",
-				Type:   migrator.MigrationUp,
+				Type:   MigrationUp,
 			},
 			{
 				Number: 1000001,
 				Name:   "create_users_table",
-				Type:   migrator.MigrationDown,
+				Type:   MigrationDown,
 			},
 			{
 				Number: 999999,
 				Name:   "create_posts_table",
-				Type:   migrator.MigrationUp,
+				Type:   MigrationUp,
 			},
 			{
 				Number: 1,
 				Name:   "create_posts_table",
-				Type:   migrator.MigrationDown,
+				Type:   MigrationDown,
 			},
 		}
 
-		expected := []*migrator.Migration{
+		expected := []*Migration{
 			{
 				Number: 1,
 				Name:   "create_posts_table",
-				Type:   migrator.MigrationDown,
+				Type:   MigrationDown,
 			},
 			{
 				Number: 999999,
 				Name:   "create_posts_table",
-				Type:   migrator.MigrationUp,
+				Type:   MigrationUp,
 			},
 			{
 				Number: 1000001,
 				Name:   "create_users_table",
-				Type:   migrator.MigrationUp,
+				Type:   MigrationUp,
 			},
 			{
 				Number: 1000001,
 				Name:   "create_users_table",
-				Type:   migrator.MigrationDown,
+				Type:   MigrationDown,
 			},
 			{
 				Number: 1000002,
 				Name:   "",
-				Type:   migrator.MigrationUp,
+				Type:   MigrationUp,
 			},
 			{
 				Number: 1000002,
 				Name:   "",
-				Type:   migrator.MigrationDown,
+				Type:   MigrationDown,
 			},
 		}
 
-		migrator.SortMigrations(migrations)
+		sortMigrations(migrations)
 
 		assert.Equal(t, expected, migrations)
 	})
@@ -277,22 +276,22 @@ func TestGenerateNextMigrations(t *testing.T) {
 
 		for _, c := range tc {
 			t.Run(fmt.Sprintf("starting at %d", c.starting), func(t *testing.T) {
-				expected := make([]*migrator.Migration, 0)
+				expected := make([]*Migration, 0)
 
 				for i := c.starting + 1; i <= c.starting+c.totalNum; i++ {
-					expected = append(expected, &migrator.Migration{
+					expected = append(expected, &Migration{
 						Number: int(i),
 						Name:   "create_users_table",
-						Type:   migrator.MigrationUp,
+						Type:   MigrationUp,
 					})
-					expected = append(expected, &migrator.Migration{
+					expected = append(expected, &Migration{
 						Number: int(i),
 						Name:   "create_users_table",
-						Type:   migrator.MigrationDown,
+						Type:   MigrationDown,
 					})
 				}
 
-				actual := migrator.GenerateNextMigrations(c.starting, "create_users_table", c.totalNum)
+				actual := generateNextMigrations(c.starting, "create_users_table", c.totalNum)
 
 				for i := range actual {
 					assert.Equal(t, expected[i].Number, actual[i].Number)
@@ -308,38 +307,38 @@ func TestGenerateNextMigrations(t *testing.T) {
 func TestMigrationToFilename(t *testing.T) {
 	t.Run("converts migration to filename", func(t *testing.T) {
 		tc := []struct {
-			migration *migrator.Migration
+			migration *Migration
 			expected  string
 		}{
 			{
-				migration: &migrator.Migration{
+				migration: &Migration{
 					Number: 1000001,
 					Name:   "create_users_table",
-					Type:   migrator.MigrationUp,
+					Type:   MigrationUp,
 				},
 				expected: "1000001_create_users_table_up",
 			},
 			{
-				migration: &migrator.Migration{
+				migration: &Migration{
 					Number: 1000001,
 					Name:   "create_users_table",
-					Type:   migrator.MigrationDown,
+					Type:   MigrationDown,
 				},
 				expected: "1000001_create_users_table_down",
 			},
 			{
-				migration: &migrator.Migration{
+				migration: &Migration{
 					Number: 1000001,
 					Name:   "",
-					Type:   migrator.MigrationUp,
+					Type:   MigrationUp,
 				},
 				expected: "1000001__up",
 			},
 			{
-				migration: &migrator.Migration{
+				migration: &Migration{
 					Number: 1000001,
 					Name:   "",
-					Type:   migrator.MigrationDown,
+					Type:   MigrationDown,
 				},
 				expected: "1000001__down",
 			},
@@ -347,7 +346,7 @@ func TestMigrationToFilename(t *testing.T) {
 
 		for _, c := range tc {
 			t.Run(c.expected, func(t *testing.T) {
-				actual := migrator.MigrationToFilename(c.migration)
+				actual := migrationToFilename(c.migration)
 
 				assert.Equal(t, c.expected, actual)
 			})

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func OpenDirectory(root string, database Database) string {
+func openDirectory(root string, database Database) string {
 	var subDirectory string
 	switch database {
 	case PostgresDB:
@@ -20,12 +20,12 @@ func OpenDirectory(root string, database Database) string {
 	}
 
 	directory := filepath.Join(root, subDirectory)
-	MkPathIfNotExists(directory)
+	mkPathIfNotExists(directory)
 
 	return directory
 }
 
-func GetMigrationFileGroup(dir string, migrationType MigrationType) ([]string, error) {
+func getMigrationFileGroup(dir string, migrationType MigrationType) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func fileNameWithoutExtension(fileName string) string {
 	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
 }
 
-func MkPathIfNotExists(dir string) error {
+func mkPathIfNotExists(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return os.MkdirAll(dir, os.ModePerm)
 	}
@@ -67,7 +67,7 @@ func createFile(path string) error {
 	return nil
 }
 
-func CreateMigrationFile(dir string, migrationFileName string) error {
+func createMigrationFile(dir string, migrationFileName string) error {
 	path := filepath.Join(dir, migrationFileName)
 	return createFile(path)
 }

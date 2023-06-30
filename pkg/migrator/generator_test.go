@@ -1,10 +1,10 @@
-package migrator_test
+package migrator
 
 import (
 	"os"
 	"testing"
 
-	"github.com/adharshmk96/stk/pkg/migrator"
+	"github.com/adharshmk96/stk/pkg/migrator/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,7 +31,7 @@ func TestGenerator(t *testing.T) {
 			"000003_test_down",
 			"000004_test_down",
 		}
-		config := migrator.GeneratorConfig{
+		config := GeneratorConfig{
 			RootDirectory: testDir,
 			Database:      "sqlite",
 			Name:          "test",
@@ -39,25 +39,25 @@ func TestGenerator(t *testing.T) {
 			DryRun:        false,
 		}
 
-		err := migrator.Generate(config)
+		err := Generate(config)
 		if err != nil {
 			t.Error(err)
 		}
-		upFilenames, err := migrator.GetMigrationFileGroup("test_dir/sqlite", migrator.MigrationUp)
+		upFilenames, err := getMigrationFileGroup("test_dir/sqlite", MigrationUp)
 		assert.NoError(t, err)
-		downFilenames, err := migrator.GetMigrationFileGroup("test_dir/sqlite", migrator.MigrationDown)
+		downFilenames, err := getMigrationFileGroup("test_dir/sqlite", MigrationDown)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 4, len(upFilenames))
 		assert.Equal(t, 4, len(downFilenames))
 
 		for _, name := range expectedUpFileNames {
-			if !contains(upFilenames, name) {
+			if !testutils.Contains(upFilenames, name) {
 				t.Errorf("expected %s to be in filenames", name)
 			}
 		}
 		for _, name := range expectedDownFileNames {
-			if !contains(downFilenames, name) {
+			if !testutils.Contains(downFilenames, name) {
 				t.Errorf("expected %s to be in filenames", name)
 			}
 		}
@@ -76,7 +76,7 @@ func TestGenerator(t *testing.T) {
 			"000006_test_down",
 			"000007_test_down",
 		}
-		config := migrator.GeneratorConfig{
+		config := GeneratorConfig{
 			RootDirectory: "test_dir2",
 			Database:      "sqlite",
 			Name:          "test",
@@ -84,26 +84,26 @@ func TestGenerator(t *testing.T) {
 			DryRun:        false,
 		}
 
-		_ = migrator.Generate(config)
-		err := migrator.Generate(config)
+		_ = Generate(config)
+		err := Generate(config)
 		if err != nil {
 			t.Error(err)
 		}
-		upFilenames, err := migrator.GetMigrationFileGroup("test_dir2/sqlite", migrator.MigrationUp)
+		upFilenames, err := getMigrationFileGroup("test_dir2/sqlite", MigrationUp)
 		assert.NoError(t, err)
-		downFilenames, err := migrator.GetMigrationFileGroup("test_dir2/sqlite", migrator.MigrationDown)
+		downFilenames, err := getMigrationFileGroup("test_dir2/sqlite", MigrationDown)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 8, len(upFilenames))
 		assert.Equal(t, 8, len(downFilenames))
 
 		for _, name := range expectedUpFileNames {
-			if !contains(upFilenames, name) {
+			if !testutils.Contains(upFilenames, name) {
 				t.Errorf("expected %s to be in filenames", name)
 			}
 		}
 		for _, name := range expectedDownFileNames {
-			if !contains(downFilenames, name) {
+			if !testutils.Contains(downFilenames, name) {
 				t.Errorf("expected %s to be in filenames", name)
 			}
 		}

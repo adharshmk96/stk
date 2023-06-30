@@ -1,4 +1,4 @@
-package migrator_test
+package migrator
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/adharshmk96/stk/pkg/migrator"
+	"github.com/adharshmk96/stk/pkg/migrator/testutils"
 )
 
 var upFileNames = []string{
@@ -36,7 +36,7 @@ var noiseFiles = []string{
 
 var testDir = "test_dir"
 
-func setupDir() {
+func setupFSDir() {
 	os.MkdirAll(testDir, 0700)
 
 	// create all upFileNames
@@ -68,65 +68,56 @@ func setupDir() {
 
 }
 
-func teardownDir() {
+func teardownFSDir() {
 	os.RemoveAll("test_dir")
 }
 
-func contains(s []string, e string) bool {
-	for _, name := range s {
-		if name == e {
-			return true
-		}
-	}
-	return false
-}
-
 func TestGetFilenamesWithoutExtension(t *testing.T) {
-	setupDir()
-	defer teardownDir()
+	setupFSDir()
+	defer teardownFSDir()
 	t.Run("get up filenames without extension", func(t *testing.T) {
-		filenames, err := migrator.GetMigrationFileGroup("test_dir", migrator.MigrationUp)
+		filenames, err := getMigrationFileGroup("test_dir", MigrationUp)
 		if err != nil {
 			t.Error(err)
 		}
 		for _, name := range upFileNames {
-			if !contains(filenames, name) {
+			if !testutils.Contains(filenames, name) {
 				t.Errorf("expected %s to be in filenames", name)
 			}
 		}
 
 		for _, name := range downFileNames {
-			if contains(filenames, name) {
+			if testutils.Contains(filenames, name) {
 				t.Errorf("expected %s to not be in filenames", name)
 			}
 		}
 
 		for _, name := range noiseFiles {
-			if contains(filenames, name) {
+			if testutils.Contains(filenames, name) {
 				t.Errorf("expected %s to not be in filenames", name)
 			}
 		}
 	})
 
 	t.Run("get down filenames without extension", func(t *testing.T) {
-		filenames, err := migrator.GetMigrationFileGroup("test_dir", migrator.MigrationDown)
+		filenames, err := getMigrationFileGroup("test_dir", MigrationDown)
 		if err != nil {
 			t.Error(err)
 		}
 		for _, name := range downFileNames {
-			if !contains(filenames, name) {
+			if !testutils.Contains(filenames, name) {
 				t.Errorf("expected %s to be in filenames", name)
 			}
 		}
 
 		for _, name := range upFileNames {
-			if contains(filenames, name) {
+			if testutils.Contains(filenames, name) {
 				t.Errorf("expected %s to not be in filenames", name)
 			}
 		}
 
 		for _, name := range noiseFiles {
-			if contains(filenames, name) {
+			if testutils.Contains(filenames, name) {
 				t.Errorf("expected %s to not be in filenames", name)
 			}
 		}
