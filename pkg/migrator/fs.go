@@ -25,8 +25,30 @@ func openDirectory(root string, database Database) string {
 	return directory
 }
 
-// TODO: return full path instead and let parser handle the rest.
-func getMigrationFileGroup(dir string, migrationType MigrationType) ([]string, error) {
+func getMigrationFilePathsByGroup(dir string, migrationType MigrationType) ([]string, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	migrationFilePaths := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		// check the string ends with "down"
+		if !entry.IsDir() {
+			filenameWithoutExt := fileNameWithoutExtension(entry.Name())
+			if strings.HasSuffix(filenameWithoutExt, string(migrationType)) {
+				fullPath := filepath.Join(dir, entry.Name())
+				migrationFilePaths = append(migrationFilePaths, fullPath)
+			} else {
+				continue
+			}
+		}
+	}
+
+	return migrationFilePaths, nil
+}
+
+func getMigrationFileNamesByGroup(dir string, migrationType MigrationType) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err

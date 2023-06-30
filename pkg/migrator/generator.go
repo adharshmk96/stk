@@ -17,15 +17,15 @@ func Generate(config GeneratorConfig) error {
 	workDirectory := openDirectory(config.RootDirectory, database)
 	log.Println("workdir: ", workDirectory)
 
-	fileNames, err := getMigrationFileGroup(workDirectory, MigrationUp)
+	filePaths, err := getMigrationFilePathsByGroup(workDirectory, MigrationUp)
 	if err != nil {
 		return ErrReadingFileNames
 	}
 
 	lastMigrationNumber := 0
 
-	if len(fileNames) > 0 {
-		lastMigrationNumber, err = getLastMigrationNumber(fileNames)
+	if len(filePaths) > 0 {
+		lastMigrationNumber, err = getLastMigrationNumber(filePaths)
 		if err != nil {
 			return err
 		}
@@ -53,8 +53,8 @@ func Generate(config GeneratorConfig) error {
 
 }
 
-func getLastMigrationNumber(fileNames []string) (int, error) {
-	migrations, err := parseMigrationsFromFilenames(fileNames)
+func getLastMigrationNumber(filePaths []string) (int, error) {
+	migrations, err := parseMigrationsFromFilePaths(filePaths)
 	if err != nil {
 		return 0, ErrParsingMigrations
 	}

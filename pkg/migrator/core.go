@@ -2,6 +2,7 @@ package migrator
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -31,6 +32,8 @@ func SelectDatabase(database string) Database {
 		return MySQLDB
 	case "sqlite":
 		return SQLiteDB
+	case "sqlite3":
+		return SQLiteDB
 	default:
 		return SQLiteDB
 	}
@@ -56,6 +59,7 @@ type Migration struct {
 	Number int
 	Name   string
 	Type   MigrationType
+	Path   string
 }
 
 func parseMigrationType(s string) (MigrationType, error) {
@@ -69,7 +73,7 @@ func parseMigrationType(s string) (MigrationType, error) {
 	}
 }
 
-func parseMigration(s string) (*Migration, error) {
+func parseMigrationFromString(s string) (*Migration, error) {
 	parts := strings.Split(s, "_")
 	if len(parts) < 2 {
 		return nil, ErrInvalidFormat
@@ -107,7 +111,28 @@ func parseMigration(s string) (*Migration, error) {
 func parseMigrationsFromFilenames(filenames []string) ([]*Migration, error) {
 	migrations := make([]*Migration, 0, len(filenames))
 	for _, filename := range filenames {
-		migration, err := parseMigration(filename)
+		migration, err := parseMigrationFromString(filename)
+		if err != nil {
+			return nil, err
+		}
+
+		migrations = append(migrations, migration)
+	}
+
+	return migrations, nil
+}
+
+func parseMigrationsFromFilePaths(filePaths []string) ([]*Migration, error) {
+	migrations := make([]*Migration, 0, len(filePaths))
+	for _, filePath := range filePaths {
+		nameWithExt := filepath.Base(filePath)
+		ext := filepath.Ext(nameWithExt)
+		nameWithoutExt := strings.TrimSuffix(nameWithExt, ext)
+		migration, err := parseMigrationFromString(nameWithoutExt)
+		if err != nil {
+			return nil, err
+		}
+		migration.Path = filePath
 		if err != nil {
 			return nil, err
 		}
@@ -160,9 +185,9 @@ type MigrationEntry struct {
 
 type DatabaseRepo interface {
 	// Create a migration table if not exists
-	OpenMigrationTable() error
+	CreateMigrationTableIfNotExists() error
 	// Get the last applied migration from the migration table
-	GetLastAppliedMigrationFromDatabase() (*Migration, error)
+	GetLastAppliedMigrationFromDatabase() (*MigrationEntry, error)
 	// Apply a migration to the database and add an entry to the migration table
 	ApplyMigration(migration *MigrationWithQuery) error
 	// Get all the migration entries from the migration table

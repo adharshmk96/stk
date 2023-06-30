@@ -35,13 +35,14 @@ var noiseFiles = []string{
 }
 
 var testDir = "test_dir"
+var extention = GetExtention(SQLiteDB)
 
 func setupFSDir() {
 	os.MkdirAll(testDir, 0700)
 
 	// create all upFileNames
 	for _, name := range upFileNames {
-		f, err := os.Create(filepath.Join(testDir, name+".sql"))
+		f, err := os.Create(filepath.Join(testDir, name+"."+extention))
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -50,7 +51,7 @@ func setupFSDir() {
 
 	// create all downFileNames
 	for _, name := range downFileNames {
-		f, err := os.Create(filepath.Join(testDir, name+".sql"))
+		f, err := os.Create(filepath.Join(testDir, name+"."+extention))
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -59,7 +60,7 @@ func setupFSDir() {
 
 	// create all noiseFiles
 	for _, name := range noiseFiles {
-		f, err := os.Create(filepath.Join(testDir, name+".sql"))
+		f, err := os.Create(filepath.Join(testDir, name+"."+extention))
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -72,11 +73,11 @@ func teardownFSDir() {
 	os.RemoveAll("test_dir")
 }
 
-func TestGetFilenamesWithoutExtension(t *testing.T) {
+func TestGetMigrationFileGroup(t *testing.T) {
 	setupFSDir()
 	defer teardownFSDir()
 	t.Run("get up filenames without extension", func(t *testing.T) {
-		filenames, err := getMigrationFileGroup("test_dir", MigrationUp)
+		filenames, err := getMigrationFileNamesByGroup("test_dir", MigrationUp)
 		if err != nil {
 			t.Error(err)
 		}
@@ -100,7 +101,7 @@ func TestGetFilenamesWithoutExtension(t *testing.T) {
 	})
 
 	t.Run("get down filenames without extension", func(t *testing.T) {
-		filenames, err := getMigrationFileGroup("test_dir", MigrationDown)
+		filenames, err := getMigrationFileNamesByGroup("test_dir", MigrationDown)
 		if err != nil {
 			t.Error(err)
 		}
@@ -118,6 +119,60 @@ func TestGetFilenamesWithoutExtension(t *testing.T) {
 
 		for _, name := range noiseFiles {
 			if testutils.Contains(filenames, name) {
+				t.Errorf("expected %s to not be in filenames", name)
+			}
+		}
+	})
+
+}
+
+func TestGetMigrationFilePathsByGroup(t *testing.T) {
+	setupFSDir()
+	defer teardownFSDir()
+
+	t.Run("get up filenames with extension", func(t *testing.T) {
+		filenames, err := getMigrationFilePathsByGroup("test_dir", MigrationUp)
+		if err != nil {
+			t.Error(err)
+		}
+		for _, name := range upFileNames {
+			if !testutils.Contains(filenames, filepath.Join(testDir, name+"."+extention)) {
+				t.Errorf("expected %s to be in filenames", name)
+			}
+		}
+
+		for _, name := range downFileNames {
+			if testutils.Contains(filenames, filepath.Join(testDir, name+"."+extention)) {
+				t.Errorf("expected %s to not be in filenames", name)
+			}
+		}
+
+		for _, name := range noiseFiles {
+			if testutils.Contains(filenames, filepath.Join(testDir, name+"."+extention)) {
+				t.Errorf("expected %s to not be in filenames", name)
+			}
+		}
+	})
+
+	t.Run("get down filenames with extension", func(t *testing.T) {
+		filenames, err := getMigrationFilePathsByGroup("test_dir", MigrationDown)
+		if err != nil {
+			t.Error(err)
+		}
+		for _, name := range downFileNames {
+			if !testutils.Contains(filenames, filepath.Join(testDir, name+"."+extention)) {
+				t.Errorf("expected %s to be in filenames", name)
+			}
+		}
+
+		for _, name := range upFileNames {
+			if testutils.Contains(filenames, filepath.Join(testDir, name+"."+extention)) {
+				t.Errorf("expected %s to not be in filenames", name)
+			}
+		}
+
+		for _, name := range noiseFiles {
+			if testutils.Contains(filenames, filepath.Join(testDir, name+"."+extention)) {
 				t.Errorf("expected %s to not be in filenames", name)
 			}
 		}
