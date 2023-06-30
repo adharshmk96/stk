@@ -39,7 +39,12 @@ func MigrateUp(config *MigratorConfig) ([]*Migration, error) {
 	log.Println("last applied migration : ", lastAppliedMigration)
 
 	// Find the next migrations to apply
-	migrationsToApply := findUpMigrationsToApply(lastAppliedMigration, migrations, config.NumToMigrate)
+	migrationsToApply := FindUpMigrationsToApply(lastAppliedMigration, migrations, config.NumToMigrate)
+
+	if len(migrationsToApply) == 0 {
+		log.Println("No migrations to apply")
+		return nil, nil
+	}
 
 	// Read migration queries from files
 	for _, migration := range migrationsToApply {
@@ -49,7 +54,7 @@ func MigrateUp(config *MigratorConfig) ([]*Migration, error) {
 		}
 
 		// Apply migrations and add entries to database
-		err = applyMigration(config, migration)
+		err = ApplyMigration(config, migration)
 		if err != nil {
 			return nil, err
 		}
@@ -60,7 +65,7 @@ func MigrateUp(config *MigratorConfig) ([]*Migration, error) {
 }
 
 // TODO: apply all as one transaction ?. if one fails, rollback all
-func applyMigration(config *MigratorConfig, migration *Migration) error {
+func ApplyMigration(config *MigratorConfig, migration *Migration) error {
 	if config.DryRun {
 		log.Println("dry run: ", migration.Number, migration.Name)
 		return nil
@@ -69,30 +74,40 @@ func applyMigration(config *MigratorConfig, migration *Migration) error {
 	log.Println("applying migration: ", migration.Number, migration.Name)
 	err := config.DBRepo.ApplyMigration(migration)
 	if err != nil {
-		log.Fatalln("error applying migration: ", migration.Number, err)
+		log.Println("error applying migration: ", migration.Number, err)
 		return err
 	}
 
 	return nil
 }
 
-func findUpMigrationsToApply(lastMigration *Migration, migrations []*Migration, numberToMigrate int) []*Migration {
-	var startIdx, lastIdx int
+func getStartIdx(lastMigration *Migration, migrations []*Migration) int {
 	if lastMigration == nil {
-		startIdx = 0
-		lastIdx = min(startIdx+numberToMigrate, len(migrations))
-	} else {
-		idx := findNextMigrationIndex(migrations, lastMigration.Number)
-		if idx < 0 {
-			return []*Migration{}
-		}
-		if lastMigration.Type == MigrationDown {
-			startIdx = max(idx-1, 0)
-			lastIdx = min(startIdx+numberToMigrate, len(migrations))
-		} else {
-			startIdx = max(idx, 0)
-			lastIdx = min(startIdx+numberToMigrate, len(migrations))
-		}
+		return 0
+	}
+
+	idx := findNextMigrationIndex(migrations, lastMigration.Number)
+	if idx < 0 {
+		return -1
+	}
+	if lastMigration.Type == MigrationDown {
+		return max(idx-1, 0)
+	}
+	return max(idx, 0)
+}
+
+func getLastIdx(startIdx int, numberToMigrate int, totalMigrations int) int {
+	if numberToMigrate == 0 || startIdx == -1 {
+		return totalMigrations
+	}
+	return min(startIdx+numberToMigrate, totalMigrations)
+}
+
+func FindUpMigrationsToApply(lastMigration *Migration, migrations []*Migration, numberToMigrate int) []*Migration {
+	startIdx := getStartIdx(lastMigration, migrations)
+	lastIdx := getLastIdx(startIdx, numberToMigrate, len(migrations))
+	if startIdx == -1 {
+		return []*Migration{}
 	}
 	return migrations[startIdx:lastIdx]
 }

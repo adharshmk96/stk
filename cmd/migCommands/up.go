@@ -23,7 +23,7 @@ var UpCmd = &cobra.Command{
 
 		dryRun := cmd.Flag("dry-run").Value.String() == "true"
 
-		numToMigrate := getNumberFromArgs(args, 1)
+		numToMigrate := getNumberFromArgs(args, 0)
 
 		// Select based on the database
 		dbType := migrator.SelectDatabase(dbChoice)
