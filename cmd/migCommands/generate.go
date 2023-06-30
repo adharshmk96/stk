@@ -6,7 +6,6 @@ package migCommands
 import (
 	"log"
 	"path/filepath"
-	"strconv"
 
 	"github.com/adharshmk96/stk/pkg/migrator"
 	"github.com/adharshmk96/stk/pkg/migrator/fsrepo"
@@ -14,17 +13,6 @@ import (
 )
 
 var migrationName string
-
-func getNumberFromArgs(args []string, defaultValue int) int {
-	if len(args) == 0 {
-		return defaultValue
-	}
-	num, err := strconv.Atoi(args[0])
-	if err != nil {
-		return defaultValue
-	}
-	return num
-}
 
 var GenerateCmd = &cobra.Command{
 	Use:   "generate",
@@ -43,7 +31,7 @@ var GenerateCmd = &cobra.Command{
 		database := migrator.SelectDatabase(dbChoice)
 		log.Println("selected database: ", database)
 
-		extention := migrator.GetExtention(database)
+		extention := migrator.SelectExtention(database)
 		subDirectory := migrator.SelectSubDirectory(database)
 		fsRepo := fsrepo.NewFSRepo(filepath.Join(rootDirectory, subDirectory), extention)
 

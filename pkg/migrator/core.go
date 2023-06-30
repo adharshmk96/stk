@@ -38,7 +38,7 @@ func SelectDatabase(database string) Database {
 	}
 }
 
-func GetExtention(database Database) string {
+func SelectExtention(database Database) string {
 	var ext string
 	switch database {
 	case PostgresDB:
@@ -121,16 +121,19 @@ func MigrationToFilename(migration *Migration) string {
 }
 
 type DatabaseRepo interface {
-	// Loads last applied migration entry from database
+	// Load last applied migration entry from the migration table
+	// - Creates migration table if not exists
+	// - Returns nil if no entry found
 	LoadLastAppliedMigration() (*Migration, error)
+	// Load all migration entries from the migration table
+	// - Creates migration table if not exists
+	LoadMigrations() ([]*Migration, error)
 	// Create a migration table if not exists
 	CreateMigrationTableIfNotExists() error
 	// Get the last applied migration from the migration table
 	GetLastAppliedMigration() (*Migration, error)
 	// Apply a migration to the database and add an entry to the migration table
 	ApplyMigration(migration *Migration) error
-	// Get all the migration entries from the migration table
-	GetMigrationEntries() ([]*Migration, error)
 	// Delete the migration table
 	DeleteMigrationTable() error
 }

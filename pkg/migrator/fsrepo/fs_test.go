@@ -38,7 +38,7 @@ var noiseFiles = []string{
 
 var testDir = "test_dir"
 var emptyDir = "empty_dir"
-var extention = migrator.GetExtention(migrator.SQLiteDB)
+var extention = migrator.SelectExtention(migrator.SQLiteDB)
 
 func setupFSDir() {
 	os.MkdirAll(testDir, 0700)
@@ -132,7 +132,7 @@ func TestParseMigrationsFromFilePaths(t *testing.T) {
 func TestLoadMigrationsFromFile(t *testing.T) {
 
 	t.Run("load migrations from empty directory", func(t *testing.T) {
-		ext := migrator.GetExtention(migrator.SQLiteDB)
+		ext := migrator.SelectExtention(migrator.SQLiteDB)
 		fsRepo := NewFSRepo("test_dir", ext)
 		migrations, err := fsRepo.LoadMigrationsFromFile(migrator.MigrationUp)
 		assert.NoError(t, err)
@@ -144,7 +144,7 @@ func TestGetMigrationFilePathsByGroup(t *testing.T) {
 	setupFSDir()
 	defer teardownFSDir()
 
-	ext := migrator.GetExtention(migrator.SQLiteDB)
+	ext := migrator.SelectExtention(migrator.SQLiteDB)
 	fsRepo := NewFSRepo("test_dir", ext)
 
 	t.Run("get up filenames with extension", func(t *testing.T) {
@@ -200,7 +200,7 @@ func TestCreateMigrationFile(t *testing.T) {
 	setupFSDir()
 	defer teardownFSDir()
 
-	ext := migrator.GetExtention(migrator.SQLiteDB)
+	ext := migrator.SelectExtention(migrator.SQLiteDB)
 	// subDir := migrator.SelectSubDirectory(migrator.SQLiteDB)
 	fsRepo := NewFSRepo(testDir, ext)
 

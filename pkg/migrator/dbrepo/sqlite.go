@@ -28,7 +28,7 @@ type sqliteRepo struct {
 	conn *sql.DB
 }
 
-func NewSqliteRepo(conn *sql.DB) migrator.DatabaseRepo {
+func NewSQLiteRepo(conn *sql.DB) migrator.DatabaseRepo {
 	return &sqliteRepo{
 		conn: conn,
 	}
@@ -43,72 +43,7 @@ func (s *sqliteRepo) LoadLastAppliedMigration() (*migrator.Migration, error) {
 	return s.GetLastAppliedMigration()
 }
 
-func (s *sqliteRepo) CreateMigrationTableIfNotExists() error {
-	_, err := s.conn.Exec(string(sqliteMigrationSchema))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *sqliteRepo) GetLastAppliedMigration() (*migrator.Migration, error) {
-	var migrationNumber int
-	var migrationName string
-	var migtype string
-	var migCreated time.Time
-	err := s.conn.QueryRow(sqliteLastAppliedMigrationEntry).Scan(&migrationNumber, &migrationName, &migtype, &migCreated)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-	migType := migrator.MigrationType(migtype)
-	return &migrator.Migration{
-		Number:  0,
-		Name:    migrationName,
-		Type:    migType,
-		Created: migCreated,
-	}, nil
-
-}
-
-func (s *sqliteRepo) ApplyMigration(mig *migrator.Migration) error {
-
-	tx, err := s.conn.Begin()
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-
-	migrationQuery := mig.Query
-
-	_, err = tx.Exec(sqliteInsertMigrationEntry, mig.Name, mig.Type)
-	if err != nil {
-		tx.Rollback()
-		log.Fatal(err)
-		return err
-	}
-
-	_, err = tx.Exec(migrationQuery)
-	if err != nil {
-		tx.Rollback()
-		log.Fatal(err)
-		return err
-	}
-
-	err = tx.Commit()
-
-	if err != nil {
-		tx.Rollback()
-		log.Fatal(err)
-		return err
-	}
-
-	return nil
-}
-
-func (s *sqliteRepo) GetMigrationEntries() ([]*migrator.Migration, error) {
+func (s *sqliteRepo) LoadMigrations() ([]*migrator.Migration, error) {
 	var exists bool
 	err := s.conn.QueryRow(sqliteMigrationTableExists, sqlMigrationTable).Scan(&exists)
 
@@ -149,6 +84,70 @@ func (s *sqliteRepo) GetMigrationEntries() ([]*migrator.Migration, error) {
 	}
 
 	return history, nil
+}
+
+func (s *sqliteRepo) CreateMigrationTableIfNotExists() error {
+	_, err := s.conn.Exec(string(sqliteMigrationSchema))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *sqliteRepo) GetLastAppliedMigration() (*migrator.Migration, error) {
+	var migrationNumber int
+	var migrationName string
+	var migtype string
+	var migCreated time.Time
+	err := s.conn.QueryRow(sqliteLastAppliedMigrationEntry).Scan(&migrationNumber, &migrationName, &migtype, &migCreated)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	migType := migrator.MigrationType(migtype)
+	return &migrator.Migration{
+		Number:  0,
+		Name:    migrationName,
+		Type:    migType,
+		Created: migCreated,
+	}, nil
+}
+
+func (s *sqliteRepo) ApplyMigration(mig *migrator.Migration) error {
+
+	tx, err := s.conn.Begin()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	migrationQuery := mig.Query
+
+	_, err = tx.Exec(sqliteInsertMigrationEntry, mig.Name, mig.Type)
+	if err != nil {
+		tx.Rollback()
+		log.Fatal(err)
+		return err
+	}
+
+	_, err = tx.Exec(migrationQuery)
+	if err != nil {
+		tx.Rollback()
+		log.Fatal(err)
+		return err
+	}
+
+	err = tx.Commit()
+
+	if err != nil {
+		tx.Rollback()
+		log.Fatal(err)
+		return err
+	}
+
+	return nil
 }
 
 func (s *sqliteRepo) DeleteMigrationTable() error {

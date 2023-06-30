@@ -7,9 +7,7 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/adharshmk96/stk/pkg/db"
 	"github.com/adharshmk96/stk/pkg/migrator"
-	"github.com/adharshmk96/stk/pkg/migrator/dbrepo"
 	"github.com/adharshmk96/stk/pkg/migrator/fsrepo"
 	"github.com/spf13/cobra"
 )
@@ -31,12 +29,11 @@ var UpCmd = &cobra.Command{
 		dbType := migrator.SelectDatabase(dbChoice)
 		log.Println("selected database: ", dbType)
 
-		extention := migrator.GetExtention(dbType)
+		extention := migrator.SelectExtention(dbType)
 		subDirectory := migrator.SelectSubDirectory(dbType)
 		fsRepo := fsrepo.NewFSRepo(filepath.Join(rootDirectory, subDirectory), extention)
 
-		conn := db.GetSqliteConnection("migration.db")
-		dbRepo := dbrepo.NewSqliteRepo(conn)
+		dbRepo := selectDbRepo(dbType)
 
 		log.Println("Generating migration files...")
 
