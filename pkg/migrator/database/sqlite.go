@@ -43,7 +43,7 @@ func (s *sqliteRepo) CreateMigrationTableIfNotExists() error {
 	return nil
 }
 
-func (s *sqliteRepo) GetLastAppliedMigrationFromDatabase() (*migrator.MigrationEntry, error) {
+func (s *sqliteRepo) GetLastAppliedMigration() (*migrator.MigrationEntry, error) {
 	var migrationNumber int
 	var migrationName string
 	var migtype string

@@ -108,20 +108,6 @@ func parseMigrationFromString(s string) (*Migration, error) {
 	}, nil
 }
 
-func parseMigrationsFromFilenames(filenames []string) ([]*Migration, error) {
-	migrations := make([]*Migration, 0, len(filenames))
-	for _, filename := range filenames {
-		migration, err := parseMigrationFromString(filename)
-		if err != nil {
-			return nil, err
-		}
-
-		migrations = append(migrations, migration)
-	}
-
-	return migrations, nil
-}
-
 func parseMigrationsFromFilePaths(filePaths []string) ([]*Migration, error) {
 	migrations := make([]*Migration, 0, len(filePaths))
 	for _, filePath := range filePaths {
@@ -149,23 +135,6 @@ func sortMigrations(migrations []*Migration) {
 	})
 }
 
-func generateNextMigrations(lastNumber int, name string, total int) []*Migration {
-	migrations := make([]*Migration, 0, total)
-	for i := 0; i < total; i++ {
-		migrations = append(migrations, &Migration{
-			Number: lastNumber + i + 1,
-			Name:   name,
-			Type:   MigrationUp,
-		})
-		migrations = append(migrations, &Migration{
-			Number: lastNumber + i + 1,
-			Name:   name,
-			Type:   MigrationDown,
-		})
-	}
-	return migrations
-}
-
 func migrationToFilename(migration *Migration) string {
 	migration.Name = strings.ReplaceAll(migration.Name, " ", "_")
 	return fmt.Sprintf("%06d_%s_%s", migration.Number, migration.Name, migration.Type)
@@ -187,7 +156,7 @@ type DatabaseRepo interface {
 	// Create a migration table if not exists
 	CreateMigrationTableIfNotExists() error
 	// Get the last applied migration from the migration table
-	GetLastAppliedMigrationFromDatabase() (*MigrationEntry, error)
+	GetLastAppliedMigration() (*MigrationEntry, error)
 	// Apply a migration to the database and add an entry to the migration table
 	ApplyMigration(migration *MigrationWithQuery) error
 	// Get all the migration entries from the migration table

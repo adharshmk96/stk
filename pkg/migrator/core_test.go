@@ -142,44 +142,6 @@ func TestParseStringToMigration(t *testing.T) {
 	})
 }
 
-func TestParseMigrationsFromFilenames(t *testing.T) {
-	t.Run("parse migrations from filenames", func(t *testing.T) {
-		fileNames := []string{
-			"1000002_up",
-			"1000002_down",
-			"1000001_create_users_table_up",
-			"1000001_create_users_table_down",
-		}
-
-		expected := []*Migration{
-			{
-				Number: 1000002,
-				Name:   "",
-				Type:   MigrationUp,
-			},
-			{
-				Number: 1000002,
-				Name:   "",
-				Type:   MigrationDown,
-			},
-			{
-				Number: 1000001,
-				Name:   "create_users_table",
-				Type:   MigrationUp,
-			},
-			{
-				Number: 1000001,
-				Name:   "create_users_table",
-				Type:   MigrationDown,
-			},
-		}
-
-		actual, _ := parseMigrationsFromFilenames(fileNames)
-
-		assert.Equal(t, expected, actual)
-	})
-}
-
 func TestSortMigrations(t *testing.T) {
 	t.Run("sorts migration objects", func(t *testing.T) {
 		migrations := []*Migration{

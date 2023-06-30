@@ -9,4 +9,6 @@ var (
 	ErrReadingFileNames      = errors.New("error_reading_file_names")
 	ErrParsingMigrations     = errors.New("error_parsing_migrations")
 	ErrCreatingMigrationFile = errors.New("error_creating_migration_file")
+
+	ErrReadingLastAppliedMigration = errors.New("error_reading_last_applied_migration")
 )

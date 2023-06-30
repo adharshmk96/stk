@@ -53,6 +53,23 @@ func Generate(config GeneratorConfig) error {
 
 }
 
+func generateNextMigrations(lastNumber int, name string, total int) []*Migration {
+	migrations := make([]*Migration, 0, total)
+	for i := 0; i < total; i++ {
+		migrations = append(migrations, &Migration{
+			Number: lastNumber + i + 1,
+			Name:   name,
+			Type:   MigrationUp,
+		})
+		migrations = append(migrations, &Migration{
+			Number: lastNumber + i + 1,
+			Name:   name,
+			Type:   MigrationDown,
+		})
+	}
+	return migrations
+}
+
 func getLastMigrationNumber(filePaths []string) (int, error) {
 	migrations, err := parseMigrationsFromFilePaths(filePaths)
 	if err != nil {
