@@ -138,6 +138,54 @@ func TestLoadMigrationsFromFile(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, len(migrations), 0)
 	})
+
+	t.Run("load migrations from directory", func(t *testing.T) {
+		setupFSDir()
+		defer teardownFSDir()
+
+		ext := migrator.SelectExtention(migrator.SQLiteDB)
+		fsRepo := NewFSRepo("test_dir", ext)
+		migrations, err := fsRepo.LoadMigrationsFromFile(migrator.MigrationUp)
+		assert.NoError(t, err)
+		assert.Equal(t, len(migrations), len(upFileNames))
+	})
+
+	t.Run("load migrations from directory with noise files", func(t *testing.T) {
+		setupFSDir()
+		defer teardownFSDir()
+
+		ext := migrator.SelectExtention(migrator.SQLiteDB)
+		fsRepo := NewFSRepo("test_dir", ext)
+		migrations, err := fsRepo.LoadMigrationsFromFile(migrator.MigrationDown)
+		assert.NoError(t, err)
+		assert.Equal(t, len(migrations), len(upFileNames))
+	})
+
+	t.Run("loaded migrations are sorted ascending for up", func(t *testing.T) {
+		setupFSDir()
+		defer teardownFSDir()
+
+		ext := migrator.SelectExtention(migrator.SQLiteDB)
+		fsRepo := NewFSRepo("test_dir", ext)
+		migrations, err := fsRepo.LoadMigrationsFromFile(migrator.MigrationUp)
+		assert.NoError(t, err)
+		for i := 0; i < len(migrations)-1; i++ {
+			assert.True(t, migrations[i].Number < migrations[i+1].Number)
+		}
+	})
+
+	t.Run("loaded migrations are sorted descending for down", func(t *testing.T) {
+		setupFSDir()
+		defer teardownFSDir()
+
+		ext := migrator.SelectExtention(migrator.SQLiteDB)
+		fsRepo := NewFSRepo("test_dir", ext)
+		migrations, err := fsRepo.LoadMigrationsFromFile(migrator.MigrationDown)
+		assert.NoError(t, err)
+		for i := 0; i < len(migrations)-1; i++ {
+			assert.True(t, migrations[i].Number > migrations[i+1].Number)
+		}
+	})
 }
 
 func TestGetMigrationFilePathsByGroup(t *testing.T) {
@@ -244,5 +292,71 @@ func TestCreateMigrationFile(t *testing.T) {
 		if !testutils.Contains(filenames, filepath.Join(testDir, "000100_create_users_table_down."+extention)) {
 			t.Errorf("expected %s to be in filenames", migration.Name)
 		}
+	})
+}
+
+func TestWriteMigrationToFile(t *testing.T) {
+	t.Run("write migration to file", func(t *testing.T) {
+		setupFSDir()
+		defer teardownFSDir()
+
+		ext := migrator.SelectExtention(migrator.SQLiteDB)
+		fsRepo := NewFSRepo(testDir, ext)
+
+		migration := &migrator.Migration{
+			Number: 100,
+			Name:   "create_users_table",
+			Type:   migrator.MigrationUp,
+			Path:   filepath.Join(testDir, "000100_create_users_table_up."+extention),
+		}
+
+		err := fsRepo.WriteMigrationToFile(migration)
+		if err != nil {
+			t.Error(err)
+		}
+
+		filenames, err := fsRepo.GetMigrationFilePathsByType(migrator.MigrationUp)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if !testutils.Contains(filenames, migration.Path) {
+			t.Errorf("expected %s to be in filenames", migration.Name)
+		}
+	})
+}
+
+func TestLoadMigrationQuery(t *testing.T) {
+	t.Run("load migration query", func(t *testing.T) {
+		setupFSDir()
+		defer teardownFSDir()
+		expectedQuery := `CREATE TABLE users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			email TEXT NOT NULL UNIQUE,
+			password TEXT NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);`
+
+		ext := migrator.SelectExtention(migrator.SQLiteDB)
+		fsRepo := NewFSRepo(testDir, ext)
+
+		migration := &migrator.Migration{
+			Number: 100,
+			Name:   "create_users_table",
+			Type:   migrator.MigrationUp,
+			Path:   filepath.Join(testDir, "000100_create_users_table_up."+extention),
+			Query:  expectedQuery,
+		}
+
+		err := fsRepo.WriteMigrationToFile(migration)
+		assert.NoError(t, err)
+
+		migration.Query = ""
+
+		err = fsRepo.LoadMigrationQuery(migration)
+		assert.NoError(t, err)
+
+		assert.Equal(t, expectedQuery, migration.Query)
 	})
 }
