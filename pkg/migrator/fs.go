@@ -25,6 +25,7 @@ func openDirectory(root string, database Database) string {
 	return directory
 }
 
+// TODO: return full path instead and let parser handle the rest.
 func getMigrationFileGroup(dir string, migrationType MigrationType) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
