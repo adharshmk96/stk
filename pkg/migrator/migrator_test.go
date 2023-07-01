@@ -444,6 +444,63 @@ func TestCalculateDownMigration(t *testing.T) {
 			}
 		})
 
+		t.Run("when last migration is at 6 and has missing migration", func(t *testing.T) {
+
+			var missingMigrationList []*migrator.Migration
+			for i := 20; i > 0; i-- {
+				if i%2 == 0 {
+					continue
+				}
+				missingMigrationList = append(missingMigrationList, &migrator.Migration{
+					Number: i,
+					Name:   fmt.Sprintf("migration_%d", i),
+				})
+			}
+
+			// last migration is 6
+			lastMigration := upMigrationList[5]
+
+			tc := []struct {
+				name         string
+				numToMigrate int
+				expected     []*migrator.Migration
+			}{
+				{
+					name:         "when num to migrate is 2",
+					numToMigrate: 2,
+					// expected should be 5, 3
+					expected: missingMigrationList[7:9],
+				},
+				{
+					name:         "when num to migrate is 100",
+					numToMigrate: 100,
+					// expected should be 5,3,1
+					expected: missingMigrationList[7:],
+				},
+				{
+					name:         "when num to migrate is 0",
+					numToMigrate: 0,
+					// expected should be 5.3.1
+					expected: missingMigrationList[7:],
+				},
+			}
+
+			for _, vtc := range tc {
+
+				t.Run(vtc.name, func(t *testing.T) {
+
+					downMigrations := migrator.CalculateDownMigrationsToApply(lastMigration, missingMigrationList, vtc.numToMigrate)
+					assert.Equal(t, len(vtc.expected), len(downMigrations))
+
+					for i, v := range downMigrations {
+						assert.Equal(t, vtc.expected[i].Number, v.Number)
+						assert.Equal(t, vtc.expected[i].Name, v.Name)
+					}
+				})
+			}
+
+		})
+
 	})
 
 	t.Run("when last migration is down", func(t *testing.T) {

@@ -24,6 +24,7 @@ func init() {
 	migratorCmd.AddCommand(migCommands.GenerateCmd)
 	migratorCmd.AddCommand(migCommands.UpCmd)
 	migratorCmd.AddCommand(migCommands.DownCmd)
+	migratorCmd.AddCommand(migCommands.CleanCmd)
 	migratorCmd.AddCommand(migCommands.HistoryCmd)
 
 	rootCmd.AddCommand(migratorCmd)

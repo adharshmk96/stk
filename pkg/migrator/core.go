@@ -120,4 +120,6 @@ type FileRepo interface {
 	WriteMigrationToFile(migration *Migration) error
 	// Read Query from File
 	LoadMigrationQuery(migration *Migration) error
+	// Delete a migration file
+	DeleteMigrationFile(migration *Migration) error
 }

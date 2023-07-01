@@ -110,6 +110,10 @@ func (f *fileSystem) LoadMigrationQuery(migration *migrator.Migration) error {
 	return nil
 }
 
+func (f *fileSystem) DeleteMigrationFile(migration *migrator.Migration) error {
+	return os.Remove(migration.Path)
+}
+
 func mkPathIfNotExists(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return os.MkdirAll(dir, os.ModePerm)
