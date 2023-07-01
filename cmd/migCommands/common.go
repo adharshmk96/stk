@@ -1,6 +1,7 @@
 package migCommands
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/adharshmk96/stk/pkg/db"
@@ -28,6 +29,40 @@ func selectDbRepo(database migrator.Database) migrator.DatabaseRepo {
 			filepath := viper.GetString("migrator.sqlite.filepath")
 			conn := db.GetSqliteConnection(filepath)
 			return dbrepo.NewSQLiteRepo(conn)
+		}
+	case migrator.PostgresDB:
+		{
+			viper.SetDefault("migrator.postgres.host", "localhost")
+			viper.SetDefault("migrator.postgres.port", "5432")
+			viper.SetDefault("migrator.postgres.user", "postgres")
+			viper.SetDefault("migrator.postgres.password", "postgres")
+			viper.SetDefault("migrator.postgres.dbname", "postgres")
+			host := viper.GetString("migrator.postgres.host")
+			port := viper.GetString("migrator.postgres.port")
+			user := viper.GetString("migrator.postgres.user")
+			password := viper.GetString("migrator.postgres.password")
+			dbname := viper.GetString("migrator.postgres.dbname")
+
+			ctx := context.Background()
+
+			conn := db.GetPGConnection(ctx, host, port, dbname, user, password)
+			return dbrepo.NewPGRepo(conn)
+		}
+	case migrator.MySQLDB:
+		{
+			viper.SetDefault("migrator.mysql.host", "localhost")
+			viper.SetDefault("migrator.mysql.port", "3306")
+			viper.SetDefault("migrator.mysql.user", "mysql")
+			viper.SetDefault("migrator.mysql.password", "mysql")
+			viper.SetDefault("migrator.mysql.dbname", "mysql")
+			host := viper.GetString("migrator.mysql.host")
+			port := viper.GetString("migrator.mysql.port")
+			user := viper.GetString("migrator.mysql.user")
+			password := viper.GetString("migrator.mysql.password")
+			dbname := viper.GetString("migrator.mysql.dbname")
+
+			conn := db.GetMysqlConnection(host, port, dbname, user, password)
+			return dbrepo.NewMySqlRepo(conn)
 		}
 	default:
 		{
