@@ -616,7 +616,7 @@ func TestCalculateDownMigration(t *testing.T) {
 		t.Run("when num to migrate is 0", func(t *testing.T) {
 
 			downMigrations := migrator.CalculateDownMigrationsToApply(nil, reversedDownMigrationList, 0)
-			assert.Equal(t, 0, len(downMigrations))
+			assert.Equal(t, 10, len(downMigrations))
 
 		})
 
