@@ -2,20 +2,14 @@
 
 Server toolkit - minimal and simple framework for developing server in golang
 
-## what is included
+## GSK
+- A web server framework with go's native http server wrapper and httprouter for routing
+- Middleware support
+- Logrus Logger
+- DB Connection helper functions
+- Utilities
 
-- [x] go's native http server wrapper
-  - uses `net/http` package
-  - Get, Post, Put, Delete, Patch methods
-- [x] httprouter for routing
-- [x] middleware support for all routes
-- [x] logger by logrus package
-- [x] utils
-  - db connection helpers
-  - password hashing using argon2
-  - loading env variables
-    
-## get started
+### Get started
 
 ```go
 package main
@@ -23,20 +17,20 @@ package main
 import (
 	"net/http"
 
-	"github.com/adharshmk96/stk"
+	"github.com/adharshmk96/stk/gsk"
 )
 
 func main() {
-	config := stk.ServerConfig{
+	config := gsk.ServerConfig{
 		Port:           "0.0.0.0:8080",
 		RequestLogging: true,
 	}
 	// create new server
-	server := stk.NewServer(&config)
+	server := gsk.NewServer(&config)
 
 	// add routes
-	server.Get("/", func(c stk.Context) {
-		c.Status(http.StatusOK).JSONResponse(stk.Map{"message": "Hello World"})
+	server.Get("/", func(c gsk.Context) {
+		c.Status(http.StatusOK).JSONResponse(gsk.Map{"message": "Hello World"})
 	})
 
 	// start server
@@ -44,7 +38,7 @@ func main() {
 }
 ```
 
-## middleware
+### Middleware
 
 you can add any middleware by simply creating a function like this and adding it to server.Use()
 
@@ -62,12 +56,60 @@ middleware := func(next stk.HandlerFunc) stk.HandlerFunc {
 server.Use(middleware)
 ```
 
-## publish new version
+# CLI Tools
 
+There are few cli tools that comes with stk
+
+## Install
 ```bash
-make patch / minor / major 
+go install github.com/adharshmk96/stk
 ```
 
+## Migrator
+- CLI tool for generating migration files and running migrations
+- Supports sqlite3 (default)
+
+### Get started
+
+Generate migration files ( optinally name it and fill )
+
 ```bash
-make publish
+stk migrator generate -n "initial migration" --fill
 ```
+
+migrate up ( applies all migrations, or specified number of steps )
+
+```bash
+stk migrator up
+```
+
+migrate down ( applies all down migrations, or specified number of steps )
+
+```bash
+stk migrator down
+```
+
+History - Shows history of applied migrations
+
+```bash
+stk migrator history
+```
+
+```
+Number  Name               Type  Created     
+000001  initial_migration  up    2023-07-01  
+000002  initial_migration  up    2023-07-01  
+000003  initial_migration  up    2023-07-01  
+000004  initial_migration  up    2023-07-01  
+000005  initial_migration  up    2023-07-01  
+000005  initial_migration  down  2023-07-01  
+000004  initial_migration  down  2023-07-01  
+000003  initial_migration  down  2023-07-01  
+000002  initial_migration  down  2023-07-01  
+000001  initial_migration  down  2023-07-01
+```
+
+
+## Development
+
+[refer development docs](docs/development.md)

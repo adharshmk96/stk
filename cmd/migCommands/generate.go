@@ -27,12 +27,12 @@ var GenerateCmd = &cobra.Command{
 
 		numToGenerate := getNumberFromArgs(args, 1)
 
-		// Select based on the database
-		database := migrator.SelectDatabase(dbChoice)
-		log.Println("selected database: ", database)
+		// Select based on the dbType
+		dbType := migrator.SelectDatabase(dbChoice)
+		log.Println("selected database: ", dbType)
 
-		extention := migrator.SelectExtention(database)
-		subDirectory := migrator.SelectSubDirectory(database)
+		extention := migrator.SelectExtention(dbType)
+		subDirectory := migrator.SelectSubDirectory(dbType)
 		fsRepo := fsrepo.NewFSRepo(filepath.Join(rootDirectory, subDirectory), extention)
 
 		log.Println("Generating migration files...")
