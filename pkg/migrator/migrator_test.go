@@ -76,11 +76,81 @@ func TestApplyMigration(t *testing.T) {
 
 func TestMigrateUp(t *testing.T) {
 
+	var migrations []*migrator.Migration
+	for i := 1; i <= 5; i++ {
+		migrations = append(migrations, &migrator.Migration{
+			Number: i,
+			Name:   fmt.Sprintf("test_%d", i),
+			Type:   migrator.MigrationUp,
+		})
+	}
+
 	// TODO: Refactor tests.
 	t.Run("when empty database", func(t *testing.T) {
 
 		dbRepo := mocks.NewDatabaseRepo(t)
 		dbRepo.On("LoadLastAppliedMigration").Return(nil, nil)
+
+		t.Run("when empty file repo", func(t *testing.T) {
+			fsRepo := mocks.NewFileRepo(t)
+			var migrations []*migrator.Migration
+
+			fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return(migrations, nil)
+
+			mockConfig := &migrator.MigratorConfig{
+				FSRepo: fsRepo,
+				DBRepo: dbRepo,
+				DryRun: false,
+			}
+
+			migrations, err := migrator.MigrateUp(mockConfig)
+			assert.NoError(t, err)
+			assert.Equal(t, 0, len(migrations))
+
+			fsRepo.AssertExpectations(t)
+			dbRepo.AssertCalled(t, "LoadLastAppliedMigration")
+			fsRepo.AssertCalled(t, "LoadMigrationsFromFile", migrator.MigrationUp)
+
+			dbRepo.AssertNotCalled(t, "ApplyMigration")
+			dbRepo.AssertNotCalled(t, "LoadMigrationQuery")
+		})
+
+		t.Run("when non-empty file repo", func(t *testing.T) {
+			fsRepo := mocks.NewFileRepo(t)
+
+			fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return(migrations, nil)
+			fsRepo.On("LoadMigrationQuery", mock.AnythingOfType("*migrator.Migration")).Return(nil)
+			dbRepo.On("ApplyMigration", mock.AnythingOfType("*migrator.Migration")).Return(nil)
+
+			mockConfig := &migrator.MigratorConfig{
+				FSRepo: fsRepo,
+				DBRepo: dbRepo,
+				DryRun: false,
+			}
+
+			migrations, err := migrator.MigrateUp(mockConfig)
+			assert.NoError(t, err)
+			assert.Equal(t, 5, len(migrations))
+
+			fsRepo.AssertExpectations(t)
+			dbRepo.AssertCalled(t, "LoadLastAppliedMigration")
+			fsRepo.AssertCalled(t, "LoadMigrationsFromFile", migrator.MigrationUp)
+
+			fsRepo.AssertNumberOfCalls(t, "LoadMigrationQuery", 5)
+			dbRepo.AssertNumberOfCalls(t, "ApplyMigration", 5)
+
+		})
+
+	})
+
+	t.Run("when non-empty database", func(t *testing.T) {
+
+		dbRepo := mocks.NewDatabaseRepo(t)
+		dbRepo.On("LoadLastAppliedMigration").Return(&migrator.Migration{
+			Number: 2,
+			Name:   "test_2",
+			Type:   migrator.MigrationUp,
+		}, nil)
 
 		t.Run("when empty file repo", func(t *testing.T) {
 			fsRepo := mocks.NewFileRepo(t)
@@ -100,38 +170,32 @@ func TestMigrateUp(t *testing.T) {
 			assert.Equal(t, 0, len(migrations))
 
 			fsRepo.AssertExpectations(t)
+			fsRepo.AssertNotCalled(t, "LoadMigrationQuery")
 			dbRepo.AssertNotCalled(t, "ApplyMigration")
 		})
-	})
 
-	t.Run("migrate up on non-empty database and empty file repo", func(t *testing.T) {
-		fsRepo := mocks.NewFileRepo(t)
-		dbRepo := mocks.NewDatabaseRepo(t)
-		mockConfig := &migrator.MigratorConfig{
-			FSRepo:       fsRepo,
-			DBRepo:       dbRepo,
-			NumToMigrate: 5,
-			DryRun:       false,
-		}
+		t.Run("when non-empty file repo", func(t *testing.T) {
+			fsRepo := mocks.NewFileRepo(t)
 
-		var migrations []*migrator.Migration
-		for i := 0; i < 5; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationUp,
-			})
-		}
+			fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return(migrations, nil)
+			fsRepo.On("LoadMigrationQuery", mock.AnythingOfType("*migrator.Migration")).Return(nil)
+			dbRepo.On("ApplyMigration", mock.AnythingOfType("*migrator.Migration")).Return(nil)
 
-		dbRepo.On("LoadLastAppliedMigration").Return(migrations[2], nil)
-		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return([]*migrator.Migration{}, nil)
+			mockConfig := &migrator.MigratorConfig{
+				FSRepo:       fsRepo,
+				DBRepo:       dbRepo,
+				NumToMigrate: 5,
+				DryRun:       false,
+			}
 
-		migrations, err := migrator.MigrateUp(mockConfig)
-		assert.NoError(t, err)
-		assert.Equal(t, 0, len(migrations))
+			migrations, err := migrator.MigrateUp(mockConfig)
+			assert.NoError(t, err)
+			assert.Equal(t, 3, len(migrations))
 
-		dbRepo.AssertNotCalled(t, "ApplyMigration")
-		dbRepo.AssertNotCalled(t, "LoadMigrationQuery")
+			fsRepo.AssertExpectations(t)
+			fsRepo.AssertNumberOfCalls(t, "LoadMigrationQuery", 3)
+			dbRepo.AssertNumberOfCalls(t, "ApplyMigration", 3)
+		})
 
 	})
 
@@ -139,334 +203,76 @@ func TestMigrateUp(t *testing.T) {
 		fsRepo := mocks.NewFileRepo(t)
 		dbRepo := mocks.NewDatabaseRepo(t)
 		mockConfig := &migrator.MigratorConfig{
-			FSRepo:       fsRepo,
-			DBRepo:       dbRepo,
-			NumToMigrate: 5,
-			DryRun:       true,
+			FSRepo: fsRepo,
+			DBRepo: dbRepo,
+			DryRun: true,
 		}
 
-		var migrations []*migrator.Migration
-		for i := 0; i < 5; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationUp,
-			})
-		}
-
+		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return(migrations, nil)
 		dbRepo.On("LoadLastAppliedMigration").Return(nil, nil)
 		fsRepo.On("LoadMigrationQuery", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return(migrations, nil)
 
 		migrations, err := migrator.MigrateUp(mockConfig)
 		assert.NoError(t, err)
 		assert.Equal(t, 5, len(migrations))
 
 		dbRepo.AssertNotCalled(t, "ApplyMigration")
+		fsRepo.AssertNumberOfCalls(t, "LoadMigrationQuery", len(migrations))
 	})
 
-	t.Run("migrate up on empty database and non-empty file repo", func(t *testing.T) {
-		fsRepo := mocks.NewFileRepo(t)
-		dbRepo := mocks.NewDatabaseRepo(t)
-		mockConfig := &migrator.MigratorConfig{
-			FSRepo:       fsRepo,
-			DBRepo:       dbRepo,
-			NumToMigrate: 5,
-			DryRun:       false,
+	t.Run("migrate up with num to migrate", func(t *testing.T) {
+		tc := []struct {
+			name          string
+			numToMigrate  int
+			expectedCalls int
+		}{
+			{
+				name:          "migrate up with 2 num to migrate",
+				numToMigrate:  2,
+				expectedCalls: 2,
+			},
+			{
+				name:          "migrate up with 0 num to migrate",
+				numToMigrate:  0,
+				expectedCalls: 5,
+			},
+			{
+				name:          "migrate up with 10 num to migrate",
+				numToMigrate:  10,
+				expectedCalls: 5,
+			},
 		}
 
-		var migrations []*migrator.Migration
-		for i := 1; i <= 5; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationUp,
+		for _, c := range tc {
+			t.Run(c.name, func(t *testing.T) {
+				fsRepo := mocks.NewFileRepo(t)
+				dbRepo := mocks.NewDatabaseRepo(t)
+				mockConfig := &migrator.MigratorConfig{
+					FSRepo:       fsRepo,
+					DBRepo:       dbRepo,
+					NumToMigrate: c.numToMigrate,
+					DryRun:       false,
+				}
+
+				dbRepo.On("LoadLastAppliedMigration").Return(nil, nil)
+				fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return(migrations, nil)
+				fsRepo.On("LoadMigrationQuery", mock.AnythingOfType("*migrator.Migration")).Return(nil)
+				dbRepo.On("ApplyMigration", mock.AnythingOfType("*migrator.Migration")).Return(nil)
+
+				migrations, err := migrator.MigrateUp(mockConfig)
+				assert.NoError(t, err)
+				assert.Equal(t, c.expectedCalls, len(migrations))
+
+				fsRepo.AssertExpectations(t)
+				dbRepo.AssertCalled(t, "LoadLastAppliedMigration")
+				fsRepo.AssertCalled(t, "LoadMigrationsFromFile", migrator.MigrationUp)
+
+				fsRepo.AssertNumberOfCalls(t, "LoadMigrationQuery", c.expectedCalls)
+				dbRepo.AssertNumberOfCalls(t, "ApplyMigration", c.expectedCalls)
 			})
 		}
-
-		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return(migrations, nil)
-		fsRepo.On("LoadMigrationQuery", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-		dbRepo.On("LoadLastAppliedMigration").Return(nil, nil)
-		dbRepo.On("ApplyMigration", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-
-		migrations, err := migrator.MigrateUp(mockConfig)
-		assert.NoError(t, err)
-		assert.Equal(t, 5, len(migrations))
-
-		fsRepo.AssertExpectations(t)
-		dbRepo.AssertExpectations(t)
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationsFromFile", 1)
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationQuery", 5)
-		dbRepo.AssertNumberOfCalls(t, "LoadLastAppliedMigration", 1)
-		dbRepo.AssertNumberOfCalls(t, "ApplyMigration", 5)
 	})
 
-	t.Run("migrate up on non-empty database and non-empty file repo", func(t *testing.T) {
-		fsRepo := mocks.NewFileRepo(t)
-		dbRepo := mocks.NewDatabaseRepo(t)
-		mockConfig := &migrator.MigratorConfig{
-			FSRepo:       fsRepo,
-			DBRepo:       dbRepo,
-			NumToMigrate: 5,
-			DryRun:       false,
-		}
-
-		var migrations []*migrator.Migration
-		for i := 1; i <= 5; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationUp,
-			})
-		}
-
-		dbRepo.On("LoadLastAppliedMigration").Return(migrations[2], nil)
-		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return(migrations, nil)
-		fsRepo.On("LoadMigrationQuery", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-		dbRepo.On("ApplyMigration", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-
-		migrations, err := migrator.MigrateUp(mockConfig)
-		assert.NoError(t, err)
-		assert.Equal(t, 2, len(migrations))
-
-		fsRepo.AssertExpectations(t)
-		dbRepo.AssertExpectations(t)
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationsFromFile", 1)
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationQuery", 2)
-		dbRepo.AssertNumberOfCalls(t, "LoadLastAppliedMigration", 1)
-		dbRepo.AssertNumberOfCalls(t, "ApplyMigration", 2)
-	})
-
-	t.Run("migrate up with 0 num to migrate", func(t *testing.T) {
-		fsRepo := mocks.NewFileRepo(t)
-		dbRepo := mocks.NewDatabaseRepo(t)
-		mockConfig := &migrator.MigratorConfig{
-			FSRepo:       fsRepo,
-			DBRepo:       dbRepo,
-			NumToMigrate: 0,
-			DryRun:       false,
-		}
-
-		var migrations []*migrator.Migration
-		for i := 1; i <= 5; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationUp,
-			})
-		}
-
-		dbRepo.On("LoadLastAppliedMigration").Return(nil, nil)
-		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return(migrations, nil)
-		fsRepo.On("LoadMigrationQuery", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-		dbRepo.On("ApplyMigration", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-
-		migrations, err := migrator.MigrateUp(mockConfig)
-		assert.NoError(t, err)
-		assert.Equal(t, 5, len(migrations))
-
-		fsRepo.AssertExpectations(t)
-		dbRepo.AssertExpectations(t)
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationsFromFile", 1)
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationQuery", 5)
-		dbRepo.AssertNumberOfCalls(t, "LoadLastAppliedMigration", 1)
-		dbRepo.AssertNumberOfCalls(t, "ApplyMigration", 5)
-	})
-}
-
-func TestMigrateDown(t *testing.T) {
-	t.Run("migrate up on empty database and empty file repo", func(t *testing.T) {
-		fsRepo := mocks.NewFileRepo(t)
-		dbRepo := mocks.NewDatabaseRepo(t)
-		mockConfig := &migrator.MigratorConfig{
-			FSRepo:       fsRepo,
-			DBRepo:       dbRepo,
-			NumToMigrate: 5,
-			DryRun:       false,
-		}
-
-		var migrations []*migrator.Migration
-
-		dbRepo.On("LoadLastAppliedMigration").Return(nil, nil)
-		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationDown).Return(migrations, nil)
-		// dbRepo.On("ApplyMigration").Return(migrations, nil)
-
-		migrations, err := migrator.MigrateDown(mockConfig)
-		assert.NoError(t, err)
-		assert.Equal(t, 0, len(migrations))
-
-		dbRepo.AssertNotCalled(t, "ApplyMigration")
-
-	})
-
-	t.Run("migrate up on non-empty database and empty file repo", func(t *testing.T) {
-		fsRepo := mocks.NewFileRepo(t)
-		dbRepo := mocks.NewDatabaseRepo(t)
-		mockConfig := &migrator.MigratorConfig{
-			FSRepo:       fsRepo,
-			DBRepo:       dbRepo,
-			NumToMigrate: 5,
-			DryRun:       false,
-		}
-
-		var migrations []*migrator.Migration
-		for i := 5; i > 0; i-- {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationDown,
-			})
-		}
-
-		dbRepo.On("LoadLastAppliedMigration").Return(migrations[2], nil)
-		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationDown).Return([]*migrator.Migration{}, nil)
-
-		migrations, err := migrator.MigrateDown(mockConfig)
-		assert.NoError(t, err)
-		assert.Equal(t, 0, len(migrations))
-
-		dbRepo.AssertNotCalled(t, "ApplyMigration")
-		dbRepo.AssertNotCalled(t, "LoadMigrationQuery")
-
-	})
-
-	t.Run("migrate up with dry run", func(t *testing.T) {
-		fsRepo := mocks.NewFileRepo(t)
-		dbRepo := mocks.NewDatabaseRepo(t)
-		mockConfig := &migrator.MigratorConfig{
-			FSRepo:       fsRepo,
-			DBRepo:       dbRepo,
-			NumToMigrate: 5,
-			DryRun:       true,
-		}
-
-		var migrations []*migrator.Migration
-		for i := 5; i > 0; i-- {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationDown,
-			})
-		}
-
-		dbRepo.On("LoadLastAppliedMigration").Return(nil, nil)
-		fsRepo.On("LoadMigrationQuery", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationDown).Return(migrations, nil)
-
-		migrations, err := migrator.MigrateDown(mockConfig)
-		assert.NoError(t, err)
-		assert.Equal(t, 5, len(migrations))
-
-		dbRepo.AssertNotCalled(t, "ApplyMigration")
-	})
-
-	t.Run("migrate up on empty database and non-empty file repo", func(t *testing.T) {
-		fsRepo := mocks.NewFileRepo(t)
-		dbRepo := mocks.NewDatabaseRepo(t)
-		mockConfig := &migrator.MigratorConfig{
-			FSRepo:       fsRepo,
-			DBRepo:       dbRepo,
-			NumToMigrate: 5,
-			DryRun:       false,
-		}
-
-		var migrations []*migrator.Migration
-		for i := 5; i > 0; i-- {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationDown,
-			})
-		}
-
-		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationDown).Return(migrations, nil)
-		fsRepo.On("LoadMigrationQuery", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-		dbRepo.On("LoadLastAppliedMigration").Return(nil, nil)
-		dbRepo.On("ApplyMigration", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-
-		migrations, err := migrator.MigrateDown(mockConfig)
-		assert.NoError(t, err)
-		assert.Equal(t, 5, len(migrations))
-
-		fsRepo.AssertExpectations(t)
-		dbRepo.AssertExpectations(t)
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationsFromFile", 1)
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationQuery", 5)
-		dbRepo.AssertNumberOfCalls(t, "LoadLastAppliedMigration", 1)
-		dbRepo.AssertNumberOfCalls(t, "ApplyMigration", 5)
-	})
-
-	t.Run("migrate up on non-empty database and non-empty file repo", func(t *testing.T) {
-		fsRepo := mocks.NewFileRepo(t)
-		dbRepo := mocks.NewDatabaseRepo(t)
-		mockConfig := &migrator.MigratorConfig{
-			FSRepo:       fsRepo,
-			DBRepo:       dbRepo,
-			NumToMigrate: 5,
-			DryRun:       false,
-		}
-
-		var migrations []*migrator.Migration
-		for i := 5; i > 0; i-- {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationDown,
-			})
-		}
-
-		dbRepo.On("LoadLastAppliedMigration").Return(migrations[2], nil)
-		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationDown).Return(migrations, nil)
-		fsRepo.On("LoadMigrationQuery", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-		dbRepo.On("ApplyMigration", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-
-		migrations, err := migrator.MigrateDown(mockConfig)
-		assert.NoError(t, err)
-		assert.Equal(t, 2, len(migrations))
-
-		fsRepo.AssertExpectations(t)
-		dbRepo.AssertExpectations(t)
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationsFromFile", 1)
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationQuery", 2)
-		dbRepo.AssertNumberOfCalls(t, "LoadLastAppliedMigration", 1)
-		dbRepo.AssertNumberOfCalls(t, "ApplyMigration", 2)
-	})
-
-	t.Run("migrate up with 0 num to migrate", func(t *testing.T) {
-		fsRepo := mocks.NewFileRepo(t)
-		dbRepo := mocks.NewDatabaseRepo(t)
-		mockConfig := &migrator.MigratorConfig{
-			FSRepo:       fsRepo,
-			DBRepo:       dbRepo,
-			NumToMigrate: 0,
-			DryRun:       false,
-		}
-
-		var migrations []*migrator.Migration
-		for i := 5; i > 0; i-- {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationDown,
-			})
-		}
-
-		dbRepo.On("LoadLastAppliedMigration").Return(nil, nil)
-		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationDown).Return(migrations, nil)
-		fsRepo.On("LoadMigrationQuery", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-		dbRepo.On("ApplyMigration", mock.AnythingOfType("*migrator.Migration")).Return(nil)
-
-		migrations, err := migrator.MigrateDown(mockConfig)
-		assert.NoError(t, err)
-		assert.Equal(t, 5, len(migrations))
-
-		fsRepo.AssertExpectations(t)
-		dbRepo.AssertExpectations(t)
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationsFromFile", 1)
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationQuery", 5)
-		dbRepo.AssertNumberOfCalls(t, "LoadLastAppliedMigration", 1)
-		dbRepo.AssertNumberOfCalls(t, "ApplyMigration", 5)
-	})
 }
 
 func TestCalculateDownMigration(t *testing.T) {
@@ -1211,7 +1017,7 @@ func TestCalculateUpMigration(t *testing.T) {
 
 			t.Run("num to migrate is 0", func(t *testing.T) {
 				upMigrations := migrator.CalculateUpMigrationsToApply(nil, upMigrationList, 0)
-				assert.Equal(t, 0, len(upMigrations))
+				assert.Equal(t, 10, len(upMigrations))
 				for i, v := range upMigrations {
 					assert.Equal(t, upMigrationList[i].Name, v.Name)
 					assert.Equal(t, upMigrationList[i].Number, v.Number)

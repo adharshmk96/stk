@@ -141,17 +141,17 @@ func ApplyMigration(config *MigratorConfig, migration *Migration) error {
 }
 
 func CalculateUpMigrationsToApply(lastMigration *Migration, migrations []*Migration, numberToMigrate int) []*Migration {
-	if lastMigration == nil {
-		endIdx := min(numberToMigrate, len(migrations))
-		return migrations[:endIdx]
+	if numberToMigrate == 0 {
+		numberToMigrate = len(migrations)
 	}
 
 	if len(migrations) == 0 {
 		return []*Migration{}
 	}
 
-	if numberToMigrate == 0 {
-		numberToMigrate = len(migrations)
+	if lastMigration == nil {
+		endIdx := min(numberToMigrate, len(migrations))
+		return migrations[:endIdx]
 	}
 
 	if lastMigration.Type == MigrationUp {
@@ -182,17 +182,17 @@ func CalculateUpMigrationsToApply(lastMigration *Migration, migrations []*Migrat
 
 // It will accept a reversed list of migrations
 func CalculateDownMigrationsToApply(lastMigration *Migration, migrations []*Migration, numberToMigrate int) []*Migration {
-	if lastMigration == nil {
-		endIdx := min(numberToMigrate, len(migrations))
-		return migrations[:endIdx]
+	if numberToMigrate == 0 {
+		numberToMigrate = len(migrations)
 	}
 
 	if len(migrations) == 0 {
 		return []*Migration{}
 	}
 
-	if numberToMigrate == 0 {
-		numberToMigrate = len(migrations)
+	if lastMigration == nil {
+		endIdx := min(numberToMigrate, len(migrations))
+		return migrations[:endIdx]
 	}
 
 	if lastMigration.Type == MigrationUp {
