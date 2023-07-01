@@ -6,6 +6,7 @@ import (
 	"github.com/adharshmk96/stk/pkg/db"
 	"github.com/adharshmk96/stk/pkg/migrator"
 	"github.com/adharshmk96/stk/pkg/migrator/dbrepo"
+	"github.com/spf13/viper"
 )
 
 func getNumberFromArgs(args []string, defaultValue int) int {
@@ -23,7 +24,9 @@ func selectDbRepo(database migrator.Database) migrator.DatabaseRepo {
 	switch database {
 	case migrator.SQLiteDB:
 		{
-			conn := db.GetSqliteConnection("migration.db")
+			viper.SetDefault("migrator.sqlite.filepath", "stkmigration.db")
+			filepath := viper.GetString("migrator.sqlite.filepath")
+			conn := db.GetSqliteConnection(filepath)
 			return dbrepo.NewSQLiteRepo(conn)
 		}
 	default:

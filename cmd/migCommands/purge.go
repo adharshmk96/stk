@@ -10,6 +10,7 @@ import (
 	"github.com/adharshmk96/stk/pkg/migrator"
 	"github.com/adharshmk96/stk/pkg/migrator/fsrepo"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // PurgeCmd represents the mkconfig command
@@ -18,8 +19,8 @@ var PurgeCmd = &cobra.Command{
 	Short: "Remove all migration files and the migration table from the database",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		rootDirectory := cmd.Flag("path").Value.String()
-		dbChoice := cmd.Flag("database").Value.String()
+		rootDirectory := viper.GetString("migrator.workdir")
+		dbChoice := viper.GetString("migrator.database")
 
 		// Select based on the database
 		dbType := migrator.SelectDatabase(dbChoice)

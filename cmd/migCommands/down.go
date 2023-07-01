@@ -10,6 +10,7 @@ import (
 	"github.com/adharshmk96/stk/pkg/migrator"
 	"github.com/adharshmk96/stk/pkg/migrator/fsrepo"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // DownCmd represents the mkconfig command
@@ -18,8 +19,8 @@ var DownCmd = &cobra.Command{
 	Short: "Perform backward migration from the files in the migrations folder",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		rootDirectory := cmd.Flag("path").Value.String()
-		dbChoice := cmd.Flag("database").Value.String()
+		rootDirectory := viper.GetString("migrator.workdir")
+		dbChoice := viper.GetString("migrator.database")
 
 		dryRun := cmd.Flag("dry-run").Value.String() == "true"
 
