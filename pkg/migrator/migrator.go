@@ -1,6 +1,9 @@
 package migrator
 
-import "log"
+import (
+	"log"
+	"sort"
+)
 
 type MigratorConfig struct {
 	NumToMigrate int
@@ -39,7 +42,7 @@ func MigrateUp(config *MigratorConfig) ([]*Migration, error) {
 	log.Println("last applied migration : ", lastAppliedMigration)
 
 	// Find the next migrations to apply
-	migrationsToApply := FindUpMigrationsToApply(lastAppliedMigration, migrations, config.NumToMigrate)
+	migrationsToApply := CalculateUpMigrationsToApply(lastAppliedMigration, migrations, config.NumToMigrate)
 
 	if len(migrationsToApply) == 0 {
 		log.Println("No migrations to apply")
@@ -93,6 +96,7 @@ func MigrateDown(config *MigratorConfig) ([]*Migration, error) {
 
 	log.Println("last applied migration : ", lastAppliedMigration)
 
+	reverseMigrationList(migrations)
 	// Find the next migrations to apply
 	migrationsToApply := CalculateDownMigrationsToApply(lastAppliedMigration, migrations, config.NumToMigrate)
 
@@ -136,114 +140,96 @@ func ApplyMigration(config *MigratorConfig, migration *Migration) error {
 	return nil
 }
 
-func getStartIdx(lastMigration *Migration, migrations []*Migration) int {
-	if lastMigration == nil {
-		return 0
-	}
-
-	idx := findNextMigrationNumberIndex(migrations, lastMigration.Number)
-	if idx < 0 {
-		return -1
-	}
-	if lastMigration.Type == MigrationDown {
-		return max(idx-1, 0)
-	}
-	return max(idx, 0)
-}
-
-func getLastIdx(startIdx int, numberToMigrate int, totalMigrations int) int {
-	if numberToMigrate == 0 || startIdx == -1 {
-		return totalMigrations
-	}
-	return min(startIdx+numberToMigrate, totalMigrations)
-}
-
-func FindUpMigrationsToApply(lastMigration *Migration, migrations []*Migration, numberToMigrate int) []*Migration {
-	startIdx := getStartIdx(lastMigration, migrations)
-	lastIdx := getLastIdx(startIdx, numberToMigrate, len(migrations))
-	if startIdx == -1 {
-		return []*Migration{}
-	}
-	return migrations[startIdx:lastIdx]
-}
-
 func CalculateUpMigrationsToApply(lastMigration *Migration, migrations []*Migration, numberToMigrate int) []*Migration {
 	if lastMigration == nil {
-		return migrations[:numberToMigrate]
+		endIdx := min(numberToMigrate, len(migrations))
+		return migrations[:endIdx]
 	}
 
-	idx := findNextMigrationNumberIndex(migrations, lastMigration.Number)
-	if idx < 0 {
+	if len(migrations) == 0 {
 		return []*Migration{}
 	}
 
-	var startIdx, endIdx int
-	if lastMigration.Type == MigrationDown {
-		startIdx = max(idx-1, 0)
-		if numberToMigrate <= 0 {
-			endIdx = len(migrations)
-		} else {
-			endIdx = min(startIdx+numberToMigrate, len(migrations))
-		}
-
-	} else {
-		startIdx = max(idx, 0)
-		if numberToMigrate <= 0 {
-			endIdx = len(migrations)
-		} else {
-			endIdx = min(startIdx+numberToMigrate, len(migrations))
-		}
+	if numberToMigrate == 0 {
+		numberToMigrate = len(migrations)
 	}
 
-	return migrations[startIdx:endIdx]
+	if lastMigration.Type == MigrationUp {
+		// Find the index of the element just greater than num
+		startIdx := sort.Search(len(migrations), func(i int) bool { return migrations[i].Number > lastMigration.Number })
+
+		// If the index + n is out of bounds
+		endInx := min(startIdx+numberToMigrate, len(migrations))
+
+		result := migrations[startIdx:endInx]
+		return result
+	}
+
+	if lastMigration.Type == MigrationDown {
+		// Find the index of the element just greater than num
+		startIdx := sort.Search(len(migrations), func(i int) bool { return migrations[i].Number > lastMigration.Number })
+
+		startIdx = max(startIdx-1, 0)
+		endInx := min(startIdx+numberToMigrate, len(migrations))
+
+		result := migrations[startIdx:endInx]
+		return result
+	}
+
+	return []*Migration{}
+
 }
 
+// It will accept a reversed list of migrations
 func CalculateDownMigrationsToApply(lastMigration *Migration, migrations []*Migration, numberToMigrate int) []*Migration {
 	if lastMigration == nil {
+		endIdx := min(numberToMigrate, len(migrations))
+		return migrations[:endIdx]
+	}
+
+	if len(migrations) == 0 {
 		return []*Migration{}
 	}
 
-	idx := findNextMigrationNumberIndex(migrations, lastMigration.Number)
-	if idx < 0 {
-		return []*Migration{}
+	if numberToMigrate == 0 {
+		numberToMigrate = len(migrations)
 	}
 
-	var startIdx, endIdx int
+	if lastMigration.Type == MigrationUp {
+		// Find the next migration value than last applied migration
+		index := sort.Search(len(migrations), func(i int) bool { return migrations[i].Number <= lastMigration.Number })
+
+		// If the index - n is less than 0, return an error
+		endIdx := min(index+numberToMigrate, len(migrations))
+
+		// Otherwise, slice the list to get the last n numbers smaller than num
+		result := migrations[index:endIdx]
+
+		return result
+	}
+
 	if lastMigration.Type == MigrationDown {
-		endIdx = max(idx-1, 0)
-		if numberToMigrate <= 0 {
-			startIdx = 0
-		} else {
-			startIdx = max(idx-numberToMigrate-1, 0)
-		}
+		// Find the index of the element just greater or equal to num
+		index := sort.Search(len(migrations), func(i int) bool { return migrations[i].Number <= lastMigration.Number }) + 1
 
-	} else {
-		endIdx = max(idx, 0)
-		if numberToMigrate <= 0 {
-			startIdx = 0
-		} else {
-			startIdx = max(endIdx-numberToMigrate, 0)
-		}
+		// If the index - n is less than 0, return an error
+		endIdx := min(index+numberToMigrate, len(migrations))
+
+		// Otherwise, slice the list to get the last n numbers smaller than num
+		result := migrations[index:endIdx]
+
+		return result
 	}
 
-	downMigrations := migrations[startIdx:endIdx]
-
-	// reverse order
-	for i, j := 0, len(downMigrations)-1; i < j; i, j = i+1, j-1 {
-		downMigrations[i], downMigrations[j] = downMigrations[j], downMigrations[i]
-	}
-
-	return downMigrations
-
+	return []*Migration{}
 }
 
-func findNextMigrationNumberIndex(migrations []*Migration, number int) int {
-	for i, v := range migrations {
-		if v.Number > number {
-			return i
-		}
+func reverseMigrationList(migrations []*Migration) []*Migration {
+	for i := len(migrations)/2 - 1; i >= 0; i-- {
+		opp := len(migrations) - 1 - i
+		migrations[i], migrations[opp] = migrations[opp], migrations[i]
 	}
-	return -1
+	return migrations
 }
 
 func min(a, b int) int {

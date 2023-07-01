@@ -3,7 +3,6 @@ package migrator_test
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/adharshmk96/stk/mocks"
@@ -11,147 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
-
-func Test_findUpMigrationsToApply(t *testing.T) {
-
-	var migrations []*migrator.Migration
-	for i := 1; i <= 10; i++ {
-		migrations = append(migrations, &migrator.Migration{
-			Number: i,
-			Name:   "test" + strconv.Itoa(i),
-			Path:   "test" + strconv.Itoa(i),
-			Query:  "test" + strconv.Itoa(i),
-			Type:   migrator.MigrationUp,
-		})
-	}
-
-	type args struct {
-		lastMigration   *migrator.Migration
-		migrations      []*migrator.Migration
-		numberToMigrate int
-	}
-	tests := []struct {
-		name string
-		args args
-		want []*migrator.Migration
-	}{
-		{
-			name: "find up migrations after num 5 to apply",
-			args: args{
-				lastMigration: &migrator.Migration{
-					Number: 5,
-					Name:   "test",
-					Path:   "test",
-					Query:  "test",
-					Type:   migrator.MigrationUp,
-				},
-				migrations:      migrations,
-				numberToMigrate: 2,
-			},
-			want: migrations[5 : 5+2],
-		},
-		{
-			name: "find up migrations from num 5 to apply",
-			args: args{
-				lastMigration: &migrator.Migration{
-					Number: 5,
-					Name:   "test",
-					Path:   "test",
-					Query:  "test",
-					Type:   migrator.MigrationDown,
-				},
-				migrations:      migrations,
-				numberToMigrate: 2,
-			},
-			want: migrations[4 : 4+2],
-		},
-		{
-			name: "apply 20 migrations from num 5",
-			args: args{
-				lastMigration: &migrator.Migration{
-					Number: 5,
-					Name:   "test",
-					Path:   "test",
-					Query:  "test",
-					Type:   migrator.MigrationDown,
-				},
-				migrations:      migrations,
-				numberToMigrate: 20,
-			},
-			want: migrations[4:],
-		},
-		{
-			name: "apply 20 migrations after num 5",
-			args: args{
-				lastMigration: &migrator.Migration{
-					Number: 5,
-					Name:   "test",
-					Path:   "test",
-					Query:  "test",
-					Type:   migrator.MigrationUp,
-				},
-				migrations:      migrations,
-				numberToMigrate: 20,
-			},
-			want: migrations[5:],
-		},
-		{
-			name: "return all migrations if last migration is nil",
-			args: args{
-				lastMigration:   nil,
-				migrations:      migrations,
-				numberToMigrate: 20,
-			},
-			want: migrations,
-		},
-		{
-			name: "return first n migrations if last migration is nil",
-			args: args{
-				lastMigration:   nil,
-				migrations:      migrations,
-				numberToMigrate: 2,
-			},
-			want: migrations[:2],
-		},
-		{
-			name: "last migration is the last migration in the list",
-			args: args{
-				lastMigration:   migrations[len(migrations)-1],
-				migrations:      migrations,
-				numberToMigrate: 2,
-			},
-			want: []*migrator.Migration{},
-		},
-		{
-			name: "last migration is nil and num to migrate is 0",
-			args: args{
-				lastMigration:   nil,
-				migrations:      migrations,
-				numberToMigrate: 0,
-			},
-			want: migrations,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := migrator.FindUpMigrationsToApply(tt.args.lastMigration, tt.args.migrations, tt.args.numberToMigrate)
-
-			if tt.name == "last migration is the last migration in the list" {
-				assert.Equal(t, 0, len(got))
-				return
-			}
-
-			assert.Equal(t, len(tt.want), len(got))
-
-			for idx, migration := range tt.want {
-				assert.Equal(t, migration.Number, got[idx].Number)
-				assert.Equal(t, migration.Name, got[idx].Name)
-				assert.Equal(t, migration.Path, got[idx].Path)
-				assert.Equal(t, migration.Query, got[idx].Query)
-			}
-		})
-	}
-}
 
 func TestApplyMigration(t *testing.T) {
 
@@ -217,35 +75,33 @@ func TestApplyMigration(t *testing.T) {
 }
 
 func TestMigrateUp(t *testing.T) {
-	t.Run("migrate up on empty database and empty file repo", func(t *testing.T) {
-		fsRepo := mocks.NewFileRepo(t)
+
+	// TODO: Refactor tests.
+	t.Run("when empty database", func(t *testing.T) {
+
 		dbRepo := mocks.NewDatabaseRepo(t)
-		mockConfig := &migrator.MigratorConfig{
-			FSRepo:       fsRepo,
-			DBRepo:       dbRepo,
-			NumToMigrate: 5,
-			DryRun:       false,
-		}
-
-		var migrations []*migrator.Migration
-		// for i := 0; i < 5; i++ {
-		// 	migrations = append(migrations, &migrator.Migration{
-		// 		Number: i,
-		// 		Name:   fmt.Sprintf("test_%d", i),
-		// 		Type:   migrator.MigrationUp,
-		// 	})
-		// }
-
 		dbRepo.On("LoadLastAppliedMigration").Return(nil, nil)
-		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return(migrations, nil)
-		// dbRepo.On("ApplyMigration").Return(migrations, nil)
 
-		migrations, err := migrator.MigrateUp(mockConfig)
-		assert.NoError(t, err)
-		assert.Equal(t, 0, len(migrations))
+		t.Run("when empty file repo", func(t *testing.T) {
+			fsRepo := mocks.NewFileRepo(t)
+			var migrations []*migrator.Migration
 
-		dbRepo.AssertNotCalled(t, "ApplyMigration")
+			fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return(migrations, nil)
 
+			mockConfig := &migrator.MigratorConfig{
+				FSRepo:       fsRepo,
+				DBRepo:       dbRepo,
+				NumToMigrate: 5,
+				DryRun:       false,
+			}
+
+			migrations, err := migrator.MigrateUp(mockConfig)
+			assert.NoError(t, err)
+			assert.Equal(t, 0, len(migrations))
+
+			fsRepo.AssertExpectations(t)
+			dbRepo.AssertNotCalled(t, "ApplyMigration")
+		})
 	})
 
 	t.Run("migrate up on non-empty database and empty file repo", func(t *testing.T) {
@@ -614,366 +470,774 @@ func TestMigrateDown(t *testing.T) {
 }
 
 func TestCalculateDownMigration(t *testing.T) {
-	t.Run("calculate down migration with last up migration", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationUp,
+	var upMigrationList []*migrator.Migration
+	for i := 1; i <= 10; i++ {
+		upMigrationList = append(upMigrationList, &migrator.Migration{
+			Number: i,
+			Name:   fmt.Sprintf("test_%d", i),
+			Type:   migrator.MigrationUp,
+		})
+	}
+
+	// don't reuse down list because it's pointers
+	reversedDownMigrationList := make([]*migrator.Migration, 0)
+	for i := 10; i > 0; i-- {
+		reversedDownMigrationList = append(reversedDownMigrationList, &migrator.Migration{
+			Number: i,
+			Name:   fmt.Sprintf("test_%d", i),
+			Type:   migrator.MigrationDown,
+		})
+	}
+
+	var downMigrationList []*migrator.Migration
+	for i := 1; i <= 10; i++ {
+		downMigrationList = append(downMigrationList, &migrator.Migration{
+			Number: i,
+			Name:   fmt.Sprintf("test_%d", i),
+			Type:   migrator.MigrationDown,
+		})
+	}
+
+	// length := len(reversedDownMigrationList)
+
+	t.Run("when last migration is up", func(t *testing.T) {
+
+		t.Run("when last migration is at 6", func(t *testing.T) {
+
+			// last migration is 6
+			lastMigration := upMigrationList[5]
+
+			tc := []struct {
+				name         string
+				numToMigrate int
+				expected     []*migrator.Migration
+			}{
+				{
+					name:         "when num to migrate is 2",
+					numToMigrate: 2,
+					// expected should be 6, 5
+					expected: reversedDownMigrationList[4:6],
+				},
+				{
+					name:         "when num to migrate is 100",
+					numToMigrate: 100,
+					// expected should be 6, 5, 4, 3 ,2, 1
+					expected: reversedDownMigrationList[4:],
+				},
+				{
+					name:         "when num to migrate is 0",
+					numToMigrate: 0,
+					// expected should be 6, 5, 4, 3 ,2, 1
+					expected: reversedDownMigrationList[4:],
+				},
+			}
+
+			for _, vtc := range tc {
+
+				t.Run(vtc.name, func(t *testing.T) {
+
+					downMigrations := migrator.CalculateDownMigrationsToApply(lastMigration, reversedDownMigrationList, vtc.numToMigrate)
+					assert.Equal(t, len(vtc.expected), len(downMigrations))
+
+					for i, v := range downMigrations {
+						assert.Equal(t, vtc.expected[i].Number, v.Number)
+						assert.Equal(t, vtc.expected[i].Name, v.Name)
+					}
+				})
+			}
+
+		})
+
+		t.Run("when last migration is at 10", func(t *testing.T) {
+
+			// last migration is 10
+			lastMigration := upMigrationList[9]
+
+			tc := []struct {
+				name         string
+				numToMigrate int
+				expected     []*migrator.Migration
+			}{
+				{
+					name:         "when num to migrate is 2",
+					numToMigrate: 2,
+					// expected should be 10, 9
+					expected: reversedDownMigrationList[:2],
+				},
+				{
+					name:         "when num to migrate is 100",
+					numToMigrate: 100,
+					// expected should be 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+					expected: reversedDownMigrationList,
+				},
+				{
+					name:         "when num to migrate is 0",
+					numToMigrate: 0,
+					// expected should be 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+					expected: reversedDownMigrationList,
+				},
+			}
+
+			for _, vtc := range tc {
+
+				t.Run(vtc.name, func(t *testing.T) {
+
+					downMigrations := migrator.CalculateDownMigrationsToApply(lastMigration, reversedDownMigrationList, vtc.numToMigrate)
+					assert.Equal(t, len(vtc.expected), len(downMigrations))
+
+					for i, v := range downMigrations {
+						assert.Equal(t, vtc.expected[i].Number, v.Number)
+						assert.Equal(t, vtc.expected[i].Name, v.Name)
+					}
+				})
+			}
+		})
+
+		t.Run("when last migration is at 0", func(t *testing.T) {
+
+			// last migration is 1
+			lastMigration := upMigrationList[0]
+
+			tc := []struct {
+				name         string
+				numToMigrate int
+				expected     []*migrator.Migration
+			}{
+				{
+					name:         "when num to migrate is 2",
+					numToMigrate: 2,
+					// expected should be 0
+					expected: reversedDownMigrationList[9:],
+				},
+				{
+					name:         "when num to migrate is 100",
+					numToMigrate: 100,
+					// expected should be 0
+					expected: reversedDownMigrationList[9:],
+				},
+				{
+					name:         "when num to migrate is 0",
+					numToMigrate: 0,
+					// expected should be 0
+					expected: reversedDownMigrationList[9:],
+				},
+			}
+
+			for _, vtc := range tc {
+
+				t.Run(vtc.name, func(t *testing.T) {
+
+					downMigrations := migrator.CalculateDownMigrationsToApply(lastMigration, reversedDownMigrationList, vtc.numToMigrate)
+					assert.Equal(t, len(vtc.expected), len(downMigrations))
+
+					for i, v := range downMigrations {
+						assert.Equal(t, vtc.expected[i].Number, v.Number)
+						assert.Equal(t, vtc.expected[i].Name, v.Name)
+					}
+				})
+			}
+		})
+
+	})
+
+	t.Run("when last migration is down", func(t *testing.T) {
+
+		t.Run("when last migration is at 6", func(t *testing.T) {
+
+			// last migration is 6
+			lastMigration := downMigrationList[5]
+
+			tc := []struct {
+				name         string
+				numToMigrate int
+				expected     []*migrator.Migration
+			}{
+				{
+					name:         "when num to migrate is 2",
+					numToMigrate: 2,
+					// expected should be 5, 4
+					expected: reversedDownMigrationList[5:7],
+				},
+				{
+					name:         "when num to migrate is 100",
+					numToMigrate: 100,
+					// expected should be 5, 4, 3 ,2, 1
+					expected: reversedDownMigrationList[5:],
+				},
+				{
+					name:         "when num to migrate is 0",
+					numToMigrate: 0,
+					// expected should be 5, 4, 3 ,2, 1
+					expected: reversedDownMigrationList[5:],
+				},
+			}
+
+			for _, vtc := range tc {
+
+				t.Run(vtc.name, func(t *testing.T) {
+
+					downMigrations := migrator.CalculateDownMigrationsToApply(lastMigration, reversedDownMigrationList, vtc.numToMigrate)
+					assert.Equal(t, len(vtc.expected), len(downMigrations))
+
+					for i, v := range downMigrations {
+						assert.Equal(t, vtc.expected[i].Number, v.Number)
+						assert.Equal(t, vtc.expected[i].Name, v.Name)
+					}
+				})
+			}
+
+		})
+
+		t.Run("when last migration is at 0", func(t *testing.T) {
+
+			// last migration is 1
+			lastMigration := downMigrationList[0]
+
+			tc := []struct {
+				name         string
+				numToMigrate int
+				expected     []*migrator.Migration
+			}{
+				{
+					name:         "when num to migrate is 2",
+					numToMigrate: 2,
+					// expected should be 0
+					expected: []*migrator.Migration{},
+				},
+				{
+					name:         "when num to migrate is 100",
+					numToMigrate: 100,
+					// expected should be 0
+					expected: []*migrator.Migration{},
+				},
+				{
+					name:         "when num to migrate is 0",
+					numToMigrate: 0,
+					// expected should be 0
+					expected: []*migrator.Migration{},
+				},
+			}
+
+			for _, vtc := range tc {
+
+				t.Run(vtc.name, func(t *testing.T) {
+
+					downMigrations := migrator.CalculateDownMigrationsToApply(lastMigration, reversedDownMigrationList, vtc.numToMigrate)
+					assert.Equal(t, len(vtc.expected), len(downMigrations))
+
+					for i, v := range downMigrations {
+						assert.Equal(t, vtc.expected[i].Number, v.Number)
+						assert.Equal(t, vtc.expected[i].Name, v.Name)
+					}
+				})
+			}
+		})
+
+		t.Run("when last migration is at 10", func(t *testing.T) {
+
+			// last migration is 10
+			lastMigration := downMigrationList[9]
+
+			tc := []struct {
+				name         string
+				numToMigrate int
+				expected     []*migrator.Migration
+			}{
+				{
+					name:         "when num to migrate is 2",
+					numToMigrate: 2,
+					// expected should be 9, 8
+					expected: reversedDownMigrationList[1:3],
+				},
+				{
+					name:         "when num to migrate is 100",
+					numToMigrate: 100,
+					// expected should be 9, 8, 7, 6, 5, 4, 3, 2, 1
+					expected: reversedDownMigrationList[1:],
+				},
+				{
+					name:         "when num to migrate is 0",
+					numToMigrate: 0,
+					// expected should be 9, 8, 7, 6, 5, 4, 3, 2, 1
+					expected: reversedDownMigrationList[1:],
+				},
+			}
+
+			for _, vtc := range tc {
+
+				t.Run(vtc.name, func(t *testing.T) {
+
+					downMigrations := migrator.CalculateDownMigrationsToApply(lastMigration, reversedDownMigrationList, vtc.numToMigrate)
+					assert.Equal(t, len(vtc.expected), len(downMigrations))
+
+					for i, v := range downMigrations {
+						assert.Equal(t, vtc.expected[i].Number, v.Number)
+						assert.Equal(t, vtc.expected[i].Name, v.Name)
+					}
+				})
+			}
+
+		})
+
+	})
+
+	t.Run("when last migration is nil", func(t *testing.T) {
+
+		t.Run("when num to migrate is 2", func(t *testing.T) {
+
+			downMigrations := migrator.CalculateDownMigrationsToApply(nil, reversedDownMigrationList, 2)
+			assert.Equal(t, 2, len(downMigrations))
+
+			for i, v := range downMigrations {
+				assert.Equal(t, reversedDownMigrationList[i].Number, v.Number)
+				assert.Equal(t, reversedDownMigrationList[i].Name, v.Name)
+			}
+
+		})
+
+		t.Run("when num to migrate is 100", func(t *testing.T) {
+
+			downMigrations := migrator.CalculateDownMigrationsToApply(nil, reversedDownMigrationList, 100)
+			assert.Equal(t, 10, len(downMigrations))
+
+			for i, v := range downMigrations {
+				assert.Equal(t, reversedDownMigrationList[i].Number, v.Number)
+				assert.Equal(t, reversedDownMigrationList[i].Name, v.Name)
+			}
+
+		})
+
+		t.Run("when num to migrate is 0", func(t *testing.T) {
+
+			downMigrations := migrator.CalculateDownMigrationsToApply(nil, reversedDownMigrationList, 0)
+			assert.Equal(t, 0, len(downMigrations))
+
+		})
+
+	})
+
+	t.Run("when migration list is empty", func(t *testing.T) {
+
+		tc := []struct {
+			name         string
+			numToMigrate int
+			expected     []*migrator.Migration
+		}{
+			{
+				name:         "when num to migrate is 2",
+				numToMigrate: 2,
+				// expected should be 0
+				expected: []*migrator.Migration{},
+			},
+			{
+				name:         "when num to migrate is 100",
+				numToMigrate: 100,
+				// expected should be 0
+				expected: []*migrator.Migration{},
+			},
+			{
+				name:         "when num to migrate is 0",
+				numToMigrate: 0,
+				// expected should be 0
+				expected: []*migrator.Migration{},
+			},
+		}
+
+		for _, vtc := range tc {
+
+			t.Run(vtc.name, func(t *testing.T) {
+
+				downMigrations := migrator.CalculateDownMigrationsToApply(downMigrationList[5], []*migrator.Migration{}, vtc.numToMigrate)
+				assert.Equal(t, len(vtc.expected), len(downMigrations))
+
 			})
 		}
 
-		var expected []*migrator.Migration
-		for i := 5; i > 0; i-- {
-			expected = append(expected, migrations[i-1])
-		}
+		for _, vtc := range tc {
 
-		lastUpMigration := migrations[4]
+			t.Run(vtc.name, func(t *testing.T) {
 
-		downMigrations := migrator.CalculateDownMigrationsToApply(lastUpMigration, migrations, 0)
+				downMigrations := migrator.CalculateDownMigrationsToApply(upMigrationList[2], []*migrator.Migration{}, vtc.numToMigrate)
+				assert.Equal(t, len(vtc.expected), len(downMigrations))
 
-		assert.Equal(t, 5, len(downMigrations))
-
-		for idx, migration := range expected {
-			// assert.Contains(t, downMigrations, migration)
-			assert.Equal(t, migration.Number, downMigrations[idx].Number)
-		}
-	})
-
-	t.Run("calculate down migration with last down migration", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationDown,
 			})
 		}
 
-		var expected []*migrator.Migration
-		for i := 4; i > 0; i-- {
-			expected = append(expected, migrations[i-1])
-		}
-
-		lastDownMigration := migrations[4]
-
-		downMigrations := migrator.CalculateDownMigrationsToApply(lastDownMigration, migrations, 0)
-
-		assert.Equal(t, 4, len(downMigrations))
-
-		for idx, migration := range expected {
-			// assert.Contains(t, downMigrations, migration)
-			assert.Equal(t, migration.Number, downMigrations[idx].Number)
-		}
 	})
 
-	t.Run("calculate down migration with last down migration and num to migrate", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationDown,
-			})
-		}
-
-		var expected []*migrator.Migration
-		for i := 4; i > 2; i-- {
-			expected = append(expected, migrations[i-1])
-		}
-
-		lastDownMigration := migrations[4]
-
-		downMigrations := migrator.CalculateDownMigrationsToApply(lastDownMigration, migrations, 2)
-
-		assert.Equal(t, 2, len(downMigrations))
-
-		for idx, migration := range expected {
-			// assert.Contains(t, downMigrations, migration)
-			assert.Equal(t, migration.Number, downMigrations[idx].Number)
-		}
-	})
-
-	t.Run("calculate down migration with last up migration and num to migrate", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationUp,
-			})
-		}
-
-		var expected []*migrator.Migration
-		for i := 5; i > 3; i-- {
-			expected = append(expected, migrations[i-1])
-		}
-
-		lastUpMigration := migrations[4]
-
-		downMigrations := migrator.CalculateDownMigrationsToApply(lastUpMigration, migrations, 2)
-
-		assert.Equal(t, 2, len(downMigrations))
-
-		for idx, migration := range expected {
-			// assert.Contains(t, downMigrations, migration)
-			assert.Equal(t, migration.Number, downMigrations[idx].Number)
-		}
-	})
-
-	t.Run("calculate down migration with last up migration and num to migrate greater than available migrations", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationUp,
-			})
-		}
-
-		var expected []*migrator.Migration
-		for i := 5; i > 0; i-- {
-			expected = append(expected, migrations[i-1])
-		}
-
-		lastUpMigration := migrations[4]
-
-		downMigrations := migrator.CalculateDownMigrationsToApply(lastUpMigration, migrations, 20)
-
-		assert.Equal(t, 5, len(downMigrations))
-
-		for idx, migration := range expected {
-			// assert.Contains(t, downMigrations, migration)
-			assert.Equal(t, migration.Number, downMigrations[idx].Number)
-		}
-	})
-
-	t.Run("calculate down migration with last down migration and num to migrate greater than available migrations", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationDown,
-			})
-		}
-
-		var expected []*migrator.Migration
-		for i := 4; i > 0; i-- {
-			expected = append(expected, migrations[i-1])
-		}
-
-		lastDownMigration := migrations[4]
-
-		downMigrations := migrator.CalculateDownMigrationsToApply(lastDownMigration, migrations, 20)
-
-		assert.Equal(t, 4, len(downMigrations))
-
-		for idx, migration := range expected {
-			// assert.Contains(t, downMigrations, migration)
-			assert.Equal(t, migration.Number, downMigrations[idx].Number)
-		}
-	})
 }
 
 func TestCalculateUpMigration(t *testing.T) {
-	t.Run("calculate up migration with last up migration", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationUp,
+
+	var upMigrationList []*migrator.Migration
+	for i := 1; i <= 10; i++ {
+		upMigrationList = append(upMigrationList, &migrator.Migration{
+			Number: i,
+			Name:   fmt.Sprintf("test_%d", i),
+			Type:   migrator.MigrationUp,
+		})
+	}
+
+	var downMigrationList []*migrator.Migration
+	for i := 1; i <= 10; i++ {
+		downMigrationList = append(downMigrationList, &migrator.Migration{
+			Number: i,
+			Name:   fmt.Sprintf("test_%d", i),
+			Type:   migrator.MigrationDown,
+		})
+	}
+
+	t.Run("when last migration is up", func(t *testing.T) {
+
+		t.Run("when last migration is at middle", func(t *testing.T) {
+			// migration 5
+			lastUpMigration := upMigrationList[4]
+
+			t.Run("num to migrate is 2", func(t *testing.T) {
+				// migration 6 to 8
+				expected := upMigrationList[5:7]
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, upMigrationList, 2)
+
+				assert.Equal(t, 2, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+
 			})
-		}
 
-		var expected []*migrator.Migration
-		for i := 6; i <= 10; i++ {
-			expected = append(expected, migrations[i-1])
-		}
+			t.Run("num to migrate is 100", func(t *testing.T) {
+				// migration 6 to 10
+				expected := upMigrationList[5:]
 
-		lastUpMigration := migrations[4]
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, upMigrationList, 100)
 
-		upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, migrations, 0)
+				assert.Equal(t, 5, len(upMigrations))
 
-		assert.Equal(t, 5, len(upMigrations))
+				assert.Equal(t, expected, upMigrations)
 
-		for idx, migration := range expected {
-			// assert.Contains(t, upMigrations, migration)
-			assert.Equal(t, migration.Number, upMigrations[idx].Number)
-		}
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+
+			t.Run("num to migrate is 0", func(t *testing.T) {
+				// migration 6 to 10
+				expected := upMigrationList[5:]
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, upMigrationList, 0)
+
+				assert.Equal(t, 5, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+
+		})
+
+		t.Run("when last migration is at end", func(t *testing.T) {
+
+			// migration 10
+			lastUpMigration := upMigrationList[9]
+
+			t.Run("num to migrate is 2", func(t *testing.T) {
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, upMigrationList, 2)
+				assert.Equal(t, 0, len(upMigrations))
+			})
+
+			t.Run("num to migrate is 100", func(t *testing.T) {
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, upMigrationList, 100)
+				assert.Equal(t, 0, len(upMigrations))
+			})
+
+			t.Run("num to migrate is 0", func(t *testing.T) {
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, upMigrationList, 0)
+				assert.Equal(t, 0, len(upMigrations))
+			})
+		})
+
+		t.Run("when last migration is at start", func(t *testing.T) {
+
+			// migration 1
+			lastUpMigration := upMigrationList[0]
+
+			t.Run("num to migrate is 2", func(t *testing.T) {
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, upMigrationList, 2)
+
+				// migration 2 to 3
+				expected := upMigrationList[1:3]
+				assert.Equal(t, 2, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+
+			t.Run("num to migrate is 100", func(t *testing.T) {
+				// migration 2 to 10
+				expected := upMigrationList[1:]
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, upMigrationList, 100)
+
+				assert.Equal(t, 9, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+
+			t.Run("num to migrate is 0", func(t *testing.T) {
+				// migration 6 to 10
+				expected := upMigrationList[1:]
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, upMigrationList, 0)
+
+				assert.Equal(t, 9, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+		})
+
 	})
 
-	t.Run("calculate up migration with last down migration", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationDown,
+	t.Run("when last migration is down", func(t *testing.T) {
+
+		t.Run("when last migration is at middle", func(t *testing.T) {
+			// migration 5
+			lastDownMigration := downMigrationList[4]
+
+			t.Run("num to migrate is 2", func(t *testing.T) {
+				// migration 5 to 7
+				expected := upMigrationList[4:6]
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastDownMigration, upMigrationList, 2)
+
+				assert.Equal(t, 2, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
 			})
-		}
 
-		var expected []*migrator.Migration
-		for i := 5; i <= 10; i++ {
-			expected = append(expected, migrations[i-1])
-		}
+			t.Run("num to migrate is 100", func(t *testing.T) {
+				// migration 5 to 10
+				expected := upMigrationList[4:]
 
-		lastUpMigration := migrations[4]
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastDownMigration, upMigrationList, 100)
 
-		upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, migrations, 0)
+				assert.Equal(t, 6, len(upMigrations))
 
-		assert.Equal(t, 6, len(upMigrations))
+				assert.Equal(t, expected, upMigrations)
 
-		for idx, migration := range expected {
-			// assert.Contains(t, upMigrations, migration)
-			assert.Equal(t, migration.Number, upMigrations[idx].Number)
-		}
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+
+			t.Run("num to migrate is 0", func(t *testing.T) {
+				// migration 5 to 10
+				expected := upMigrationList[4:]
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastDownMigration, upMigrationList, 0)
+
+				assert.Equal(t, 6, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+
+		})
+
+		t.Run("when last migration is at end", func(t *testing.T) {
+
+			// migration 10
+			lastDownMigration := downMigrationList[9]
+
+			t.Run("num to migrate is 2", func(t *testing.T) {
+				// migration 10
+				expected := upMigrationList[9:]
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastDownMigration, upMigrationList, 2)
+
+				assert.Equal(t, 1, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+
+			t.Run("num to migrate is 100", func(t *testing.T) {
+				// migration 10
+				expected := upMigrationList[9:]
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastDownMigration, upMigrationList, 100)
+
+				assert.Equal(t, 1, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+
+			t.Run("num to migrate is 0", func(t *testing.T) {
+				// migration 10
+				expected := upMigrationList[9:]
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastDownMigration, upMigrationList, 0)
+
+				assert.Equal(t, 1, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+		})
+
+		t.Run("when last migration is at start", func(t *testing.T) {
+
+			// migration 1
+			lastDownMigration := downMigrationList[0]
+
+			t.Run("num to migrate is 2", func(t *testing.T) {
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastDownMigration, upMigrationList, 2)
+
+				// migration 2 to 3
+				expected := upMigrationList[:2]
+				assert.Equal(t, 2, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+
+			t.Run("num to migrate is 100", func(t *testing.T) {
+				// migration 2 to 10
+				expected := upMigrationList[:]
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastDownMigration, upMigrationList, 100)
+
+				assert.Equal(t, 10, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+
+			t.Run("num to migrate is 0", func(t *testing.T) {
+				// migration 2 to 10
+				expected := upMigrationList[:]
+
+				upMigrations := migrator.CalculateUpMigrationsToApply(lastDownMigration, upMigrationList, 0)
+
+				assert.Equal(t, 10, len(upMigrations))
+
+				assert.Equal(t, expected, upMigrations)
+
+				for i, v := range upMigrations {
+					assert.Equal(t, expected[i].Name, v.Name)
+					assert.Equal(t, expected[i].Number, v.Number)
+				}
+			})
+
+		})
+
 	})
 
-	t.Run("calculate up migration with last up migration and num to migrate", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationUp,
+	t.Run("when last migration is nil", func(t *testing.T) {
+
+		emptyMigrationList := []*migrator.Migration{}
+
+		t.Run("when migrations are not empty", func(t *testing.T) {
+
+			t.Run("num to migrate is 2", func(t *testing.T) {
+				upMigrations := migrator.CalculateUpMigrationsToApply(nil, upMigrationList, 2)
+				assert.Equal(t, 2, len(upMigrations))
+				assert.Equal(t, upMigrationList[:2], upMigrations)
 			})
-		}
 
-		var expected []*migrator.Migration
-		for i := 6; i <= 7; i++ {
-			expected = append(expected, migrations[i-1])
-		}
-
-		lastUpMigration := migrations[4]
-
-		upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, migrations, 2)
-
-		assert.Equal(t, 2, len(upMigrations))
-
-		for idx, migration := range expected {
-			// assert.Contains(t, upMigrations, migration)
-			assert.Equal(t, migration.Number, upMigrations[idx].Number)
-		}
-	})
-
-	t.Run("calculate up migration with last down migration and num to migrate", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationDown,
+			t.Run("num to migrate is 100", func(t *testing.T) {
+				upMigrations := migrator.CalculateUpMigrationsToApply(nil, upMigrationList, 100)
+				assert.Equal(t, 10, len(upMigrations))
+				for i, v := range upMigrations {
+					assert.Equal(t, upMigrationList[i].Name, v.Name)
+					assert.Equal(t, upMigrationList[i].Number, v.Number)
+				}
 			})
-		}
 
-		var expected []*migrator.Migration
-		for i := 5; i <= 6; i++ {
-			expected = append(expected, migrations[i-1])
-		}
-
-		lastDownMigration := migrations[4]
-
-		upMigrations := migrator.CalculateUpMigrationsToApply(lastDownMigration, migrations, 2)
-
-		assert.Equal(t, 2, len(upMigrations))
-
-		for idx, migration := range expected {
-			// assert.Contains(t, upMigrations, migration)
-			assert.Equal(t, migration.Number, upMigrations[idx].Number)
-		}
-	})
-
-	t.Run("calculate up migration with last up is last entry and num to migrate greater than available migrations", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationUp,
+			t.Run("num to migrate is 0", func(t *testing.T) {
+				upMigrations := migrator.CalculateUpMigrationsToApply(nil, upMigrationList, 0)
+				assert.Equal(t, 0, len(upMigrations))
+				for i, v := range upMigrations {
+					assert.Equal(t, upMigrationList[i].Name, v.Name)
+					assert.Equal(t, upMigrationList[i].Number, v.Number)
+				}
 			})
-		}
 
-		lastUpMigration := migrations[9]
+		})
 
-		upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, migrations, 20)
+		t.Run("when migrations are empty", func(t *testing.T) {
 
-		assert.Equal(t, 0, len(upMigrations))
-	})
-
-	t.Run("calculate up migration with last down is last entry and num to migrate greater than available migrations", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationDown,
+			t.Run("num to migrate is 2", func(t *testing.T) {
+				upMigrations := migrator.CalculateUpMigrationsToApply(nil, emptyMigrationList, 2)
+				assert.Equal(t, 0, len(upMigrations))
 			})
-		}
 
-		lastUpMigration := migrations[9]
-
-		upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, migrations, 0)
-
-		assert.Equal(t, 1, len(upMigrations))
-
-		assert.Equal(t, migrations[9], upMigrations[0])
-	})
-
-	t.Run("calculate up migration with last up migration and num to migrate greater than available migrations", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationUp,
+			t.Run("num to migrate is 100", func(t *testing.T) {
+				upMigrations := migrator.CalculateUpMigrationsToApply(nil, emptyMigrationList, 100)
+				assert.Equal(t, 0, len(upMigrations))
 			})
-		}
 
-		var expected []*migrator.Migration
-		for i := 6; i <= 10; i++ {
-			expected = append(expected, migrations[i-1])
-		}
-
-		lastUpMigration := migrations[4]
-
-		upMigrations := migrator.CalculateUpMigrationsToApply(lastUpMigration, migrations, 20)
-
-		assert.Equal(t, 5, len(upMigrations))
-
-		for idx, migration := range expected {
-			// assert.Contains(t, upMigrations, migration)
-			assert.Equal(t, migration.Number, upMigrations[idx].Number)
-		}
-	})
-
-	t.Run("calculate up migration with last down migration and num to migrate greater than available migrations", func(t *testing.T) {
-		var migrations []*migrator.Migration
-		for i := 1; i <= 10; i++ {
-			migrations = append(migrations, &migrator.Migration{
-				Number: i,
-				Name:   fmt.Sprintf("test_%d", i),
-				Type:   migrator.MigrationDown,
+			t.Run("num to migrate is 0", func(t *testing.T) {
+				upMigrations := migrator.CalculateUpMigrationsToApply(nil, emptyMigrationList, 0)
+				assert.Equal(t, 0, len(upMigrations))
 			})
-		}
 
-		var expected []*migrator.Migration
-		for i := 5; i <= 10; i++ {
-			expected = append(expected, migrations[i-1])
-		}
+		})
 
-		lastDownMigration := migrations[4]
-
-		upMigrations := migrator.CalculateUpMigrationsToApply(lastDownMigration, migrations, 20)
-
-		assert.Equal(t, 6, len(upMigrations))
-
-		for idx, migration := range expected {
-			// assert.Contains(t, upMigrations, migration)
-			assert.Equal(t, migration.Number, upMigrations[idx].Number)
-		}
 	})
-
 }
