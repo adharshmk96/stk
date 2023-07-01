@@ -21,6 +21,13 @@ func NewFSRepo(workDir, ext string) migrator.FileRepo {
 	}
 }
 
+// LoadMigrationsFromFile loads all migrations from the filesystem
+// return values
+// 1. []*Migration
+//   - list of migrations if any
+//   - emtpy list if no migrations found
+//
+// 2. error - error if any
 func (f *fileSystem) LoadMigrationsFromFile(migrationType migrator.MigrationType) ([]*migrator.Migration, error) {
 	if err := f.OpenDirectory(); err != nil {
 		return nil, err
@@ -35,11 +42,11 @@ func (f *fileSystem) LoadMigrationsFromFile(migrationType migrator.MigrationType
 		return nil, err
 	}
 
-	if migrationType == migrator.MigrationDown {
-		sortDescMigrations(migrations)
-	} else {
-		sortAscMigrations(migrations)
-	}
+	// if migrationType == migrator.MigrationDown {
+	// 	sortDescMigrations(migrations)
+	// } else {
+	// }
+	sortAscMigrations(migrations)
 
 	return migrations, nil
 }

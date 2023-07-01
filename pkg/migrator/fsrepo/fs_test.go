@@ -136,10 +136,11 @@ func TestLoadMigrationsFromFile(t *testing.T) {
 		fsRepo := NewFSRepo("test_dir", ext)
 		migrations, err := fsRepo.LoadMigrationsFromFile(migrator.MigrationUp)
 		assert.NoError(t, err)
+		assert.NotNil(t, migrations)
 		assert.Equal(t, len(migrations), 0)
 	})
 
-	t.Run("load migrations from directory", func(t *testing.T) {
+	t.Run("load migrations from non-empty directory", func(t *testing.T) {
 		setupFSDir()
 		defer teardownFSDir()
 
@@ -174,7 +175,7 @@ func TestLoadMigrationsFromFile(t *testing.T) {
 		}
 	})
 
-	t.Run("loaded migrations are sorted descending for down", func(t *testing.T) {
+	t.Run("loaded migrations are sorted ascending for down", func(t *testing.T) {
 		setupFSDir()
 		defer teardownFSDir()
 
@@ -182,8 +183,11 @@ func TestLoadMigrationsFromFile(t *testing.T) {
 		fsRepo := NewFSRepo("test_dir", ext)
 		migrations, err := fsRepo.LoadMigrationsFromFile(migrator.MigrationDown)
 		assert.NoError(t, err)
+		// for i := 0; i < len(migrations)-1; i++ {
+		// 	assert.True(t, migrations[i].Number > migrations[i+1].Number)
+		// }
 		for i := 0; i < len(migrations)-1; i++ {
-			assert.True(t, migrations[i].Number > migrations[i+1].Number)
+			assert.True(t, migrations[i].Number < migrations[i+1].Number)
 		}
 	})
 }
