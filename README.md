@@ -2,7 +2,23 @@
 
 Server toolkit - minimal and simple framework for developing server in golang
 
-## GSK
+## Library
+
+GSK - Web server framework [here](#gsk---web-server-framework--library-)
+
+## CLI Tools
+
+There are few cli tools that comes with stk
+- Migrator - Database migration tool [here](#migrator)
+- Project generator - Generates a new project with gsk following clean architecture (WIP)
+- Verify - Verify the project structure for arch rules (WIP)
+
+### Install
+```bash
+go install github.com/adharshmk96/stk
+```
+
+## GSK - Web server framework ( library )
 - A web server framework with go's native http server wrapper and httprouter for routing
 - Middleware support
 - Logrus Logger
@@ -57,13 +73,6 @@ server.Use(middleware)
 ```
 
 # CLI Tools
-
-There are few cli tools that comes with stk
-
-## Install
-```bash
-go install github.com/adharshmk96/stk
-```
 
 ## Migrator
 - CLI tool for generating migration files and running migrations

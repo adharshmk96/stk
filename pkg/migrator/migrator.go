@@ -2,7 +2,6 @@ package migrator
 
 import (
 	"log"
-	"sort"
 )
 
 type MigratorConfig struct {
@@ -13,118 +12,93 @@ type MigratorConfig struct {
 }
 
 func MigrateUp(config *MigratorConfig) ([]*Migration, error) {
-
-	fsRepo := config.FSRepo
-	dbRepo := config.DBRepo
-
-	if config.DBRepo == nil {
-		log.Fatalf("database is not initialized")
-		return nil, ErrDatabaseNotInitialized
-	}
-
-	// Read last applied migration from database
-	lastAppliedMigration, err := dbRepo.LoadLastAppliedMigration()
+	migrations, lastAppliedMigration, err := LoadMigrations(config, MigrationUp)
 	if err != nil {
 		return nil, err
-	}
-
-	// Read and parse all migrations from directory
-	migrations, err := fsRepo.LoadMigrationsFromFile(MigrationUp)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Println("loaded migrations: ")
-	for _, v := range migrations {
-		log.Println(" - ", v.Number, v.Name)
-	}
-
-	if lastAppliedMigration != nil {
-		log.Println("last applied migration : ", lastAppliedMigration)
-	} else {
-		log.Println("last applied migration : ", "Empty")
 	}
 
 	// Find the next migrations to apply
 	migrationsToApply := CalculateUpMigrationsToApply(lastAppliedMigration, migrations, config.NumToMigrate)
-
 	if len(migrationsToApply) == 0 {
 		log.Println("No migrations to apply")
 		return nil, nil
 	}
 
-	// Read migration queries from files
-	for _, migration := range migrationsToApply {
-		err := fsRepo.LoadMigrationQuery(migration)
-		if err != nil {
-			return nil, err
-		}
-
-		// Apply migrations and add entries to database
-		err = ApplyMigration(config, migration)
-		if err != nil {
-			return nil, err
-		}
+	// Apply migrations
+	err = ApplyMigrations(config, migrationsToApply)
+	if err != nil {
+		return nil, err
 	}
 
 	return migrationsToApply, nil
-
 }
 
 func MigrateDown(config *MigratorConfig) ([]*Migration, error) {
+	migrations, lastAppliedMigration, err := LoadMigrations(config, MigrationDown)
+	if err != nil {
+		return nil, err
+	}
 
+	// Sort migrations in reverse order
+	reverseMigrationList(migrations)
+	// Find the next migrations to apply
+	migrationsToApply := CalculateDownMigrationsToApply(lastAppliedMigration, migrations, config.NumToMigrate)
+	if len(migrationsToApply) == 0 {
+		log.Println("No migrations to apply")
+		return nil, nil
+	}
+
+	// Apply migrations
+	err = ApplyMigrations(config, migrationsToApply)
+	if err != nil {
+		return nil, err
+	}
+
+	return migrationsToApply, nil
+}
+
+func LoadMigrations(config *MigratorConfig, migrationType MigrationType) ([]*Migration, *Migration, error) {
 	fsRepo := config.FSRepo
 	dbRepo := config.DBRepo
 
 	if config.DBRepo == nil {
 		log.Fatalf("database is not initialized")
-		return nil, ErrDatabaseNotInitialized
+		return nil, nil, ErrDatabaseNotInitialized
 	}
 
 	// Read last applied migration from database
 	lastAppliedMigration, err := dbRepo.LoadLastAppliedMigration()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Read and parse all migrations from directory
-	migrations, err := fsRepo.LoadMigrationsFromFile(MigrationDown)
+	migrations, err := fsRepo.LoadMigrationsFromFile(migrationType)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	log.Println("loaded migrations: ")
-	for _, v := range migrations {
-		log.Println(" - ", v.Number, v.Name)
-	}
+	return migrations, lastAppliedMigration, nil
+}
 
-	log.Println("last applied migration : ", lastAppliedMigration)
-
-	reverseMigrationList(migrations)
-	// Find the next migrations to apply
-	migrationsToApply := CalculateDownMigrationsToApply(lastAppliedMigration, migrations, config.NumToMigrate)
-
-	if len(migrationsToApply) == 0 {
-		log.Println("No migrations to apply")
-		return nil, nil
-	}
+func ApplyMigrations(config *MigratorConfig, migrationsToApply []*Migration) error {
+	fsRepo := config.FSRepo
 
 	// Read migration queries from files
 	for _, migration := range migrationsToApply {
 		err := fsRepo.LoadMigrationQuery(migration)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// Apply migrations and add entries to database
 		err = ApplyMigration(config, migration)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return migrationsToApply, nil
-
+	return nil
 }
 
 // TODO: apply all as one transaction ?. if one fails, rollback all
@@ -159,25 +133,21 @@ func CalculateUpMigrationsToApply(lastMigration *Migration, migrations []*Migrat
 	}
 
 	if lastMigration.Type == MigrationUp {
-		// Find the index of the element just greater than num
-		startIdx := sort.Search(len(migrations), func(i int) bool { return migrations[i].Number > lastMigration.Number })
-
-		// If the index + n is out of bounds
-		endInx := min(startIdx+numberToMigrate, len(migrations))
-
-		result := migrations[startIdx:endInx]
-		return result
+		for i, v := range migrations {
+			if v.Number > lastMigration.Number {
+				endIdx := min(i+numberToMigrate, len(migrations))
+				return migrations[i:endIdx]
+			}
+		}
 	}
 
 	if lastMigration.Type == MigrationDown {
-		// Find the index of the element just greater than num
-		startIdx := sort.Search(len(migrations), func(i int) bool { return migrations[i].Number > lastMigration.Number })
-
-		startIdx = max(startIdx-1, 0)
-		endInx := min(startIdx+numberToMigrate, len(migrations))
-
-		result := migrations[startIdx:endInx]
-		return result
+		for i, v := range migrations {
+			if v.Number >= lastMigration.Number {
+				endIdx := min(i+numberToMigrate, len(migrations))
+				return migrations[i:endIdx]
+			}
+		}
 	}
 
 	return []*Migration{}
@@ -200,29 +170,21 @@ func CalculateDownMigrationsToApply(lastMigration *Migration, migrations []*Migr
 	}
 
 	if lastMigration.Type == MigrationUp {
-		// Find the next migration value than last applied migration
-		index := sort.Search(len(migrations), func(i int) bool { return migrations[i].Number <= lastMigration.Number })
-
-		// If the index - n is less than 0, return an error
-		endIdx := min(index+numberToMigrate, len(migrations))
-
-		// Otherwise, slice the list to get the last n numbers smaller than num
-		result := migrations[index:endIdx]
-
-		return result
+		for i, v := range migrations {
+			if v.Number <= lastMigration.Number {
+				endIdx := min(i+numberToMigrate, len(migrations))
+				return migrations[i:endIdx]
+			}
+		}
 	}
 
 	if lastMigration.Type == MigrationDown {
-		// Find the index of the element just greater or equal to num
-		index := sort.Search(len(migrations), func(i int) bool { return migrations[i].Number <= lastMigration.Number }) + 1
-
-		// If the index - n is less than 0, return an error
-		endIdx := min(index+numberToMigrate, len(migrations))
-
-		// Otherwise, slice the list to get the last n numbers smaller than num
-		result := migrations[index:endIdx]
-
-		return result
+		for i, v := range migrations {
+			if v.Number < lastMigration.Number {
+				endIdx := min(i+numberToMigrate, len(migrations))
+				return migrations[i:endIdx]
+			}
+		}
 	}
 
 	return []*Migration{}

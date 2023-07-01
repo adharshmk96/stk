@@ -13,7 +13,7 @@ import (
 // historyCmd represents the mkconfig command
 var HistoryCmd = &cobra.Command{
 	Use:   "history",
-	Short: "migrate next migrations to database",
+	Short: "View the migration history of the database.",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		dbChoice := cmd.Flag("database").Value.String()

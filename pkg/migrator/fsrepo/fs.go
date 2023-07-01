@@ -27,7 +27,7 @@ func NewFSRepo(workDir, ext string) migrator.FileRepo {
 //   - list of migrations if any
 //   - emtpy list if no migrations found
 //
-// 2. error - error if any
+// 2. error - error if something goes wrong ONLY
 func (f *fileSystem) LoadMigrationsFromFile(migrationType migrator.MigrationType) ([]*migrator.Migration, error) {
 	if err := f.OpenDirectory(); err != nil {
 		return nil, err
@@ -108,6 +108,14 @@ func (f *fileSystem) LoadMigrationQuery(migration *migrator.Migration) error {
 	}
 	migration.Query = string(content)
 	return nil
+}
+
+func (f *fileSystem) DeleteMigrationFile(migration *migrator.Migration) error {
+	return os.Remove(migration.Path)
+}
+
+func (f *fileSystem) DeleteMigrationDirectory() error {
+	return os.RemoveAll(f.workDir)
 }
 
 func mkPathIfNotExists(dir string) error {

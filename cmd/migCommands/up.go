@@ -10,16 +10,17 @@ import (
 	"github.com/adharshmk96/stk/pkg/migrator"
 	"github.com/adharshmk96/stk/pkg/migrator/fsrepo"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // UpCmd represents the mkconfig command
 var UpCmd = &cobra.Command{
 	Use:   "up",
-	Short: "migrate next migrations to database",
+	Short: "Perform forward migration from the files in the migrations folder",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		rootDirectory := cmd.Flag("path").Value.String()
-		dbChoice := cmd.Flag("database").Value.String()
+		rootDirectory := viper.GetString("migrator.workdir")
+		dbChoice := viper.GetString("migrator.database")
 
 		dryRun := cmd.Flag("dry-run").Value.String() == "true"
 

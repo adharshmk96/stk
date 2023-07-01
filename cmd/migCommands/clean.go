@@ -13,18 +13,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-// DownCmd represents the mkconfig command
-var DownCmd = &cobra.Command{
-	Use:   "down",
-	Short: "Perform backward migration from the files in the migrations folder",
-	Args:  cobra.MaximumNArgs(1),
+// CleanCmd represents the mkconfig command
+var CleanCmd = &cobra.Command{
+	Use:   "clean",
+	Short: "Remove all unapplied migration files.",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootDirectory := viper.GetString("migrator.workdir")
 		dbChoice := viper.GetString("migrator.database")
 
 		dryRun := cmd.Flag("dry-run").Value.String() == "true"
-
-		numToMigrate := getNumberFromArgs(args, 0)
 
 		// Select based on the database
 		dbType := migrator.SelectDatabase(dbChoice)
@@ -36,27 +34,26 @@ var DownCmd = &cobra.Command{
 
 		dbRepo := selectDbRepo(dbType)
 
-		log.Println("Applying migrations down...")
+		log.Println("Cleaning unapplied migrations...")
 
 		config := &migrator.MigratorConfig{
-			NumToMigrate: numToMigrate,
-			DryRun:       dryRun,
+			DryRun: dryRun,
 
 			FSRepo: fsRepo,
 			DBRepo: dbRepo,
 		}
 
-		_, err := migrator.MigrateDown(config)
+		_, err := migrator.Clean(config)
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
 
-		log.Println("Migrated to database successfully.")
+		log.Println("Cleaned migrations successfully.")
 
 	},
 }
 
 func init() {
-	DownCmd.Flags().Bool("dry-run", false, "dry run, do not generate files")
+	CleanCmd.Flags().Bool("dry-run", false, "dry run, do not generate files")
 }
