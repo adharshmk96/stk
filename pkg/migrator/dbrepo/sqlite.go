@@ -9,8 +9,6 @@ import (
 )
 
 const (
-	sqlMigrationTable = "migdb_migration"
-
 	sqliteMigrationTableExists      = "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?;"
 	sqliteSelectMigrationEntries    = "SELECT number, name, migtype, created FROM " + sqlMigrationTable + " ORDER BY id ASC"
 	sqliteDropMigrationTable        = "DROP TABLE IF EXISTS " + sqlMigrationTable

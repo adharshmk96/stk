@@ -95,7 +95,6 @@ type DatabaseRepo interface {
 	// - Returns nil if no entry found
 	LoadLastAppliedMigration() (*Migration, error)
 	// Load all migration entries from the migration table
-	// - Creates migration table if not exists
 	LoadMigrations() ([]*Migration, error)
 	// Create a migration table if not exists
 	CreateMigrationTableIfNotExists() error
