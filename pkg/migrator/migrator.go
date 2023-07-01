@@ -39,7 +39,11 @@ func MigrateUp(config *MigratorConfig) ([]*Migration, error) {
 		log.Println(" - ", v.Number, v.Name)
 	}
 
-	log.Println("last applied migration : ", lastAppliedMigration)
+	if lastAppliedMigration != nil {
+		log.Println("last applied migration : ", lastAppliedMigration)
+	} else {
+		log.Println("last applied migration : ", "Empty")
+	}
 
 	// Find the next migrations to apply
 	migrationsToApply := CalculateUpMigrationsToApply(lastAppliedMigration, migrations, config.NumToMigrate)

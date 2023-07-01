@@ -35,7 +35,7 @@ var UpCmd = &cobra.Command{
 
 		dbRepo := selectDbRepo(dbType)
 
-		log.Println("Generating migration files...")
+		log.Println("Applying migrations up...")
 
 		config := &migrator.MigratorConfig{
 			NumToMigrate: numToMigrate,

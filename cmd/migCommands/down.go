@@ -14,8 +14,8 @@ import (
 
 // DownCmd represents the mkconfig command
 var DownCmd = &cobra.Command{
-	Use:   "up",
-	Short: "migrate next migrations to database",
+	Use:   "down",
+	Short: "apply down migrations to database",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		rootDirectory := cmd.Flag("path").Value.String()
@@ -35,7 +35,7 @@ var DownCmd = &cobra.Command{
 
 		dbRepo := selectDbRepo(dbType)
 
-		log.Println("Generating migration files...")
+		log.Println("Applying migrations down...")
 
 		config := &migrator.MigratorConfig{
 			NumToMigrate: numToMigrate,
@@ -45,7 +45,7 @@ var DownCmd = &cobra.Command{
 			DBRepo: dbRepo,
 		}
 
-		_, err := migrator.MigrateUp(config)
+		_, err := migrator.MigrateDown(config)
 		if err != nil {
 			log.Fatal(err)
 			return
