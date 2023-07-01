@@ -60,7 +60,9 @@ func Clean(config *MigratorConfig) ([]*Migration, error) {
 		}
 	}
 
-	return migrationsToApply, nil
+	allMigrations := append(migrationsToApply, downMigrations...)
+
+	return allMigrations, nil
 }
 
 func filterMigrations(migrationsB, migrationsA []*Migration) []*Migration {
