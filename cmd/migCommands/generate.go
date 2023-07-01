@@ -16,7 +16,7 @@ var migrationName string
 
 var GenerateCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "generate migration files",
+	Short: "Generate migration files.",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		rootDirectory := cmd.Flag("path").Value.String()

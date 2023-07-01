@@ -26,6 +26,20 @@ func (_m *FileRepo) CreateMigrationFile(migration *migrator.Migration) error {
 	return r0
 }
 
+// DeleteMigrationDirectory provides a mock function with given fields:
+func (_m *FileRepo) DeleteMigrationDirectory() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeleteMigrationFile provides a mock function with given fields: migration
 func (_m *FileRepo) DeleteMigrationFile(migration *migrator.Migration) error {
 	ret := _m.Called(migration)

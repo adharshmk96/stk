@@ -12,18 +12,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// UpCmd represents the mkconfig command
-var UpCmd = &cobra.Command{
-	Use:   "up",
-	Short: "Perform forward migration from the files in the migrations folder",
-	Args:  cobra.MaximumNArgs(1),
+// PurgeCmd represents the mkconfig command
+var PurgeCmd = &cobra.Command{
+	Use:   "purge",
+	Short: "Remove all migration files and the migration table from the database",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootDirectory := cmd.Flag("path").Value.String()
 		dbChoice := cmd.Flag("database").Value.String()
-
-		dryRun := cmd.Flag("dry-run").Value.String() == "true"
-
-		numToMigrate := getNumberFromArgs(args, 0)
 
 		// Select based on the database
 		dbType := migrator.SelectDatabase(dbChoice)
@@ -35,27 +31,29 @@ var UpCmd = &cobra.Command{
 
 		dbRepo := selectDbRepo(dbType)
 
-		log.Println("Applying migrations up...")
+		log.Println("Removing migration table...")
 
-		config := &migrator.MigratorConfig{
-			NumToMigrate: numToMigrate,
-			DryRun:       dryRun,
-
-			FSRepo: fsRepo,
-			DBRepo: dbRepo,
-		}
-
-		_, err := migrator.MigrateUp(config)
+		err := dbRepo.DeleteMigrationTable()
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
 
-		log.Println("Migrated to database successfully.")
+		log.Println("Removed migration table successfully.")
+
+		log.Println("Removing migration files")
+
+		err = fsRepo.DeleteMigrationDirectory()
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		log.Println("Removed migration files successfully.")
 
 	},
 }
 
 func init() {
-	UpCmd.Flags().Bool("dry-run", false, "dry run, do not generate files")
+	PurgeCmd.Flags().Bool("dry-run", false, "dry run, do not generate files")
 }

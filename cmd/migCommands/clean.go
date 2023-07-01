@@ -15,7 +15,7 @@ import (
 // CleanCmd represents the mkconfig command
 var CleanCmd = &cobra.Command{
 	Use:   "clean",
-	Short: "clean all unapplied migration files",
+	Short: "Remove all unapplied migration files.",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootDirectory := cmd.Flag("path").Value.String()

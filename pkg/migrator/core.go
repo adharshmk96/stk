@@ -122,4 +122,6 @@ type FileRepo interface {
 	LoadMigrationQuery(migration *Migration) error
 	// Delete a migration file
 	DeleteMigrationFile(migration *Migration) error
+	// Delete the migration directory
+	DeleteMigrationDirectory() error
 }

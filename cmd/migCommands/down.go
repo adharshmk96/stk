@@ -15,7 +15,7 @@ import (
 // DownCmd represents the mkconfig command
 var DownCmd = &cobra.Command{
 	Use:   "down",
-	Short: "apply down migrations to database",
+	Short: "Perform backward migration from the files in the migrations folder",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		rootDirectory := cmd.Flag("path").Value.String()

@@ -14,7 +14,7 @@ var database string
 // migratorCmd represents the generate command
 var migratorCmd = &cobra.Command{
 	Use:   "migrator",
-	Short: "database migrator commands",
+	Short: "A database migrator, to generate, run and clean database migrations",
 }
 
 func init() {
