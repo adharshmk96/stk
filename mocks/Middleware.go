@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	stk "github.com/adharshmk96/stk"
+	gsk "github.com/adharshmk96/stk/gsk"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -13,15 +13,15 @@ type Middleware struct {
 }
 
 // Execute provides a mock function with given fields: _a0
-func (_m *Middleware) Execute(_a0 stk.HandlerFunc) stk.HandlerFunc {
+func (_m *Middleware) Execute(_a0 gsk.HandlerFunc) gsk.HandlerFunc {
 	ret := _m.Called(_a0)
 
-	var r0 stk.HandlerFunc
-	if rf, ok := ret.Get(0).(func(stk.HandlerFunc) stk.HandlerFunc); ok {
+	var r0 gsk.HandlerFunc
+	if rf, ok := ret.Get(0).(func(gsk.HandlerFunc) gsk.HandlerFunc); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(stk.HandlerFunc)
+			r0 = ret.Get(0).(gsk.HandlerFunc)
 		}
 	}
 
