@@ -6,7 +6,7 @@ func StorageSqliteTemplate() []byte {
 import (
 	"database/sql"
 
-	"github.com/adharshmk96/stk-project-template/pkg/entity"
+	"{{.PkgName}}/{{.DirTree.EntityPath}}"
 )
 
 type sqliteRepo struct {
