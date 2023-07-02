@@ -1,4 +1,4 @@
-package migCommands
+package migratorCmds
 
 import (
 	"context"

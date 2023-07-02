@@ -1,7 +1,7 @@
 /*
 Copyright © 2023 Adharsh M dev@adharsh.in
 */
-package migCommands
+package migratorCmds
 
 import (
 	"log"
@@ -13,18 +13,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-// DownCmd represents the mkconfig command
-var DownCmd = &cobra.Command{
-	Use:   "down",
-	Short: "Perform backward migration from the files in the migrations folder",
-	Args:  cobra.MaximumNArgs(1),
+// PurgeCmd represents the mkconfig command
+var PurgeCmd = &cobra.Command{
+	Use:   "purge",
+	Short: "Remove all migration files and the migration table from the database",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootDirectory := viper.GetString("migrator.workdir")
 		dbChoice := viper.GetString("migrator.database")
-
-		dryRun := cmd.Flag("dry-run").Value.String() == "true"
-
-		numToMigrate := getNumberFromArgs(args, 0)
 
 		// Select based on the database
 		dbType := migrator.SelectDatabase(dbChoice)
@@ -36,27 +32,29 @@ var DownCmd = &cobra.Command{
 
 		dbRepo := selectDbRepo(dbType)
 
-		log.Println("Applying migrations down...")
+		log.Println("Removing migration table...")
 
-		config := &migrator.MigratorConfig{
-			NumToMigrate: numToMigrate,
-			DryRun:       dryRun,
-
-			FSRepo: fsRepo,
-			DBRepo: dbRepo,
-		}
-
-		_, err := migrator.MigrateDown(config)
+		err := dbRepo.DeleteMigrationTable()
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
 
-		log.Println("Migrated to database successfully.")
+		log.Println("Removed migration table successfully.")
+
+		log.Println("Removing migration files")
+
+		err = fsRepo.DeleteMigrationDirectory()
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		log.Println("Removed migration files successfully.")
 
 	},
 }
 
 func init() {
-	DownCmd.Flags().Bool("dry-run", false, "dry run, do not generate files")
+	PurgeCmd.Flags().Bool("dry-run", false, "dry run, do not generate files")
 }
