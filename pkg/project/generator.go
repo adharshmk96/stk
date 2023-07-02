@@ -59,7 +59,7 @@ func RandomName() string {
 	adjective := adjectives[randGen.Intn(len(adjectives))]
 	noun := nouns[randGen.Intn(len(nouns))]
 
-	return fmt.Sprintf("%s-%s", adjective, noun)
+	return fmt.Sprintf("%s%s", adjective, noun)
 }
 
 func CreateProjectFiles(config *Config) (err error) {
