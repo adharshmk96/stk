@@ -2,13 +2,11 @@ package migrator
 
 func SelectDatabase(database string) Database {
 	switch database {
-	case "postgres":
+	case "postgres", "postgresql":
 		return PostgresDB
 	case "mysql":
 		return MySQLDB
-	case "sqlite":
-		return SQLiteDB
-	case "sqlite3":
+	case "sqlite", "sqlite3":
 		return SQLiteDB
 	default:
 		return SQLiteDB

@@ -1,0 +1,26 @@
+services:
+  stk:
+    image: adharshmk96/stk:0.4.0
+    container_name: stk
+    build:
+      context: . #build context is current directory
+      dockerfile: Dockerfile
+  
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: stk
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+volumes:
+  postgres-data:

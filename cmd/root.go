@@ -62,6 +62,4 @@ func initConfig() {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 
-	fmt.Println("migrator.sqlite.filepath")
-	fmt.Println(viper.GetString("migrator.sqlite.filepath"))
 }
