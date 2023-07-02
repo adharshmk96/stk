@@ -2,6 +2,7 @@ package migratorCmds
 
 import (
 	"context"
+	"log"
 	"strconv"
 
 	"github.com/adharshmk96/stk/pkg/db"
@@ -25,6 +26,7 @@ func selectDbRepo(database migrator.Database) migrator.DatabaseRepo {
 	switch database {
 	case migrator.SQLiteDB:
 		{
+			log.Println("Loading sqlite config...")
 			viper.SetDefault("migrator.sqlite.filepath", "stkmigration.db")
 			filepath := viper.GetString("migrator.sqlite.filepath")
 			conn := db.GetSqliteConnection(filepath)
@@ -32,16 +34,17 @@ func selectDbRepo(database migrator.Database) migrator.DatabaseRepo {
 		}
 	case migrator.PostgresDB:
 		{
+			log.Println("Loading postgres config...")
 			viper.SetDefault("migrator.postgres.host", "localhost")
 			viper.SetDefault("migrator.postgres.port", "5432")
 			viper.SetDefault("migrator.postgres.user", "postgres")
 			viper.SetDefault("migrator.postgres.password", "postgres")
-			viper.SetDefault("migrator.postgres.dbname", "postgres")
+			viper.SetDefault("migrator.postgres.database", "postgres")
 			host := viper.GetString("migrator.postgres.host")
 			port := viper.GetString("migrator.postgres.port")
 			user := viper.GetString("migrator.postgres.user")
 			password := viper.GetString("migrator.postgres.password")
-			dbname := viper.GetString("migrator.postgres.dbname")
+			dbname := viper.GetString("migrator.postgres.database")
 
 			ctx := context.Background()
 
@@ -50,6 +53,7 @@ func selectDbRepo(database migrator.Database) migrator.DatabaseRepo {
 		}
 	case migrator.MySQLDB:
 		{
+			log.Println("Loading mysql config...")
 			viper.SetDefault("migrator.mysql.host", "localhost")
 			viper.SetDefault("migrator.mysql.port", "3306")
 			viper.SetDefault("migrator.mysql.user", "mysql")

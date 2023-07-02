@@ -21,6 +21,7 @@ var UpCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		rootDirectory := viper.GetString("migrator.workdir")
 		dbChoice := viper.GetString("migrator.database")
+		log.Println("selected database: ", dbChoice)
 
 		dryRun := cmd.Flag("dry-run").Value.String() == "true"
 
@@ -28,7 +29,6 @@ var UpCmd = &cobra.Command{
 
 		// Select based on the database
 		dbType := migrator.SelectDatabase(dbChoice)
-		log.Println("selected database: ", dbType)
 
 		extention := migrator.SelectExtention(dbType)
 		subDirectory := migrator.SelectSubDirectory(dbType)

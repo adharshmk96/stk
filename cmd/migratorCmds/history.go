@@ -8,6 +8,7 @@ import (
 
 	"github.com/adharshmk96/stk/pkg/migrator"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // historyCmd represents the mkconfig command
@@ -16,7 +17,7 @@ var HistoryCmd = &cobra.Command{
 	Short: "View the migration history of the database.",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		dbChoice := cmd.Flag("database").Value.String()
+		dbChoice := viper.GetString("migrator.database")
 
 		// Select based on the database
 		dbType := migrator.SelectDatabase(dbChoice)
