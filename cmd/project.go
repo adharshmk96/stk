@@ -21,10 +21,8 @@ var projectCmd = &cobra.Command{
 
 func init() {
 	projectCmd.PersistentFlags().StringVar(&projectPackageName, "pkg", "", "project package name or repository name")
-	projectCmd.PersistentFlags().StringVarP(&projectAppName, "app", "b", "", "project app name (binary name)")
 
 	viper.BindPFlag("project.package", projectCmd.PersistentFlags().Lookup("pkg"))
-	viper.BindPFlag("project.app", projectCmd.PersistentFlags().Lookup("app"))
 
 	projectCmd.AddCommand(projectCmds.GenerateCmd)
 
