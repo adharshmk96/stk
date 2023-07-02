@@ -45,7 +45,8 @@ func getAppNameFromPkgName(s string) string {
 	if lastSlash != -1 {
 		lastPart = s[lastSlash+1:]
 	}
-	return strings.ReplaceAll(lastPart, "-", "")
+	name := strings.ReplaceAll(lastPart, "-", "")
+	return strcase.ToLowerCamel(name)
 }
 
 func openDirectory(workDir string) error {
@@ -72,34 +73,28 @@ var GenerateCmd = &cobra.Command{
 		log.Println("Generating project files...")
 
 		workdir := getWorkDirFromArg(args)
-		pkg := viper.GetString("project.package")
-		app := viper.GetString("project.app")
-
 		err := openDirectory(workdir)
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
 
+		var pkg string
+
 		packageNameFromGit, err := getRepoName()
 		if err == nil && packageNameFromGit != "" {
 			// if a git repo exists, use the repo name as package name
 			log.Println("using existing git repo name: ", packageNameFromGit)
 			pkg = packageNameFromGit
-			app = getAppNameFromPkgName(pkg)
 		} else {
+			pkg = viper.GetString("project.package")
 			randomName := project.RandomName()
 			if pkg == "" {
 				pkg = randomName
 			}
-
-			if app == "" {
-				app = randomName
-			}
 		}
 
-		app = strings.ReplaceAll(app, "-", "")
-		app = strcase.ToLowerCamel(app)
+		app := getAppNameFromPkgName(pkg)
 
 		config := &project.Config{
 			RootPath: workdir,
