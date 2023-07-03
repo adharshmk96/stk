@@ -35,7 +35,7 @@ func TestRateLimiter(t *testing.T) {
 	for i := 0; i < requestsPerInterval; i++ {
 		req, _ := http.NewRequest("GET", "/test", nil)
 		respRec := httptest.NewRecorder()
-		s.Router.ServeHTTP(respRec, req)
+		s.GetRouter().ServeHTTP(respRec, req)
 
 		if respRec.Code != http.StatusOK {
 			t.Errorf("Expected 200 OK, got: %d for request %d", respRec.Code, i+1)
@@ -44,7 +44,7 @@ func TestRateLimiter(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", "/test", nil)
 	respRec := httptest.NewRecorder()
-	s.Router.ServeHTTP(respRec, req)
+	s.GetRouter().ServeHTTP(respRec, req)
 
 	assert.Equal(t, http.StatusTooManyRequests, respRec.Code)
 }

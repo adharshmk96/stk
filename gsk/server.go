@@ -1,6 +1,7 @@
 package gsk
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -20,20 +21,42 @@ type ServerConfig struct {
 	Logger         *logrus.Logger
 }
 
-type Server struct {
+type server struct {
+	httpServer  *http.Server
 	Router      *httprouter.Router
 	Middlewares []Middleware
 	Config      *ServerConfig
 	Logger      *logrus.Logger
 }
 
+type Server interface {
+	// Start and Stop
+	Start()
+	Shutdown() error
+	// Middleware
+	Use(Middleware)
+
+	// HTTP methods
+	Get(string, HandlerFunc)
+	Post(string, HandlerFunc)
+	Put(string, HandlerFunc)
+	Delete(string, HandlerFunc)
+	Patch(string, HandlerFunc)
+
+	// GetRouter
+	GetRouter() *httprouter.Router
+}
+
 // NewServer creates a new server instance
-func NewServer(config *ServerConfig) *Server {
+func NewServer(config *ServerConfig) Server {
 	if config.Logger == nil {
 		config.Logger = logging.NewLogrusLogger()
 	}
 
-	newSTKServer := &Server{
+	newSTKServer := &server{
+		httpServer: &http.Server{
+			Addr: fmt.Sprintf(":%s", config.Port),
+		},
 		Router:      httprouter.New(),
 		Middlewares: []Middleware{},
 		Config:      config,
@@ -44,41 +67,54 @@ func NewServer(config *ServerConfig) *Server {
 }
 
 // Start starts the server on the configured port
-func (s *Server) Start() {
+func (s *server) Start() {
 	startingPort := NormalizePort(s.Config.Port)
 	s.Logger.WithField("port", startingPort).Info("starting server")
-	err := http.ListenAndServe(startingPort, s.Router)
+	err := s.httpServer.ListenAndServe()
 	if err != nil {
 		s.Logger.WithError(err).Error("error starting server")
 		panic(err)
 	}
 }
 
+// Shuts down the server
+func (s *server) Shutdown() error {
+	s.Logger.Info("shutting down server")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return s.httpServer.Shutdown(ctx)
+}
+
 // Use adds a middleware to the server
 // usage example:
 // server.Use(stk.RequestLogger())
-func (s *Server) Use(middleware Middleware) {
+func (s *server) Use(middleware Middleware) {
 	s.Middlewares = append(s.Middlewares, middleware)
 }
 
-func (s *Server) Get(path string, handler HandlerFunc) {
+func (s *server) Get(path string, handler HandlerFunc) {
 	s.Router.GET(path, wrapHandlerFunc(s.applyMiddleware(handler), s.Config))
 }
 
-func (s *Server) Post(path string, handler HandlerFunc) {
+func (s *server) Post(path string, handler HandlerFunc) {
 	s.Router.POST(path, wrapHandlerFunc(s.applyMiddleware(handler), s.Config))
 }
 
-func (s *Server) Put(path string, handler HandlerFunc) {
+func (s *server) Put(path string, handler HandlerFunc) {
 	s.Router.PUT(path, wrapHandlerFunc(s.applyMiddleware(handler), s.Config))
 }
 
-func (s *Server) Delete(path string, handler HandlerFunc) {
+func (s *server) Delete(path string, handler HandlerFunc) {
 	s.Router.DELETE(path, wrapHandlerFunc(s.applyMiddleware(handler), s.Config))
 }
 
-func (s *Server) Patch(path string, handler HandlerFunc) {
+func (s *server) Patch(path string, handler HandlerFunc) {
 	s.Router.PATCH(path, wrapHandlerFunc(s.applyMiddleware(handler), s.Config))
+}
+
+func (s *server) GetRouter() *httprouter.Router {
+	return s.Router
 }
 
 // wrapHandlerFunc wraps the handler function with the httprouter.Handle
@@ -97,7 +133,7 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 			}).Info("incoming_request")
 		}
 
-		handlerContext := &context{
+		handlerContext := &gskContext{
 			params:         p,
 			request:        r,
 			writer:         w,

@@ -31,7 +31,7 @@ func TestCORSDefault(t *testing.T) {
 		req.Header.Set("Host", "example.com")
 		respRec := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(respRec, req)
+		s.GetRouter().ServeHTTP(respRec, req)
 
 		expectedHeaders := map[string]string{
 			"Access-Control-Allow-Origin":  "example.com",
@@ -77,7 +77,7 @@ func TestCORSAllowedOrigin(t *testing.T) {
 		req.Header.Set("Host", "example.com")
 		respRec := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(respRec, req)
+		s.GetRouter().ServeHTTP(respRec, req)
 
 		expectedHeaders := map[string]string{
 			"Access-Control-Allow-Origin":  "example.com",
@@ -99,7 +99,7 @@ func TestCORSAllowedOrigin(t *testing.T) {
 		req.Header.Set("Host", "invalid.com")
 		respRec := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(respRec, req)
+		s.GetRouter().ServeHTTP(respRec, req)
 
 		expectedHeaders := map[string]string{
 			"Access-Control-Allow-Origin":  "",
@@ -122,7 +122,7 @@ func TestCORSAllowedOrigin(t *testing.T) {
 		req.Header.Set("Access-Control-Request-Method", "POST")
 		respRec := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(respRec, req)
+		s.GetRouter().ServeHTTP(respRec, req)
 
 		// NOTE: thie is behaviour from the router package
 		// change this if we are chaning the router
@@ -147,7 +147,7 @@ func TestCORSAllowedOrigin(t *testing.T) {
 		req.Header.Set("Access-Control-Request-Method", "POST")
 		respRec := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(respRec, req)
+		s.GetRouter().ServeHTTP(respRec, req)
 
 		expectedHeaders := map[string]string{
 			"Access-Control-Allow-Origin":  "",

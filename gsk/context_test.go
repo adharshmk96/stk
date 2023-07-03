@@ -29,7 +29,7 @@ func TestStatus(t *testing.T) {
 			c.Status(http.StatusTeapot).JSONResponse("Hello, this is a JSON response!")
 		})
 
-		s.Router.ServeHTTP(responseRec, request)
+		s.GetRouter().ServeHTTP(responseRec, request)
 
 		assert.Equal(t, http.StatusTeapot, responseRec.Code)
 
@@ -44,7 +44,7 @@ func TestStatus(t *testing.T) {
 			c.Status(http.StatusTeapot)
 		})
 
-		s.Router.ServeHTTP(responseRec, request)
+		s.GetRouter().ServeHTTP(responseRec, request)
 
 		assert.Equal(t, http.StatusTeapot, responseRec.Code)
 
@@ -60,7 +60,7 @@ func TestStatus(t *testing.T) {
 			c.JSONResponse("Hello, this is a JSON response!")
 		})
 
-		s.Router.ServeHTTP(responseRec, request)
+		s.GetRouter().ServeHTTP(responseRec, request)
 
 		assert.Equal(t, http.StatusBadGateway, responseRec.Code)
 
@@ -75,7 +75,7 @@ func TestStatus(t *testing.T) {
 			c.JSONResponse("Hello, this is a JSON response!")
 		})
 
-		s.Router.ServeHTTP(responseRec, request)
+		s.GetRouter().ServeHTTP(responseRec, request)
 
 		assert.Equal(t, http.StatusOK, responseRec.Code)
 
@@ -91,7 +91,7 @@ func TestStatus(t *testing.T) {
 			c.Status(http.StatusBadGateway)
 		})
 
-		s.Router.ServeHTTP(responseRec, request)
+		s.GetRouter().ServeHTTP(responseRec, request)
 
 		assert.Equal(t, http.StatusBadGateway, responseRec.Code)
 
@@ -165,7 +165,7 @@ func TestJSONResponse(t *testing.T) {
 				c.Status(tc.status).JSONResponse(tc.data)
 			})
 
-			s.Router.ServeHTTP(responseRec, request)
+			s.GetRouter().ServeHTTP(responseRec, request)
 
 			if tc.expectedErr != nil {
 				expectedErr := tc.expectedErr.Error()
@@ -238,7 +238,7 @@ func TestDecodeJSONBody(t *testing.T) {
 				}
 			})
 
-			server.Router.ServeHTTP(resp, req)
+			server.GetRouter().ServeHTTP(resp, req)
 
 		})
 	}
@@ -268,7 +268,7 @@ func TestGetAllowedOrigins(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(responseRec, request)
+		s.GetRouter().ServeHTTP(responseRec, request)
 
 	})
 }
@@ -288,7 +288,7 @@ func TestRawResponse(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(responseRec, request)
+		s.GetRouter().ServeHTTP(responseRec, request)
 
 		assert.Equal(t, "Hello, this is a raw response!", responseRec.Body.String())
 		assert.Equal(t, http.StatusOK, responseRec.Code)
@@ -310,7 +310,7 @@ func TestGetRequestMethod(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(responseRec, request)
+		s.GetRouter().ServeHTTP(responseRec, request)
 
 	})
 }
@@ -330,7 +330,7 @@ func TestSetHeader(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(responseRec, request)
+		s.GetRouter().ServeHTTP(responseRec, request)
 
 		assert.Equal(t, responseRec.Header().Get("X-Header"), "Added")
 	})
@@ -381,8 +381,8 @@ func TestContext(t *testing.T) {
 		responseRec1 := httptest.NewRecorder()
 		responseRec2 := httptest.NewRecorder()
 
-		s1.Router.ServeHTTP(responseRec1, request)
-		s2.Router.ServeHTTP(responseRec2, request)
+		s1.GetRouter().ServeHTTP(responseRec1, request)
+		s2.GetRouter().ServeHTTP(responseRec2, request)
 
 		if context1 != context3 {
 			t.Errorf("Expected context1 to be the same as context3")
@@ -431,7 +431,7 @@ func TestCookie(t *testing.T) {
 		request, _ := http.NewRequest("GET", "/", nil)
 		responseRec := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(responseRec, request)
+		s.GetRouter().ServeHTTP(responseRec, request)
 
 		assert.Equal(t, responseRec.Header().Get("Set-Cookie"), "X-Cookie=Added; Path=/; HttpOnly")
 
@@ -455,7 +455,7 @@ func TestCookie(t *testing.T) {
 			assert.Equal(t, cookie.Name, reqCookie.Name)
 		})
 
-		s.Router.ServeHTTP(responseRec, request)
+		s.GetRouter().ServeHTTP(responseRec, request)
 
 	})
 
@@ -469,7 +469,7 @@ func TestCookie(t *testing.T) {
 			assert.Error(t, err)
 		})
 
-		s.Router.ServeHTTP(responseRec, request)
+		s.GetRouter().ServeHTTP(responseRec, request)
 
 	})
 

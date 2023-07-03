@@ -56,7 +56,7 @@ func TestServerRoutes(t *testing.T) {
 	s.Delete("/test/d/:id", paramsHandler)
 	s.Patch("/test/d/:id", paramsHandler)
 
-	serverHandler := http.HandlerFunc(s.Router.ServeHTTP)
+	serverHandler := http.HandlerFunc(s.GetRouter().ServeHTTP)
 
 	testCases := []struct {
 		name       string
@@ -258,7 +258,7 @@ func TestMiddlewares(t *testing.T) {
 		req := httptest.NewRequest("GET", "/", nil)
 		w := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(w, req)
+		s.GetRouter().ServeHTTP(w, req)
 
 		resp := w.Result()
 
@@ -281,7 +281,7 @@ func TestMiddlewares(t *testing.T) {
 		req := httptest.NewRequest("GET", "/", nil)
 		w := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(w, req)
+		s.GetRouter().ServeHTTP(w, req)
 
 		resp := w.Result()
 
@@ -304,7 +304,7 @@ func TestMiddlewares(t *testing.T) {
 		req := httptest.NewRequest("GET", "/", nil)
 		w := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(w, req)
+		s.GetRouter().ServeHTTP(w, req)
 
 		resp := w.Result()
 
@@ -340,7 +340,7 @@ func TestMiddlewares(t *testing.T) {
 		req := httptest.NewRequest("GET", "/", nil)
 		w := httptest.NewRecorder()
 
-		s.Router.ServeHTTP(w, req)
+		s.GetRouter().ServeHTTP(w, req)
 
 		resp := w.Result()
 
@@ -349,7 +349,7 @@ func TestMiddlewares(t *testing.T) {
 		req = httptest.NewRequest("GET", "/blocked", nil)
 		w = httptest.NewRecorder()
 
-		s.Router.ServeHTTP(w, req)
+		s.GetRouter().ServeHTTP(w, req)
 
 		resp = w.Result()
 
@@ -370,7 +370,11 @@ func TestServerLogger(t *testing.T) {
 		}
 		s := gsk.NewServer(config)
 
-		assert.NotNil(t, s.Logger)
+		s.Get("/", func(ctx gsk.Context) {
+			assert.NotNil(t, ctx.Logger())
+			ctx.Status(http.StatusOK).JSONResponse("ok")
+		})
+
 	})
 }
 

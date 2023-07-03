@@ -29,7 +29,7 @@ func TestSecurityHeaders(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	respRec := httptest.NewRecorder()
 
-	s.Router.ServeHTTP(respRec, req)
+	s.GetRouter().ServeHTTP(respRec, req)
 
 	expectedHeaders := map[string]string{
 		"X-Content-Type-Options":            "nosniff",
