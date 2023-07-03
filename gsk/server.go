@@ -53,9 +53,11 @@ func NewServer(config *ServerConfig) Server {
 		config.Logger = logging.NewLogrusLogger()
 	}
 
+	startingPort := NormalizePort(config.Port)
+
 	newSTKServer := &server{
 		httpServer: &http.Server{
-			Addr: fmt.Sprintf(":%s", config.Port),
+			Addr: startingPort,
 		},
 		Router:      httprouter.New(),
 		Middlewares: []Middleware{},
