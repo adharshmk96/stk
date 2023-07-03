@@ -18,7 +18,7 @@ func TestCORSDefault(t *testing.T) {
 	}
 	s := gsk.NewServer(config)
 
-	s.Use(middleware.CORS)
+	s.Use(middleware.CORSMiddleWare())
 
 	// Register a test route and handler
 	s.Get("/", func(c gsk.Context) {
@@ -64,7 +64,9 @@ func TestCORSAllowedOrigin(t *testing.T) {
 	}
 	s := gsk.NewServer(config)
 
-	s.Use(middleware.CORS)
+	s.Use(middleware.CORSMiddleWare(middleware.CORSConfig{
+		AllowedOrigins: config.AllowedOrigins,
+	}))
 
 	// Register a test route and handler
 	s.Get("/", func(c gsk.Context) {

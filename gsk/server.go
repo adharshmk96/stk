@@ -2,7 +2,6 @@ package gsk
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -128,15 +127,6 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
-		startTime := time.Now()
-
-		if config.RequestLogging {
-			config.Logger.WithFields(logrus.Fields{
-				"method": r.Method,
-				"url":    r.URL.String(),
-			}).Info("incoming_request")
-		}
-
 		handlerContext := &gskContext{
 			params:         p,
 			request:        r,
@@ -157,16 +147,6 @@ func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handl
 			w.Write(handlerContext.responseBody)
 		} else {
 			w.Write([]byte(""))
-		}
-
-		if config.RequestLogging {
-			timeTaken := time.Since(startTime).Milliseconds()
-			config.Logger.WithFields(logrus.Fields{
-				"method":    r.Method,
-				"url":       r.URL.String(),
-				"status":    handlerContext.responseStatus,
-				"timeTaken": fmt.Sprintf("%d ms", timeTaken),
-			}).Info("response_served")
 		}
 
 	}

@@ -16,7 +16,22 @@ type RateLimiter struct {
 	Middleware          gsk.Middleware
 }
 
-func NewRateLimiter(requestsPerInterval int, interval time.Duration) *RateLimiter {
+type RateLimiterConfig struct {
+	RequestsPerInterval int
+	Interval            time.Duration
+}
+
+func NewRateLimiter(config ...RateLimiterConfig) *RateLimiter {
+	var requestsPerInterval int
+	var interval time.Duration
+
+	if len(config) > 0 {
+		requestsPerInterval = config[0].RequestsPerInterval
+		interval = config[0].Interval
+	} else {
+		requestsPerInterval = 10
+		interval = 1 * time.Minute
+	}
 
 	rl := &RateLimiter{
 		requestsPerInterval: requestsPerInterval,

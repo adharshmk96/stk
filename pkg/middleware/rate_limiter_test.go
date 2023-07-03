@@ -26,7 +26,13 @@ func TestRateLimiter(t *testing.T) {
 	// rate limiter middleware
 	requestsPerInterval := 5
 	interval := 1 * time.Second
-	rateLimiter := middleware.NewRateLimiter(requestsPerInterval, interval)
+
+	rlConfig := middleware.RateLimiterConfig{
+		RequestsPerInterval: requestsPerInterval,
+		Interval:            interval,
+	}
+
+	rateLimiter := middleware.NewRateLimiter(rlConfig)
 
 	s.Use(rateLimiter.Middleware)
 

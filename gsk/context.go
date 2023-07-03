@@ -30,6 +30,7 @@ type Context interface {
 	GetWriter() http.ResponseWriter
 
 	// get data from request
+	GetStatusCode() int
 	GetParam(key string) string
 	GetQueryParam(key string) string
 	GetAllowedOrigins() []string
@@ -147,4 +148,8 @@ func (c *gskContext) SetCookie(cookie *http.Cookie) {
 
 func (c *gskContext) GetCookie(name string) (*http.Cookie, error) {
 	return c.request.Cookie(name)
+}
+
+func (c *gskContext) GetStatusCode() int {
+	return c.responseStatus
 }
