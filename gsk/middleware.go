@@ -7,8 +7,8 @@ type Middleware func(HandlerFunc) HandlerFunc
 // in the reverse order, chaining the middlewares independently
 func (s *server) applyMiddleware(handler HandlerFunc) HandlerFunc {
 	updatedHandler := handler
-	for i := len(s.Middlewares) - 1; i >= 0; i-- {
-		updatedHandler = s.Middlewares[i](updatedHandler)
+	for i := len(s.middlewares) - 1; i >= 0; i-- {
+		updatedHandler = s.middlewares[i](updatedHandler)
 	}
 	return updatedHandler
 }

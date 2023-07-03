@@ -23,10 +23,10 @@ type ServerConfig struct {
 
 type server struct {
 	httpServer  *http.Server
-	Router      *httprouter.Router
-	Middlewares []Middleware
-	Config      *ServerConfig
-	Logger      *logrus.Logger
+	router      *httprouter.Router
+	middlewares []Middleware
+	config      *ServerConfig
+	logger      *logrus.Logger
 }
 
 type Server interface {
@@ -54,15 +54,17 @@ func NewServer(config *ServerConfig) Server {
 	}
 
 	startingPort := NormalizePort(config.Port)
+	router := httprouter.New()
 
 	newSTKServer := &server{
 		httpServer: &http.Server{
-			Addr: startingPort,
+			Addr:    startingPort,
+			Handler: router,
 		},
-		Router:      httprouter.New(),
-		Middlewares: []Middleware{},
-		Config:      config,
-		Logger:      config.Logger,
+		router:      router,
+		middlewares: []Middleware{},
+		config:      config,
+		logger:      config.Logger,
 	}
 
 	return newSTKServer
@@ -70,18 +72,18 @@ func NewServer(config *ServerConfig) Server {
 
 // Start starts the server on the configured port
 func (s *server) Start() {
-	startingPort := NormalizePort(s.Config.Port)
-	s.Logger.WithField("port", startingPort).Info("starting server")
+	startingPort := NormalizePort(s.config.Port)
+	s.logger.WithField("port", startingPort).Info("starting server")
 	err := s.httpServer.ListenAndServe()
 	if err != nil {
-		s.Logger.WithError(err).Error("error starting server")
+		s.logger.WithError(err).Error("error starting server")
 		panic(err)
 	}
 }
 
 // Shuts down the server
 func (s *server) Shutdown() error {
-	s.Logger.Info("shutting down server")
+	s.logger.Info("shutting down server")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -92,31 +94,31 @@ func (s *server) Shutdown() error {
 // usage example:
 // server.Use(stk.RequestLogger())
 func (s *server) Use(middleware Middleware) {
-	s.Middlewares = append(s.Middlewares, middleware)
+	s.middlewares = append(s.middlewares, middleware)
 }
 
 func (s *server) Get(path string, handler HandlerFunc) {
-	s.Router.GET(path, wrapHandlerFunc(s.applyMiddleware(handler), s.Config))
+	s.router.GET(path, wrapHandlerFunc(s.applyMiddleware(handler), s.config))
 }
 
 func (s *server) Post(path string, handler HandlerFunc) {
-	s.Router.POST(path, wrapHandlerFunc(s.applyMiddleware(handler), s.Config))
+	s.router.POST(path, wrapHandlerFunc(s.applyMiddleware(handler), s.config))
 }
 
 func (s *server) Put(path string, handler HandlerFunc) {
-	s.Router.PUT(path, wrapHandlerFunc(s.applyMiddleware(handler), s.Config))
+	s.router.PUT(path, wrapHandlerFunc(s.applyMiddleware(handler), s.config))
 }
 
 func (s *server) Delete(path string, handler HandlerFunc) {
-	s.Router.DELETE(path, wrapHandlerFunc(s.applyMiddleware(handler), s.Config))
+	s.router.DELETE(path, wrapHandlerFunc(s.applyMiddleware(handler), s.config))
 }
 
 func (s *server) Patch(path string, handler HandlerFunc) {
-	s.Router.PATCH(path, wrapHandlerFunc(s.applyMiddleware(handler), s.Config))
+	s.router.PATCH(path, wrapHandlerFunc(s.applyMiddleware(handler), s.config))
 }
 
 func (s *server) GetRouter() *httprouter.Router {
-	return s.Router
+	return s.router
 }
 
 // wrapHandlerFunc wraps the handler function with the httprouter.Handle
