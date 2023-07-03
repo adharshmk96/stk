@@ -66,13 +66,13 @@ func CORSMiddleWare(config ...CORSConfig) gsk.Middleware {
 			// Set CORS headers
 			headers := c.GetWriter().Header()
 
-			allowedMethods := strings.Join(defaultAllowHeaders, ",")
+			allowedMethods := strings.Join(defaultAllowMethods, ", ")
 			if len(corsConfig.AllowedMethods) != 0 {
-				allowedMethods = strings.Join(corsConfig.AllowedMethods, ",")
+				allowedMethods = strings.Join(corsConfig.AllowedMethods, ", ")
 			}
-			allowedHeaders := strings.Join(defaultAllowHeaders, ",")
+			allowedHeaders := strings.Join(defaultAllowHeaders, ", ")
 			if len(corsConfig.AllowedHeaders) != 0 {
-				allowedHeaders = strings.Join(corsConfig.AllowedHeaders, ",")
+				allowedHeaders = strings.Join(corsConfig.AllowedHeaders, ", ")
 			}
 
 			headers.Set(AccessControlAllowOrigin, origin)
