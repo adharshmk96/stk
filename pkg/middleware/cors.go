@@ -67,11 +67,11 @@ func CORSMiddleWare(config ...CORSConfig) gsk.Middleware {
 			headers := c.GetWriter().Header()
 
 			allowedMethods := strings.Join(defaultAllowHeaders, ",")
-			if len(corsConfig.AllowedMethods) == 0 {
+			if len(corsConfig.AllowedMethods) != 0 {
 				allowedMethods = strings.Join(corsConfig.AllowedMethods, ",")
 			}
 			allowedHeaders := strings.Join(defaultAllowHeaders, ",")
-			if len(corsConfig.AllowedHeaders) == 0 {
+			if len(corsConfig.AllowedHeaders) != 0 {
 				allowedHeaders = strings.Join(corsConfig.AllowedHeaders, ",")
 			}
 
