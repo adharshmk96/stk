@@ -151,6 +151,8 @@ func (s *server) Shutdown() error {
 // Use adds a middleware to the server
 // usage example:
 // server.Use(stk.RequestLogger())
+// NOTE: Middlewares will be applied when the route is registered
+// SO Make sure to register the routes after adding the middlewares
 func (s *server) Use(middleware Middleware) {
 	s.middlewares = append(s.middlewares, middleware)
 
