@@ -60,9 +60,9 @@ you can add any middleware by simply creating a function like this and adding it
 
 ```go
 middleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-	return func(c stk.Context) {
-		if ctx.Request.URL.Path == "/blocked" {
-  			ctx.Status(http.StatusForbidden).JSONResponse("blocked")
+	return func(gc stk.Context) {
+		if gc.Request.URL.Path == "/blocked" {
+  			gc.Status(http.StatusForbidden).JSONResponse("blocked")
 			return
   		}
 		next(c)

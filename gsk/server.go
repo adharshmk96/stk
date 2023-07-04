@@ -157,17 +157,17 @@ func wrapHandlerFunc(handler HandlerFunc, s *server) httprouter.Handle {
 
 		handler(handlerContext)
 
-		ctx := handlerContext.eject()
+		gc := handlerContext.eject()
 
-		if ctx.responseStatus != 0 {
-			w.WriteHeader(ctx.responseStatus)
+		if gc.responseStatus != 0 {
+			w.WriteHeader(gc.responseStatus)
 		} else {
 			// Default to 200 OK
 			w.WriteHeader(http.StatusOK)
 		}
 
-		if ctx.responseBody != nil {
-			w.Write(ctx.responseBody)
+		if gc.responseBody != nil {
+			w.Write(gc.responseBody)
 		} else {
 			w.Write([]byte(""))
 		}

@@ -34,11 +34,11 @@ Response:
 - 200: OK
 - 500: Internal Server Error
 */
-func (h *pingHandler) PingHandler(ctx gsk.Context) {
+func (h *pingHandler) PingHandler(gc gsk.Context) {
 	
 	ping := h.pingService.PingService()
 
-	ctx.Status(http.StatusOK).JSONResponse(gsk.Map{
+	gc.Status(http.StatusOK).JSONResponse(gsk.Map{
 		"message": ping,
 	})
 }	

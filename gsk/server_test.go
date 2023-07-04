@@ -53,10 +53,10 @@ func TestServerRoutes(t *testing.T) {
 
 	test_status := http.StatusNoContent
 
-	sampleHandler := func(ctx gsk.Context) {
-		method := ctx.GetRequest().Method
-		ctx.Status(test_status)
-		ctx.RawResponse([]byte(method))
+	sampleHandler := func(gc gsk.Context) {
+		method := gc.GetRequest().Method
+		gc.Status(test_status)
+		gc.RawResponse([]byte(method))
 	}
 
 	s.Get("/test-get", sampleHandler)
@@ -65,9 +65,9 @@ func TestServerRoutes(t *testing.T) {
 	s.Delete("/test-delete", sampleHandler)
 	s.Patch("/test-patch", sampleHandler)
 
-	queryParamHandler := func(ctx gsk.Context) {
-		ctx.Status(test_status)
-		ctx.RawResponse([]byte(ctx.GetQueryParam("name")))
+	queryParamHandler := func(gc gsk.Context) {
+		gc.Status(test_status)
+		gc.RawResponse([]byte(gc.GetQueryParam("name")))
 	}
 
 	s.Get("/test/p", queryParamHandler)
@@ -76,9 +76,9 @@ func TestServerRoutes(t *testing.T) {
 	s.Delete("/test/p", queryParamHandler)
 	s.Patch("/test/p", queryParamHandler)
 
-	paramsHandler := func(ctx gsk.Context) {
-		ctx.Status(test_status)
-		ctx.RawResponse([]byte(ctx.GetParam("id")))
+	paramsHandler := func(gc gsk.Context) {
+		gc.Status(test_status)
+		gc.RawResponse([]byte(gc.GetParam("id")))
 	}
 
 	s.Get("/test/d/:id", paramsHandler)
@@ -147,10 +147,10 @@ func TestServerRoutes(t *testing.T) {
 
 	t.Run("server handles same routes and different http methods", func(t *testing.T) {
 
-		sampleHandler := func(ctx gsk.Context) {
-			method := ctx.GetRequest().Method
-			ctx.Status(test_status)
-			ctx.RawResponse([]byte(method))
+		sampleHandler := func(gc gsk.Context) {
+			method := gc.GetRequest().Method
+			gc.Status(test_status)
+			gc.RawResponse([]byte(method))
 		}
 
 		s.Get("/get-and-post", sampleHandler)
@@ -178,10 +178,10 @@ func TestServerRoutes(t *testing.T) {
 
 	t.Run("server handles same routes and different http methods with dynamic routes", func(t *testing.T) {
 
-		sampleHandler := func(ctx gsk.Context) {
-			method := ctx.GetRequest().Method
-			ctx.Status(test_status)
-			ctx.RawResponse([]byte(method))
+		sampleHandler := func(gc gsk.Context) {
+			method := gc.GetRequest().Method
+			gc.Status(test_status)
+			gc.RawResponse([]byte(method))
 		}
 
 		s.Get("/get-and-post/:id", sampleHandler)
@@ -209,16 +209,16 @@ func TestServerRoutes(t *testing.T) {
 
 	t.Run("server with overlapping routes", func(t *testing.T) {
 
-		getHandler := func(ctx gsk.Context) {
+		getHandler := func(gc gsk.Context) {
 			response := "get"
-			ctx.Status(http.StatusOK)
-			ctx.RawResponse([]byte(response))
+			gc.Status(http.StatusOK)
+			gc.RawResponse([]byte(response))
 		}
 
-		getThatHandler := func(ctx gsk.Context) {
+		getThatHandler := func(gc gsk.Context) {
 			response := "get-that"
-			ctx.Status(http.StatusOK)
-			ctx.RawResponse([]byte(response))
+			gc.Status(http.StatusOK)
+			gc.RawResponse([]byte(response))
 		}
 
 		s.Get("/get", getHandler)
@@ -251,27 +251,27 @@ func TestServerRoutes(t *testing.T) {
 func TestMiddlewares(t *testing.T) {
 
 	firstMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
-		return func(ctx gsk.Context) {
-			ctx.SetHeader("X-FirstMiddleware", "true")
-			next(ctx)
+		return func(gc gsk.Context) {
+			gc.SetHeader("X-FirstMiddleware", "true")
+			next(gc)
 		}
 	}
 
 	secondMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
-		return func(ctx gsk.Context) {
-			ctx.SetHeader("X-SecondMiddleware", "true")
-			next(ctx)
+		return func(gc gsk.Context) {
+			gc.SetHeader("X-SecondMiddleware", "true")
+			next(gc)
 		}
 	}
 
 	middlewareStatusCode := func(next gsk.HandlerFunc) gsk.HandlerFunc {
-		return func(ctx gsk.Context) {
-			ctx.Status(http.StatusBadRequest).JSONResponse("error")
+		return func(gc gsk.Context) {
+			gc.Status(http.StatusBadRequest).JSONResponse("error")
 		}
 	}
 
-	myHandler := func(ctx gsk.Context) {
-		ctx.Status(http.StatusOK).JSONResponse("ok")
+	myHandler := func(gc gsk.Context) {
+		gc.Status(http.StatusOK).JSONResponse("ok")
 	}
 
 	t.Run("server with two middlewares", func(t *testing.T) {
@@ -345,12 +345,12 @@ func TestMiddlewares(t *testing.T) {
 
 	t.Run("middleware blocks certain routes", func(t *testing.T) {
 		blockerMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
-			return func(ctx gsk.Context) {
-				if ctx.GetRequest().URL.Path == "/blocked" {
-					ctx.Status(http.StatusForbidden).JSONResponse("blocked")
+			return func(gc gsk.Context) {
+				if gc.GetRequest().URL.Path == "/blocked" {
+					gc.Status(http.StatusForbidden).JSONResponse("blocked")
 					return
 				}
-				next(ctx)
+				next(gc)
 			}
 		}
 
@@ -396,9 +396,9 @@ func TestServerLogger(t *testing.T) {
 		}
 		s := gsk.New(config)
 
-		s.Get("/", func(ctx gsk.Context) {
-			assert.NotNil(t, ctx.Logger())
-			ctx.Status(http.StatusOK).JSONResponse("ok")
+		s.Get("/", func(gc gsk.Context) {
+			assert.NotNil(t, gc.Logger())
+			gc.Status(http.StatusOK).JSONResponse("ok")
 		})
 
 	})
