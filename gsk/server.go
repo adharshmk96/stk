@@ -44,6 +44,9 @@ type Server interface {
 	Delete(string, HandlerFunc)
 	Patch(string, HandlerFunc)
 
+	// Other Server methods
+	// Static(string, string)
+
 	// Helpers
 	Test(method string, route string, body io.Reader) (httptest.ResponseRecorder, error)
 }
@@ -165,6 +168,8 @@ func (s *server) Patch(path string, handler HandlerFunc) {
 }
 
 // Helper function to test the server
+// Usage example:
+// w, err := server.Test("GET", "/test", nil)
 func (s *server) Test(method string, route string, body io.Reader) (httptest.ResponseRecorder, error) {
 	w := httptest.NewRecorder()
 	req, err := http.NewRequest(method, route, body)
@@ -176,8 +181,7 @@ func (s *server) Test(method string, route string, body io.Reader) (httptest.Res
 }
 
 // wrapHandlerFunc wraps the handler function with the httprouter.Handle
-// this is done to pass the httprouter.Params to the handler
-// and also to log the incoming request
+// this is done to pass the gsk context to the handler function
 func wrapHandlerFunc(handler HandlerFunc, s *server) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {

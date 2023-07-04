@@ -5,7 +5,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
@@ -87,8 +86,6 @@ func TestServerRoutes(t *testing.T) {
 	s.Delete("/test/d/:id", paramsHandler)
 	s.Patch("/test/d/:id", paramsHandler)
 
-	serverHandler := http.HandlerFunc(s.GetRouter().ServeHTTP)
-
 	testCases := []struct {
 		name       string
 		method     string
@@ -123,10 +120,7 @@ func TestServerRoutes(t *testing.T) {
 
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
-			req := httptest.NewRequest(test.method, test.path, nil)
-			rr := httptest.NewRecorder()
-			serverHandler.ServeHTTP(rr, req)
-
+			rr, _ := s.Test(test.method, test.path, nil)
 			res := rr.Result()
 			body, _ := io.ReadAll(res.Body)
 			assert.Equal(t, test.statusCode, res.StatusCode)
@@ -135,10 +129,7 @@ func TestServerRoutes(t *testing.T) {
 	}
 
 	t.Run("server returns 404 for non existent route", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/non-existent-route", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
+		rr, _ := s.Test(http.MethodGet, "/non-existent-route", nil)
 		res := rr.Result()
 		body, _ := io.ReadAll(res.Body)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
@@ -156,19 +147,14 @@ func TestServerRoutes(t *testing.T) {
 		s.Get("/get-and-post", sampleHandler)
 		s.Post("/get-and-post", sampleHandler)
 
-		req := httptest.NewRequest(http.MethodGet, "/get-and-post", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
+		rr, _ := s.Test(http.MethodGet, "/get-and-post", nil)
 
 		res := rr.Result()
 		body, _ := io.ReadAll(res.Body)
 		assert.Equal(t, test_status, res.StatusCode)
 		assert.Equal(t, "GET", string(body))
 
-		req = httptest.NewRequest(http.MethodPost, "/get-and-post", nil)
-		rr = httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
+		rr, _ = s.Test(http.MethodPost, "/get-and-post", nil)
 		res = rr.Result()
 		body, _ = io.ReadAll(res.Body)
 		assert.Equal(t, test_status, res.StatusCode)
@@ -187,18 +173,13 @@ func TestServerRoutes(t *testing.T) {
 		s.Get("/get-and-post/:id", sampleHandler)
 		s.Post("/get-and-post/:id", sampleHandler)
 
-		req := httptest.NewRequest(http.MethodGet, "/get-and-post/123", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
+		rr, _ := s.Test(http.MethodGet, "/get-and-post/123", nil)
 		res := rr.Result()
 		body, _ := io.ReadAll(res.Body)
 		assert.Equal(t, test_status, res.StatusCode)
 		assert.Equal(t, "GET", string(body))
 
-		req = httptest.NewRequest(http.MethodPost, "/get-and-post/123", nil)
-		rr = httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
+		rr, _ = s.Test(http.MethodPost, "/get-and-post/123", nil)
 
 		res = rr.Result()
 		body, _ = io.ReadAll(res.Body)
@@ -224,18 +205,14 @@ func TestServerRoutes(t *testing.T) {
 		s.Get("/get", getHandler)
 		s.Get("/get/:that", getThatHandler)
 
-		req := httptest.NewRequest(http.MethodGet, "/get", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
+		rr, _ := s.Test(http.MethodGet, "/get", nil)
 
 		res := rr.Result()
 		body, _ := io.ReadAll(res.Body)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Equal(t, "get", string(body))
 
-		req = httptest.NewRequest(http.MethodGet, "/get/that", nil)
-		rr = httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
+		rr, _ = s.Test(http.MethodGet, "/get/that", nil)
 
 		res = rr.Result()
 		body, _ = io.ReadAll(res.Body)
@@ -285,7 +262,7 @@ func TestMiddlewares(t *testing.T) {
 
 		s.Get("/", myHandler)
 
-		w, _ := s.Test("GET", "/", "")
+		w, _ := s.Test("GET", "/", nil)
 
 		resp := w.Result()
 
@@ -323,12 +300,8 @@ func TestMiddlewares(t *testing.T) {
 		s.Use(middlewareStatusCode)
 		s.Get("/", myHandler)
 
-		req := httptest.NewRequest("GET", "/", nil)
-		w := httptest.NewRecorder()
-
-		s.GetRouter().ServeHTTP(w, req)
-
-		resp := w.Result()
+		rr, _ := s.Test("GET", "/", nil)
+		resp := rr.Result()
 
 		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
@@ -358,21 +331,14 @@ func TestMiddlewares(t *testing.T) {
 		s.Get("/", myHandler)
 		s.Get("/blocked", myHandler)
 
-		req := httptest.NewRequest("GET", "/", nil)
-		w := httptest.NewRecorder()
-
-		s.GetRouter().ServeHTTP(w, req)
-
-		resp := w.Result()
+		rr, _ := s.Test("GET", "/", nil)
+		resp := rr.Result()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-		req = httptest.NewRequest("GET", "/blocked", nil)
-		w = httptest.NewRecorder()
+		rr, _ = s.Test("GET", "/blocked", nil)
 
-		s.GetRouter().ServeHTTP(w, req)
-
-		resp = w.Result()
+		resp = rr.Result()
 
 		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 
@@ -428,7 +394,7 @@ func TestServer_Test(t *testing.T) {
 		gc.Status(http.StatusAccepted).JSONResponse("ok")
 	})
 
-	w, err := s.Test("GET", "/", "")
+	w, err := s.Test("GET", "/", nil)
 	if err != nil {
 		t.Errorf("Expected no error, but got %v", err)
 	}
