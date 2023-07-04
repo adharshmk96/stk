@@ -38,17 +38,19 @@ type Server interface {
 	Use(Middleware)
 
 	// HTTP methods
-	Get(string, HandlerFunc)
-	Post(string, HandlerFunc)
-	Put(string, HandlerFunc)
-	Delete(string, HandlerFunc)
-	Patch(string, HandlerFunc)
+	Get(path string, handler HandlerFunc)
+	Post(path string, handler HandlerFunc)
+	Put(path string, handler HandlerFunc)
+	Delete(path string, handler HandlerFunc)
+	Patch(path string, handler HandlerFunc)
+	// Handle arbitrary HTTP methods
+	Handle(method string, path string, handler HandlerFunc)
 
 	// Other Server methods
-	// Static(string, string)
+	Static(string, string)
 
 	// Helpers
-	Test(string, string, io.Reader, ...TestParams) (httptest.ResponseRecorder, error)
+	Test(method string, path string, body io.Reader, params ...TestParams) (httptest.ResponseRecorder, error)
 
 	// Internals
 	Router() *httprouter.Router
@@ -152,7 +154,9 @@ func (s *server) Shutdown() error {
 func (s *server) Use(middleware Middleware) {
 	s.middlewares = append(s.middlewares, middleware)
 
-	// TODO: Fix this hack, this needs to be in a different place.
+	// This is to ensure that CORS Middleware will be applied
+	// and the preflight request will be handled properly via middleware.
+	// It is a confusing pattern, but it works and the impact is lower on performance.
 	s.router.GlobalOPTIONS = wrapHandlerFunc(
 		s.applyMiddlewares(func(gc Context) {
 			gc.Status(http.StatusNoContent)
@@ -165,23 +169,31 @@ func (s *server) Use(middleware Middleware) {
 // usage example:
 // server.Get("/test", func(c stk.Context) { gc.Status(http.StatusOK).JSONResponse("OK") })
 func (s *server) Get(path string, handler HandlerFunc) {
-	s.router.HandlerFunc("GET", path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+	s.router.HandlerFunc(http.MethodGet, path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
 }
 
 func (s *server) Post(path string, handler HandlerFunc) {
-	s.router.HandlerFunc("POST", path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+	s.router.HandlerFunc(http.MethodPost, path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
 }
 
 func (s *server) Put(path string, handler HandlerFunc) {
-	s.router.HandlerFunc("PUT", path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+	s.router.HandlerFunc(http.MethodPut, path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
 }
 
 func (s *server) Delete(path string, handler HandlerFunc) {
-	s.router.HandlerFunc("DELETE", path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+	s.router.HandlerFunc(http.MethodDelete, path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
 }
 
 func (s *server) Patch(path string, handler HandlerFunc) {
-	s.router.HandlerFunc("PATCH", path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+	s.router.HandlerFunc(http.MethodPatch, path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+}
+
+func (s *server) Handle(method string, path string, handler HandlerFunc) {
+	s.router.HandlerFunc(method, path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+}
+
+func (s *server) Static(path string, dir string) {
+	s.router.ServeFiles(path, http.Dir(dir))
 }
 
 type TestParams struct {
@@ -246,6 +258,8 @@ func wrapHandlerFunc(handler HandlerFunc, s *server) http.HandlerFunc {
 			logger:        s.config.Logger,
 			bodySizeLimit: s.config.BodySizeLimit,
 		}
+
+		s.config.Logger.Info("handling request")
 
 		handler(handlerContext)
 

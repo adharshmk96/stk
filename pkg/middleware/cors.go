@@ -56,7 +56,7 @@ func CORS(config ...CORSConfig) gsk.Middleware {
 				}
 			}
 
-			if !isAllowed {
+			if !corsConfig.AllowAll && !isAllowed {
 				c.Status(http.StatusForbidden)
 				c.SetHeader("Content-Type", "text/plain")
 				c.RawResponse([]byte("Forbidden"))

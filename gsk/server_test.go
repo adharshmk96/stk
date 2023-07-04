@@ -405,3 +405,35 @@ func TestServer_Test(t *testing.T) {
 	body, _ := io.ReadAll(w.Body)
 	assert.Equal(t, "\"ok\"", string(body))
 }
+
+func setupTestDir() {
+	os.MkdirAll("./testdata", os.ModePerm)
+	os.Create("./testdata/test.txt")
+}
+
+func teardownTestDir() {
+	os.RemoveAll("./testdata")
+}
+
+func TestServer_Static(t *testing.T) {
+	setupTestDir()
+	defer teardownTestDir()
+
+	config := &gsk.ServerConfig{
+		Port: "8080",
+	}
+	s := gsk.New(config)
+
+	s.Static("/static/*filepath", "./testdata")
+
+	w, err := s.Test("GET", "/static/test.txt", nil)
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
+
+	// body, _ := io.ReadAll(w.Body)
+	// assert.Equal(t, "test", string(body))
+}
