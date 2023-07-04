@@ -21,21 +21,30 @@ type RateLimiterConfig struct {
 	Interval            time.Duration
 }
 
-func NewRateLimiter(config ...RateLimiterConfig) *RateLimiter {
-	var requestsPerInterval int
-	var interval time.Duration
-
-	if len(config) > 0 {
-		requestsPerInterval = config[0].RequestsPerInterval
-		interval = config[0].Interval
+func initConfig(config ...RateLimiterConfig) *RateLimiterConfig {
+	var initConfig *RateLimiterConfig
+	if len(config) == 0 {
+		initConfig = &RateLimiterConfig{}
 	} else {
-		requestsPerInterval = 10
-		interval = 1 * time.Minute
+		initConfig = &config[0]
 	}
 
+	if initConfig.RequestsPerInterval == 0 {
+		initConfig.RequestsPerInterval = 5
+	}
+	if initConfig.Interval == 0 {
+		initConfig.Interval = 1 * time.Second
+	}
+
+	return initConfig
+}
+
+func NewRateLimiter(rlConfig ...RateLimiterConfig) *RateLimiter {
+	config := initConfig(rlConfig...)
+
 	rl := &RateLimiter{
-		requestsPerInterval: requestsPerInterval,
-		interval:            interval,
+		requestsPerInterval: config.RequestsPerInterval,
+		interval:            config.Interval,
 		accessCounter:       make(map[string]int),
 		mux:                 &sync.Mutex{},
 	}
