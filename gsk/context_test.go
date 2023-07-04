@@ -164,57 +164,82 @@ func TestDecodeJSONBody(t *testing.T) {
 
 	jsonBody, _ := json.Marshal(SampleStruct{Name: "John", Age: 30})
 
-	tests := []struct {
-		name           string
-		reqBody        string
-		expectedErr    error
-		expectedResult SampleStruct
-	}{
-		{
-			name:        "decodes valid json",
-			reqBody:     string(jsonBody),
-			expectedErr: nil,
-			expectedResult: SampleStruct{
-				Name: "John",
-				Age:  30,
-			},
-		},
-		{
-			name:           "returns error on invalid json",
-			reqBody:        `{"name":"John",,,"age":30}`,
-			expectedErr:    gsk.ErrInvalidJSON,
-			expectedResult: SampleStruct{},
-		},
-		{
-			name:           "decodes to empty struct on empty json",
-			reqBody:        "",
-			expectedErr:    gsk.ErrInvalidJSON,
-			expectedResult: SampleStruct{},
-		},
-	}
+	t.Run("decodes valid json", func(t *testing.T) {
+		server := gsk.New(&gsk.ServerConfig{})
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			body := io.NopCloser(bytes.NewReader([]byte(tt.reqBody)))
-			server := gsk.New(&gsk.ServerConfig{})
+		server.Post("/", func(c gsk.Context) {
+			var res SampleStruct
+			err := c.DecodeJSONBody(&res)
 
-			server.Post("/", func(c gsk.Context) {
-				var res SampleStruct
-				err := c.DecodeJSONBody(&res)
+			if err != nil {
+				t.Errorf("Expected error to be nil, got '%v'", err)
+			}
 
-				if !errors.Is(err, tt.expectedErr) {
-					t.Errorf("Expected error to be '%v', got '%v'", tt.expectedErr, err)
-				}
-
-				if err == nil && res != tt.expectedResult {
-					t.Errorf("Expected result to be '%v', got '%v'", tt.expectedResult, res)
-				}
-			})
-
-			server.Test("POST", "/", body)
-
+			if res != (SampleStruct{Name: "John", Age: 30}) {
+				t.Errorf("Expected result to be '%v', got '%v'", SampleStruct{Name: "John", Age: 30}, res)
+			}
 		})
-	}
+
+		server.Test("POST", "/", io.NopCloser(bytes.NewReader(jsonBody)))
+
+	})
+
+	t.Run("returns error on invalid json", func(t *testing.T) {
+		server := gsk.New(&gsk.ServerConfig{})
+
+		server.Post("/", func(c gsk.Context) {
+			var res SampleStruct
+			err := c.DecodeJSONBody(&res)
+
+			if err == nil {
+				t.Errorf("Expected error to be '%v', got '%v'", gsk.ErrInvalidJSON, err)
+			}
+
+			if res != (SampleStruct{}) {
+				t.Errorf("Expected result to be '%v', got '%v'", SampleStruct{}, res)
+			}
+		})
+
+		server.Test("POST", "/", io.NopCloser(bytes.NewReader([]byte(`{"name":"John",,,"age":30}`))))
+
+	})
+
+	t.Run("decodes to empty struct on empty json", func(t *testing.T) {
+		server := gsk.New(&gsk.ServerConfig{})
+		server.Post("/", func(c gsk.Context) {
+			var res SampleStruct
+			err := c.DecodeJSONBody(&res)
+
+			if err == nil {
+				t.Errorf("Expected error to be '%v', got '%v'", gsk.ErrInvalidJSON, err)
+			}
+
+			if res != (SampleStruct{}) {
+				t.Errorf("Expected result to be '%v', got '%v'", SampleStruct{}, res)
+			}
+		})
+
+		server.Test("POST", "/", io.NopCloser(bytes.NewReader([]byte(``))))
+	})
+
+	t.Run("returns err if body is nil", func(t *testing.T) {
+		server := gsk.New(&gsk.ServerConfig{})
+		server.Post("/", func(c gsk.Context) {
+			var res SampleStruct
+			err := c.DecodeJSONBody(&res)
+
+			if err == nil {
+				t.Errorf("Expected error to be '%v', got '%v'", gsk.ErrInvalidJSON, err)
+			}
+
+			if res != (SampleStruct{}) {
+				t.Errorf("Expected result to be '%v', got '%v'", SampleStruct{}, res)
+			}
+		})
+
+		server.Test("POST", "/", nil)
+	})
+
 }
 
 // generate10KBArray generates a byte array of 10KB size
