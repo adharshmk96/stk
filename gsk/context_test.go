@@ -186,6 +186,8 @@ func TestDecodeJSONBody(t *testing.T) {
 		Age  int    `json:"age"`
 	}
 
+	jsonBody, _ := json.Marshal(SampleStruct{Name: "John", Age: 30})
+
 	tests := []struct {
 		name           string
 		reqBody        string
@@ -194,7 +196,7 @@ func TestDecodeJSONBody(t *testing.T) {
 	}{
 		{
 			name:        "decodes valid json",
-			reqBody:     `{"name":"John","age":30}`,
+			reqBody:     string(jsonBody),
 			expectedErr: nil,
 			expectedResult: SampleStruct{
 				Name: "John",
@@ -222,6 +224,69 @@ func TestDecodeJSONBody(t *testing.T) {
 			resp := httptest.NewRecorder()
 
 			server := gsk.New(&gsk.ServerConfig{})
+
+			server.Post("/", func(c gsk.Context) {
+				var res SampleStruct
+				err := c.DecodeJSONBody(&res)
+
+				if !errors.Is(err, tt.expectedErr) {
+					t.Errorf("Expected error to be '%v', got '%v'", tt.expectedErr, err)
+				}
+
+				if err == nil && res != tt.expectedResult {
+					t.Errorf("Expected result to be '%v', got '%v'", tt.expectedResult, res)
+				}
+			})
+
+			server.GetRouter().ServeHTTP(resp, req)
+
+		})
+	}
+}
+
+// generate10KBArray generates a byte array of 10KB size
+func generate2MB() string {
+	size := 1 << 20 * 2 // 1KB is 1 << 10, so 10KB is 10 times that
+	b := make([]byte, size)
+
+	// Let's fill the array with some value, e.g. 1
+	for i := range b {
+		b[i] = 'a'
+	}
+
+	return string(b)
+}
+
+func TestDecodeJSONBodySizeLimit(t *testing.T) {
+	type SampleStruct struct {
+		Name string `json:"name"`
+		Age  int    `json:"age"`
+	}
+
+	tests := []struct {
+		name           string
+		reqBody        string
+		bodySizeLimit  int64
+		expectedErr    error
+		expectedResult SampleStruct
+	}{
+		{
+			name:          "decodes valid json",
+			reqBody:       generate2MB(),
+			bodySizeLimit: 1,
+			expectedErr:   gsk.ErrBodyTooLarge,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body := io.NopCloser(bytes.NewReader([]byte(tt.reqBody)))
+			req := httptest.NewRequest("POST", "/", body)
+			resp := httptest.NewRecorder()
+
+			server := gsk.New(&gsk.ServerConfig{
+				BodySizeLimit: tt.bodySizeLimit,
+			})
 
 			server.Post("/", func(c gsk.Context) {
 				var res SampleStruct
