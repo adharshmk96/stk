@@ -10,14 +10,17 @@ import (
 )
 
 type gskContext struct {
+	// server config
 	request *http.Request
 	writer  http.ResponseWriter
 
+	// request params
 	params httprouter.Params
 
+	// logging
 	logger *logrus.Logger
 
-	allowedOrigins []string
+	// to write response
 	responseStatus int
 	responseBody   []byte
 }
@@ -33,7 +36,6 @@ type Context interface {
 	GetStatusCode() int
 	GetParam(key string) string
 	GetQueryParam(key string) string
-	GetAllowedOrigins() []string
 	DecodeJSONBody(v interface{}) error
 
 	// set data for response
@@ -48,6 +50,9 @@ type Context interface {
 
 	// logger
 	Logger() *logrus.Logger
+
+	// Internals
+	eject() gskContext
 }
 
 func (c *gskContext) GetRequest() *http.Request {
@@ -68,11 +73,8 @@ func (c *gskContext) GetQueryParam(key string) string {
 	return c.request.URL.Query().Get(key)
 }
 
-func (c *gskContext) GetAllowedOrigins() []string {
-	return c.allowedOrigins
-}
-
 func (c *gskContext) DecodeJSONBody(v interface{}) error {
+	// TODO: config from server
 	bodySizeLimit := int64(1 << 20) // 1 MB
 
 	// Set a maximum limit for the request body size to avoid possible malicious requests
@@ -138,6 +140,7 @@ func (c *gskContext) RawResponse(raw []byte) {
 	c.responseBody = raw
 }
 
+// get the logger
 func (c *gskContext) Logger() *logrus.Logger {
 	return c.logger
 }
@@ -152,4 +155,8 @@ func (c *gskContext) GetCookie(name string) (*http.Cookie, error) {
 
 func (c *gskContext) GetStatusCode() int {
 	return c.responseStatus
+}
+
+func (c *gskContext) eject() gskContext {
+	return *c
 }

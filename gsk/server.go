@@ -14,18 +14,17 @@ import (
 type HandlerFunc func(Context)
 
 type ServerConfig struct {
-	Port           string
-	RequestLogging bool
-	AllowedOrigins []string
-	Logger         *logrus.Logger
+	Port   string
+	Logger *logrus.Logger
 }
 
 type server struct {
 	httpServer  *http.Server
 	router      *httprouter.Router
 	middlewares []Middleware
-	config      *ServerConfig
-	logger      *logrus.Logger
+	// configurations
+	port   string
+	logger *logrus.Logger
 }
 
 type Server interface {
@@ -46,8 +45,8 @@ type Server interface {
 	GetRouter() *httprouter.Router
 }
 
-// NewServer creates a new server instance
-func NewServer(config *ServerConfig) Server {
+// New creates a new server instance
+func New(config *ServerConfig) Server {
 	if config.Logger == nil {
 		config.Logger = logging.NewLogrusLogger()
 	}
@@ -62,7 +61,7 @@ func NewServer(config *ServerConfig) Server {
 		},
 		router:      router,
 		middlewares: []Middleware{},
-		config:      config,
+		port:        config.Port,
 		logger:      config.Logger,
 	}
 
@@ -71,7 +70,7 @@ func NewServer(config *ServerConfig) Server {
 
 // Start starts the server on the configured port
 func (s *server) Start() {
-	startingPort := NormalizePort(s.config.Port)
+	startingPort := NormalizePort(s.port)
 	s.logger.WithField("port", startingPort).Info("starting server")
 	err := s.httpServer.ListenAndServe()
 	if err != nil {
@@ -97,23 +96,23 @@ func (s *server) Use(middleware Middleware) {
 }
 
 func (s *server) Get(path string, handler HandlerFunc) {
-	s.router.GET(path, wrapHandlerFunc(s.applyMiddleware(handler), s.config))
+	s.router.GET(path, wrapHandlerFunc(s.applyMiddleware(handler), s))
 }
 
 func (s *server) Post(path string, handler HandlerFunc) {
-	s.router.POST(path, wrapHandlerFunc(s.applyMiddleware(handler), s.config))
+	s.router.POST(path, wrapHandlerFunc(s.applyMiddleware(handler), s))
 }
 
 func (s *server) Put(path string, handler HandlerFunc) {
-	s.router.PUT(path, wrapHandlerFunc(s.applyMiddleware(handler), s.config))
+	s.router.PUT(path, wrapHandlerFunc(s.applyMiddleware(handler), s))
 }
 
 func (s *server) Delete(path string, handler HandlerFunc) {
-	s.router.DELETE(path, wrapHandlerFunc(s.applyMiddleware(handler), s.config))
+	s.router.DELETE(path, wrapHandlerFunc(s.applyMiddleware(handler), s))
 }
 
 func (s *server) Patch(path string, handler HandlerFunc) {
-	s.router.PATCH(path, wrapHandlerFunc(s.applyMiddleware(handler), s.config))
+	s.router.PATCH(path, wrapHandlerFunc(s.applyMiddleware(handler), s))
 }
 
 func (s *server) GetRouter() *httprouter.Router {
@@ -123,28 +122,30 @@ func (s *server) GetRouter() *httprouter.Router {
 // wrapHandlerFunc wraps the handler function with the httprouter.Handle
 // this is done to pass the httprouter.Params to the handler
 // and also to log the incoming request
-func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handle {
+func wrapHandlerFunc(handler HandlerFunc, s *server) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 		handlerContext := &gskContext{
-			params:         p,
-			request:        r,
-			writer:         w,
-			logger:         config.Logger,
-			allowedOrigins: config.AllowedOrigins,
+			params:  p,
+			request: r,
+			writer:  w,
+			logger:  s.logger,
 		}
+
 		handler(handlerContext)
 
-		if handlerContext.responseStatus != 0 {
-			w.WriteHeader(handlerContext.responseStatus)
+		ctx := handlerContext.eject()
+
+		if ctx.responseStatus != 0 {
+			w.WriteHeader(ctx.responseStatus)
 		} else {
 			// Default to 200 OK
 			w.WriteHeader(http.StatusOK)
 		}
 
-		if handlerContext.responseBody != nil {
-			w.Write(handlerContext.responseBody)
+		if ctx.responseBody != nil {
+			w.Write(ctx.responseBody)
 		} else {
 			w.Write([]byte(""))
 		}

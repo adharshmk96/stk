@@ -1,24 +1,55 @@
 package gsk_test
 
 import (
+	"bytes"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/adharshmk96/stk/gsk"
 )
 
+func TestServer_Start(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	logger := logrus.New()
+	logger.Out = io.MultiWriter(os.Stdout, buffer)
+
+	// Create a ServerConfig
+	config := &gsk.ServerConfig{
+		Port:   "8080",
+		Logger: logger,
+	}
+
+	// Create a new server
+	server := gsk.New(config)
+
+	// Start the server in a goroutine
+	go server.Start()
+
+	// Wait for the server to start
+	time.Sleep(2 * time.Second)
+
+	// Check if the server is running
+	_, err := net.DialTimeout("tcp", "localhost:"+config.Port, 1*time.Second)
+	if err != nil {
+		t.Fatalf("Expected server to start, but it didn't: %v", err)
+	}
+}
+
 // Test server routes
 
 func TestServerRoutes(t *testing.T) {
 	config := &gsk.ServerConfig{
-		Port:           "8080",
-		RequestLogging: false,
+		Port: "8080",
 	}
-	s := gsk.NewServer(config)
+	s := gsk.New(config)
 
 	test_status := http.StatusNoContent
 
@@ -245,10 +276,9 @@ func TestMiddlewares(t *testing.T) {
 
 	t.Run("server with two middlewares", func(t *testing.T) {
 		config := &gsk.ServerConfig{
-			Port:           "8080",
-			RequestLogging: false,
+			Port: "8080",
 		}
-		s := gsk.NewServer(config)
+		s := gsk.New(config)
 
 		s.Use(firstMiddleware)
 		s.Use(secondMiddleware)
@@ -271,10 +301,9 @@ func TestMiddlewares(t *testing.T) {
 
 	t.Run("server with no middlewares", func(t *testing.T) {
 		config := &gsk.ServerConfig{
-			Port:           "8080",
-			RequestLogging: false,
+			Port: "8080",
 		}
-		s := gsk.NewServer(config)
+		s := gsk.New(config)
 
 		s.Get("/", myHandler)
 
@@ -293,10 +322,9 @@ func TestMiddlewares(t *testing.T) {
 
 	t.Run("middleware can write status code and body", func(t *testing.T) {
 		config := &gsk.ServerConfig{
-			Port:           "8080",
-			RequestLogging: false,
+			Port: "8080",
 		}
-		s := gsk.NewServer(config)
+		s := gsk.New(config)
 
 		s.Use(middlewareStatusCode)
 		s.Get("/", myHandler)
@@ -327,11 +355,10 @@ func TestMiddlewares(t *testing.T) {
 		}
 
 		config := &gsk.ServerConfig{
-			Port:           "8080",
-			RequestLogging: false,
+			Port: "8080",
 		}
 
-		s := gsk.NewServer(config)
+		s := gsk.New(config)
 
 		s.Use(blockerMiddleware)
 		s.Get("/", myHandler)
@@ -365,10 +392,9 @@ func TestMiddlewares(t *testing.T) {
 func TestServerLogger(t *testing.T) {
 	t.Run("Server initializes logger without passing one", func(t *testing.T) {
 		config := &gsk.ServerConfig{
-			Port:           "8080",
-			RequestLogging: false,
+			Port: "8080",
 		}
-		s := gsk.NewServer(config)
+		s := gsk.New(config)
 
 		s.Get("/", func(ctx gsk.Context) {
 			assert.NotNil(t, ctx.Logger())

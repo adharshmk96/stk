@@ -13,10 +13,9 @@ import (
 func TestSecurityHeaders(t *testing.T) {
 	// Create a new server instance
 	config := &gsk.ServerConfig{
-		Port:           "8080",
-		RequestLogging: false,
+		Port: "8080",
 	}
-	s := gsk.NewServer(config)
+	s := gsk.New(config)
 
 	s.Use(middleware.SecurityHeaders)
 

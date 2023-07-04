@@ -30,7 +30,7 @@ type CORSConfig struct {
 	AllowAll       bool
 }
 
-func CORSMiddleWare(config ...CORSConfig) gsk.Middleware {
+func CORS(config ...CORSConfig) gsk.Middleware {
 	var corsConfig CORSConfig
 	if len(config) > 0 {
 		corsConfig = config[0]
@@ -88,7 +88,7 @@ func CORSMiddleWare(config ...CORSConfig) gsk.Middleware {
 func getAllowedOrigins(origins []string) []string {
 	var allowedOrigins []string
 
-	if origins == nil || len(origins) == 0 {
+	if len(origins) == 0 {
 		allowedOrigins = []string{defaultCORSOrigin}
 	} else {
 		allowedOrigins = origins

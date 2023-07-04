@@ -13,12 +13,11 @@ import (
 func TestCORSDefault(t *testing.T) {
 	// Create a new server instance
 	config := &gsk.ServerConfig{
-		Port:           "8080",
-		RequestLogging: false,
+		Port: "8080",
 	}
-	s := gsk.NewServer(config)
+	s := gsk.New(config)
 
-	s.Use(middleware.CORSMiddleWare())
+	s.Use(middleware.CORS())
 
 	// Register a test route and handler
 	s.Get("/", func(c gsk.Context) {
@@ -56,16 +55,16 @@ func TestCORSDefault(t *testing.T) {
 func TestCORSAllowedOrigin(t *testing.T) {
 	// Create a new server instance
 	config := &gsk.ServerConfig{
-		Port:           "8080",
-		RequestLogging: false,
-		AllowedOrigins: []string{
-			"example.com",
-		},
+		Port: "8080",
 	}
-	s := gsk.NewServer(config)
 
-	s.Use(middleware.CORSMiddleWare(middleware.CORSConfig{
-		AllowedOrigins: config.AllowedOrigins,
+	AllowedOrigins := []string{
+		"example.com",
+	}
+	s := gsk.New(config)
+
+	s.Use(middleware.CORS(middleware.CORSConfig{
+		AllowedOrigins: AllowedOrigins,
 	}))
 
 	// Register a test route and handler

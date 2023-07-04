@@ -15,10 +15,9 @@ import (
 
 func TestStatus(t *testing.T) {
 	config := &gsk.ServerConfig{
-		Port:           "8080",
-		RequestLogging: false,
+		Port: "8080",
 	}
-	s := gsk.NewServer(config)
+	s := gsk.New(config)
 
 	t.Run("sets status and jsonresponse methods by chaining", func(t *testing.T) {
 
@@ -107,10 +106,9 @@ type TestPayload struct {
 func TestJSONResponse(t *testing.T) {
 
 	config := &gsk.ServerConfig{
-		Port:           "8080",
-		RequestLogging: false,
+		Port: "8080",
 	}
-	s := gsk.NewServer(config)
+	s := gsk.New(config)
 
 	testCases := []struct {
 		path        string
@@ -223,7 +221,7 @@ func TestDecodeJSONBody(t *testing.T) {
 			req := httptest.NewRequest("POST", "/", body)
 			resp := httptest.NewRecorder()
 
-			server := gsk.NewServer(&gsk.ServerConfig{})
+			server := gsk.New(&gsk.ServerConfig{})
 
 			server.Post("/", func(c gsk.Context) {
 				var res SampleStruct
@@ -244,42 +242,12 @@ func TestDecodeJSONBody(t *testing.T) {
 	}
 }
 
-func TestGetAllowedOrigins(t *testing.T) {
-	t.Run("returns configured origins", func(t *testing.T) {
-		config := &gsk.ServerConfig{
-			Port:           "8080",
-			RequestLogging: false,
-			AllowedOrigins: []string{"http://localhost:8080", "http://localhost:8081"},
-		}
-		s := gsk.NewServer(config)
-
-		interMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
-			return func(c gsk.Context) {
-				assert.Equal(t, c.GetAllowedOrigins(), config.AllowedOrigins)
-			}
-		}
-
-		s.Use(interMiddleware)
-
-		s.Get("/", func(c gsk.Context) {
-			assert.Equal(t, c.GetAllowedOrigins(), config.AllowedOrigins)
-		})
-
-		request, _ := http.NewRequest("GET", "/", nil)
-		responseRec := httptest.NewRecorder()
-
-		s.GetRouter().ServeHTTP(responseRec, request)
-
-	})
-}
-
 func TestRawResponse(t *testing.T) {
 	t.Run("sets raw response", func(t *testing.T) {
 		config := &gsk.ServerConfig{
-			Port:           "8080",
-			RequestLogging: false,
+			Port: "8080",
 		}
-		s := gsk.NewServer(config)
+		s := gsk.New(config)
 
 		s.Get("/", func(c gsk.Context) {
 			c.RawResponse([]byte("Hello, this is a raw response!"))
@@ -298,10 +266,9 @@ func TestRawResponse(t *testing.T) {
 func TestGetRequestMethod(t *testing.T) {
 	t.Run("returns correct request method", func(t *testing.T) {
 		config := &gsk.ServerConfig{
-			Port:           "8080",
-			RequestLogging: false,
+			Port: "8080",
 		}
-		s := gsk.NewServer(config)
+		s := gsk.New(config)
 
 		s.Get("/", func(c gsk.Context) {
 			assert.Equal(t, http.MethodGet, c.GetRequest().Method)
@@ -318,10 +285,9 @@ func TestGetRequestMethod(t *testing.T) {
 func TestSetHeader(t *testing.T) {
 	t.Run("adds header to the response", func(t *testing.T) {
 		config := &gsk.ServerConfig{
-			Port:           "8080",
-			RequestLogging: false,
+			Port: "8080",
 		}
-		s := gsk.NewServer(config)
+		s := gsk.New(config)
 
 		s.Get("/", func(c gsk.Context) {
 			c.SetHeader("X-Header", "Added")
@@ -339,11 +305,10 @@ func TestSetHeader(t *testing.T) {
 func TestContext(t *testing.T) {
 	t.Run("context is desn't overlap between handlers", func(t *testing.T) {
 		config := &gsk.ServerConfig{
-			Port:           "8080",
-			RequestLogging: false,
+			Port: "8080",
 		}
-		s1 := gsk.NewServer(config)
-		s2 := gsk.NewServer(config)
+		s1 := gsk.New(config)
+		s2 := gsk.New(config)
 
 		if s1 == s2 {
 			t.Errorf("Servers should be different")
@@ -410,10 +375,9 @@ func TestContext(t *testing.T) {
 func TestCookie(t *testing.T) {
 
 	config := &gsk.ServerConfig{
-		Port:           "8080",
-		RequestLogging: false,
+		Port: "8080",
 	}
-	s := gsk.NewServer(config)
+	s := gsk.New(config)
 
 	t.Run("SetCookie adds cookie to the response", func(t *testing.T) {
 

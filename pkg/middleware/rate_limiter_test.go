@@ -18,10 +18,9 @@ func dummyHandler(c gsk.Context) {
 func TestRateLimiter(t *testing.T) {
 	// Create a new server instance
 	config := &gsk.ServerConfig{
-		Port:           "8080",
-		RequestLogging: false,
+		Port: "8080",
 	}
-	s := gsk.NewServer(config)
+	s := gsk.New(config)
 
 	// rate limiter middleware
 	requestsPerInterval := 5
