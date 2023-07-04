@@ -285,10 +285,7 @@ func TestMiddlewares(t *testing.T) {
 
 		s.Get("/", myHandler)
 
-		req := httptest.NewRequest("GET", "/", nil)
-		w := httptest.NewRecorder()
-
-		s.GetRouter().ServeHTTP(w, req)
+		w, _ := s.Test("GET", "/", "")
 
 		resp := w.Result()
 
@@ -307,10 +304,7 @@ func TestMiddlewares(t *testing.T) {
 
 		s.Get("/", myHandler)
 
-		req := httptest.NewRequest("GET", "/", nil)
-		w := httptest.NewRecorder()
-
-		s.GetRouter().ServeHTTP(w, req)
+		w, _ := s.Test("GET", "/", nil)
 
 		resp := w.Result()
 
@@ -422,4 +416,26 @@ func TestNormalizePort(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestServer_Test(t *testing.T) {
+	config := &gsk.ServerConfig{
+		Port: "8080",
+	}
+	s := gsk.New(config)
+
+	s.Get("/", func(gc gsk.Context) {
+		gc.Status(http.StatusAccepted).JSONResponse("ok")
+	})
+
+	w, err := s.Test("GET", "/", "")
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
+
+	assert.Equal(t, http.StatusAccepted, w.Code)
+	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+
+	body, _ := io.ReadAll(w.Body)
+	assert.Equal(t, "\"ok\"", string(body))
 }

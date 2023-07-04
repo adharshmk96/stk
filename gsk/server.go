@@ -2,7 +2,9 @@ package gsk
 
 import (
 	"context"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"time"
 
@@ -42,10 +44,12 @@ type Server interface {
 	Delete(string, HandlerFunc)
 	Patch(string, HandlerFunc)
 
-	// GetRouter
-	GetRouter() *httprouter.Router
+	// Helpers
+	Test(method string, route string, body io.Reader) (httptest.ResponseRecorder, error)
 }
 
+// Initialize the server configurations
+// if no configurations are passed, default values are used
 func initConfig(config ...*ServerConfig) *ServerConfig {
 	var initConfig *ServerConfig
 	if len(config) == 0 {
@@ -70,6 +74,8 @@ func initConfig(config ...*ServerConfig) *ServerConfig {
 }
 
 // New creates a new server instance
+// Configurations can be passed as a parameter and It's optional
+// If no configurations are passed, default values are used
 func New(userconfig ...*ServerConfig) Server {
 	config := initConfig(userconfig...)
 
@@ -100,7 +106,29 @@ func (s *server) Start() {
 	}
 }
 
-// Shuts down the server
+// Shuts down the server, use for graceful shutdown
+// Eg Usage:
+/*
+// indicate that the server is shutting down
+done := make(chan bool)
+
+// A go routine that listens for os signals
+// it will block until it receives a signal
+// once it receives a signal, it will shutdown close the done channel
+go func() {
+	sigint := make(chan os.Signal, 1)
+	signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
+	<-sigint
+
+	if err := server.Shutdown(); err != nil {
+		logger.Error(err)
+	}
+
+	close(done)
+}()
+
+return server, done
+*/
 func (s *server) Shutdown() error {
 	s.config.Logger.Info("shutting down server")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -136,8 +164,15 @@ func (s *server) Patch(path string, handler HandlerFunc) {
 	s.router.PATCH(path, wrapHandlerFunc(s.applyMiddleware(handler), s))
 }
 
-func (s *server) GetRouter() *httprouter.Router {
-	return s.router
+// Helper function to test the server
+func (s *server) Test(method string, route string, body io.Reader) (httptest.ResponseRecorder, error) {
+	w := httptest.NewRecorder()
+	req, err := http.NewRequest(method, route, body)
+	if err != nil {
+		return *w, err
+	}
+	s.router.ServeHTTP(w, req)
+	return *w, nil
 }
 
 // wrapHandlerFunc wraps the handler function with the httprouter.Handle
