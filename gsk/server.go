@@ -16,6 +16,8 @@ type HandlerFunc func(Context)
 type ServerConfig struct {
 	Port   string
 	Logger *logrus.Logger
+	// Input
+	BodySizeLimit int64
 }
 
 type server struct {
@@ -23,8 +25,7 @@ type server struct {
 	router      *httprouter.Router
 	middlewares []Middleware
 	// configurations
-	port   string
-	logger *logrus.Logger
+	config *ServerConfig
 }
 
 type Server interface {
@@ -45,11 +46,32 @@ type Server interface {
 	GetRouter() *httprouter.Router
 }
 
-// New creates a new server instance
-func New(config *ServerConfig) Server {
-	if config.Logger == nil {
-		config.Logger = logging.NewLogrusLogger()
+func initConfig(config ...*ServerConfig) *ServerConfig {
+	var initConfig *ServerConfig
+	if len(config) == 0 {
+		initConfig = &ServerConfig{}
+	} else {
+		initConfig = config[0]
 	}
+
+	if initConfig.Port == "" {
+		initConfig.Port = "8080"
+	}
+
+	if initConfig.Logger == nil {
+		initConfig.Logger = logging.NewLogrusLogger()
+	}
+
+	if initConfig.BodySizeLimit == 0 {
+		initConfig.BodySizeLimit = int64(1 << 20)
+	}
+
+	return initConfig
+}
+
+// New creates a new server instance
+func New(userconfig ...*ServerConfig) Server {
+	config := initConfig(userconfig...)
 
 	startingPort := NormalizePort(config.Port)
 	router := httprouter.New()
@@ -61,8 +83,7 @@ func New(config *ServerConfig) Server {
 		},
 		router:      router,
 		middlewares: []Middleware{},
-		port:        config.Port,
-		logger:      config.Logger,
+		config:      config,
 	}
 
 	return newSTKServer
@@ -70,18 +91,18 @@ func New(config *ServerConfig) Server {
 
 // Start starts the server on the configured port
 func (s *server) Start() {
-	startingPort := NormalizePort(s.port)
-	s.logger.WithField("port", startingPort).Info("starting server")
+	startingPort := NormalizePort(s.config.Port)
+	s.config.Logger.WithField("port", startingPort).Info("starting server")
 	err := s.httpServer.ListenAndServe()
 	if err != nil {
-		s.logger.WithError(err).Error("error starting server")
+		s.config.Logger.WithError(err).Error("error starting server")
 		panic(err)
 	}
 }
 
 // Shuts down the server
 func (s *server) Shutdown() error {
-	s.logger.Info("shutting down server")
+	s.config.Logger.Info("shutting down server")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -127,10 +148,11 @@ func wrapHandlerFunc(handler HandlerFunc, s *server) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 		handlerContext := &gskContext{
-			params:  p,
-			request: r,
-			writer:  w,
-			logger:  s.logger,
+			params:        p,
+			request:       r,
+			writer:        w,
+			logger:        s.config.Logger,
+			bodySizeLimit: s.config.BodySizeLimit,
 		}
 
 		handler(handlerContext)

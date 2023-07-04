@@ -18,7 +18,8 @@ type gskContext struct {
 	params httprouter.Params
 
 	// logging
-	logger *logrus.Logger
+	logger        *logrus.Logger
+	bodySizeLimit int64
 
 	// to write response
 	responseStatus int
@@ -75,7 +76,7 @@ func (c *gskContext) GetQueryParam(key string) string {
 
 func (c *gskContext) DecodeJSONBody(v interface{}) error {
 	// TODO: config from server
-	bodySizeLimit := int64(1 << 20) // 1 MB
+	bodySizeLimit := int64(c.bodySizeLimit << 20) // 1 MB
 
 	// Set a maximum limit for the request body size to avoid possible malicious requests
 	c.request.Body = http.MaxBytesReader(c.writer, c.request.Body, bodySizeLimit)

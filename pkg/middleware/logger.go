@@ -15,7 +15,9 @@ func RequestLogger(next gsk.HandlerFunc) gsk.HandlerFunc {
 			"method": c.GetRequest().Method,
 			"url":    c.GetRequest().URL.String(),
 		}).Info("incoming_request")
+
 		next(c)
+
 		timeTaken := time.Since(startTime).Milliseconds()
 		c.Logger().WithFields(logrus.Fields{
 			"method":    c.GetRequest().Method,
