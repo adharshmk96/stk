@@ -2,7 +2,6 @@ package middleware_test
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/adharshmk96/stk/gsk"
@@ -25,10 +24,7 @@ func TestSecurityHeaders(t *testing.T) {
 	})
 
 	// Run the test request
-	req, _ := http.NewRequest("GET", "/", nil)
-	respRec := httptest.NewRecorder()
-
-	s.GetRouter().ServeHTTP(respRec, req)
+	rr, _ := s.Test("GET", "/", nil)
 
 	expectedHeaders := map[string]string{
 		"X-Content-Type-Options":            "nosniff",
@@ -41,7 +37,7 @@ func TestSecurityHeaders(t *testing.T) {
 	}
 
 	for header, expectedValue := range expectedHeaders {
-		value := respRec.Header().Get(header)
+		value := rr.Header().Get(header)
 		assert.Equal(t, expectedValue, value)
 	}
 }

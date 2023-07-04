@@ -421,24 +421,28 @@ func TestCookie(t *testing.T) {
 
 	})
 
-	// t.Run("GetCookie gets cookie from the request", func(t *testing.T) {
+	t.Run("GetCookie gets cookie from the request", func(t *testing.T) {
 
-	// 	cookie := &http.Cookie{
-	// 		Name:  "X-Cookie",
-	// 		Value: "Added",
-	// 		Path:  "/",
-	// 	}
+		cookie := &http.Cookie{
+			Name:  "X-Cookie",
+			Value: "Added",
+			Path:  "/",
+		}
+		testParams := gsk.TestParams{
+			Cookies: []*http.Cookie{
+				cookie,
+			},
+		}
 
-	// 	rr, _ := s.Test("GET", "/c", nil)
-	// 	request.AddCookie(cookie)
+		s.Test("GET", "/c", nil, testParams)
 
-	// 	s.Get("/c", func(c gsk.Context) {
-	// 		reqCookie, _ := c.GetCookie("X-Cookie")
-	// 		assert.Equal(t, cookie.Value, reqCookie.Value)
-	// 		assert.Equal(t, cookie.Name, reqCookie.Name)
-	// 	})
+		s.Get("/c", func(c gsk.Context) {
+			reqCookie, _ := c.GetCookie("X-Cookie")
+			assert.Equal(t, cookie.Value, reqCookie.Value)
+			assert.Equal(t, cookie.Name, reqCookie.Name)
+		})
 
-	// })
+	})
 
 	t.Run("GetCookie returns error if cookie is not found", func(t *testing.T) {
 

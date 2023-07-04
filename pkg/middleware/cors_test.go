@@ -2,7 +2,6 @@ package middleware_test
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/adharshmk96/stk/gsk"
@@ -26,11 +25,12 @@ func TestCORSDefault(t *testing.T) {
 
 	t.Run("Non-preflight request", func(t *testing.T) {
 		// Run the test request
-		req, _ := http.NewRequest("GET", "/", nil)
-		req.Header.Set("Host", "example.com")
-		respRec := httptest.NewRecorder()
-
-		s.GetRouter().ServeHTTP(respRec, req)
+		testParams := gsk.TestParams{
+			Headers: map[string]string{
+				"Host": "example.com",
+			},
+		}
+		rr, _ := s.Test("GET", "/", nil, testParams)
 
 		expectedHeaders := map[string]string{
 			"Access-Control-Allow-Origin":  "example.com",
@@ -39,12 +39,12 @@ func TestCORSDefault(t *testing.T) {
 		}
 
 		// expect http.StatusOK
-		if respRec.Code != http.StatusOK {
-			t.Errorf("Expected response code %d, but got %d", http.StatusOK, respRec.Code)
+		if rr.Code != http.StatusOK {
+			t.Errorf("Expected response code %d, but got %d", http.StatusOK, rr.Code)
 		}
 
 		for header, expectedValue := range expectedHeaders {
-			if value := respRec.Header().Get(header); value != expectedValue {
+			if value := rr.Header().Get(header); value != expectedValue {
 				t.Errorf("Expected %s header to be %q, but got %q", header, expectedValue, value)
 			}
 		}
@@ -74,11 +74,13 @@ func TestCORSAllowedOrigin(t *testing.T) {
 
 	t.Run("Non-preflight request from example.com", func(t *testing.T) {
 
-		req, _ := http.NewRequest("GET", "/", nil)
-		req.Header.Set("Host", "example.com")
-		respRec := httptest.NewRecorder()
-
-		s.GetRouter().ServeHTTP(respRec, req)
+		// Run the test request
+		testParams := gsk.TestParams{
+			Headers: map[string]string{
+				"Host": "example.com",
+			},
+		}
+		rr, _ := s.Test("GET", "/", nil, testParams)
 
 		expectedHeaders := map[string]string{
 			"Access-Control-Allow-Origin":  "example.com",
@@ -86,21 +88,23 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Headers": "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization",
 		}
 
-		assert.Equal(t, http.StatusOK, respRec.Code)
+		assert.Equal(t, http.StatusOK, rr.Code)
 
 		for header, expectedValue := range expectedHeaders {
-			value := respRec.Header().Get(header)
+			value := rr.Header().Get(header)
 			assert.Equal(t, expectedValue, value)
 		}
 	})
 
 	t.Run("Non-preflight request with invalid origin", func(t *testing.T) {
 
-		req, _ := http.NewRequest("GET", "/", nil)
-		req.Header.Set("Host", "invalid.com")
-		respRec := httptest.NewRecorder()
-
-		s.GetRouter().ServeHTTP(respRec, req)
+		// Run the test request
+		testParams := gsk.TestParams{
+			Headers: map[string]string{
+				"Host": "invalid.com",
+			},
+		}
+		rr, _ := s.Test("GET", "/", nil, testParams)
 
 		expectedHeaders := map[string]string{
 			"Access-Control-Allow-Origin":  "",
@@ -108,47 +112,51 @@ func TestCORSAllowedOrigin(t *testing.T) {
 			"Access-Control-Allow-Headers": "",
 		}
 
-		assert.Equal(t, http.StatusForbidden, respRec.Code)
+		assert.Equal(t, http.StatusForbidden, rr.Code)
 
 		for header, expectedValue := range expectedHeaders {
-			value := respRec.Header().Get(header)
+			value := rr.Header().Get(header)
 			assert.Equal(t, expectedValue, value)
 		}
 	})
 
 	t.Run("Preflight request with example.com", func(t *testing.T) {
 
-		req, _ := http.NewRequest("OPTIONS", "/", nil)
-		req.Header.Set("Host", "example.com")
-		req.Header.Set("Access-Control-Request-Method", "POST")
-		respRec := httptest.NewRecorder()
-
-		s.GetRouter().ServeHTTP(respRec, req)
+		// Run the test request
+		testParams := gsk.TestParams{
+			Headers: map[string]string{
+				"Host":                          "example.com",
+				"Access-Control-Request-Method": "POST",
+			},
+		}
+		rr, _ := s.Test("OPTIONS", "/", nil, testParams)
 
 		// NOTE: thie is behaviour from the router package
 		// change this if we are chaning the router
 		expectedHeaders := map[string]string{
-			"Access-Control-Allow-Origin":  "",
-			"Access-Control-Allow-Methods": "",
-			"Access-Control-Allow-Headers": "",
+			"Access-Control-Allow-Origin":  "example.com",
+			"Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE, PATCH",
+			"Access-Control-Allow-Headers": "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization",
 		}
 
-		assert.Equal(t, http.StatusOK, respRec.Code)
+		assert.Equal(t, http.StatusNoContent, rr.Code)
 
 		for header, expectedValue := range expectedHeaders {
-			value := respRec.Header().Get(header)
+			value := rr.Header().Get(header)
 			assert.Equal(t, expectedValue, value)
 		}
 	})
 
 	t.Run("Preflight request with invalid origin", func(t *testing.T) {
 
-		req, _ := http.NewRequest("OPTIONS", "/", nil)
-		req.Header.Set("Host", "invalid.com")
-		req.Header.Set("Access-Control-Request-Method", "POST")
-		respRec := httptest.NewRecorder()
-
-		s.GetRouter().ServeHTTP(respRec, req)
+		// Run the test request
+		testParams := gsk.TestParams{
+			Headers: map[string]string{
+				"Host":                          "invalid.com",
+				"Access-Control-Request-Method": "POST",
+			},
+		}
+		rr, _ := s.Test("OPTIONS", "/", nil, testParams)
 
 		expectedHeaders := map[string]string{
 			"Access-Control-Allow-Origin":  "",
@@ -157,10 +165,10 @@ func TestCORSAllowedOrigin(t *testing.T) {
 		}
 
 		// TODO - this should be checked later on
-		assert.Equal(t, http.StatusOK, respRec.Code)
+		assert.Equal(t, http.StatusForbidden, rr.Code)
 
 		for header, expectedValue := range expectedHeaders {
-			value := respRec.Header().Get(header)
+			value := rr.Header().Get(header)
 			assert.Equal(t, expectedValue, value)
 		}
 	})

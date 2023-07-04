@@ -11,7 +11,7 @@ import (
 )
 
 type gskContext struct {
-	// server config
+	// server
 	request *http.Request
 	writer  http.ResponseWriter
 
@@ -147,18 +147,22 @@ func (c *gskContext) Logger() *logrus.Logger {
 	return c.logger
 }
 
+// Set cookie using http.Cookie
 func (c *gskContext) SetCookie(cookie *http.Cookie) {
 	http.SetCookie(c.writer, cookie)
 }
 
+// Get cookie using cookie name
 func (c *gskContext) GetCookie(name string) (*http.Cookie, error) {
 	return c.request.Cookie(name)
 }
 
+// Get the status code set for the response
 func (c *gskContext) GetStatusCode() int {
 	return c.responseStatus
 }
 
+// returns a copy of the context, now it's safe to use
 func (c *gskContext) eject() gskContext {
 	return *c
 }

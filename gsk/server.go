@@ -48,7 +48,12 @@ type Server interface {
 	// Static(string, string)
 
 	// Helpers
-	Test(method string, route string, body io.Reader) (httptest.ResponseRecorder, error)
+	Test(string, string, io.Reader, ...TestParams) (httptest.ResponseRecorder, error)
+
+	// Internals
+	Router() *httprouter.Router
+	// to Apply middlewares
+	applyMiddlewares(HandlerFunc) HandlerFunc
 }
 
 // Initialize the server configurations
@@ -100,6 +105,7 @@ func New(userconfig ...*ServerConfig) Server {
 
 // Start starts the server on the configured port
 func (s *server) Start() {
+
 	startingPort := NormalizePort(s.config.Port)
 	s.config.Logger.WithField("port", startingPort).Info("starting server")
 	err := s.httpServer.ListenAndServe()
@@ -145,34 +151,74 @@ func (s *server) Shutdown() error {
 // server.Use(stk.RequestLogger())
 func (s *server) Use(middleware Middleware) {
 	s.middlewares = append(s.middlewares, middleware)
+
+	// TODO: Fix this hack, this needs to be in a different place.
+	s.router.GlobalOPTIONS = wrapHandlerFunc(
+		s.applyMiddlewares(func(gc Context) {
+			gc.Status(http.StatusNoContent)
+		}),
+		s,
+	)
 }
 
+// Register handlers for the HTTP methods
+// usage example:
+// server.Get("/test", func(c stk.Context) { gc.Status(http.StatusOK).JSONResponse("OK") })
 func (s *server) Get(path string, handler HandlerFunc) {
-	s.router.GET(path, wrapHandlerFunc(s.applyMiddleware(handler), s))
+	s.router.HandlerFunc("GET", path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
 }
 
 func (s *server) Post(path string, handler HandlerFunc) {
-	s.router.POST(path, wrapHandlerFunc(s.applyMiddleware(handler), s))
+	s.router.HandlerFunc("POST", path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
 }
 
 func (s *server) Put(path string, handler HandlerFunc) {
-	s.router.PUT(path, wrapHandlerFunc(s.applyMiddleware(handler), s))
+	s.router.HandlerFunc("PUT", path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
 }
 
 func (s *server) Delete(path string, handler HandlerFunc) {
-	s.router.DELETE(path, wrapHandlerFunc(s.applyMiddleware(handler), s))
+	s.router.HandlerFunc("DELETE", path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
 }
 
 func (s *server) Patch(path string, handler HandlerFunc) {
-	s.router.PATCH(path, wrapHandlerFunc(s.applyMiddleware(handler), s))
+	s.router.HandlerFunc("PATCH", path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+}
+
+type TestParams struct {
+	Cookies []*http.Cookie
+	Headers map[string]string
 }
 
 // Helper function to test the server
 // Usage example:
 // w, err := server.Test("GET", "/test", nil)
-func (s *server) Test(method string, route string, body io.Reader) (httptest.ResponseRecorder, error) {
-	w := httptest.NewRecorder()
+func (s *server) Test(method string, route string, body io.Reader, testParams ...TestParams) (httptest.ResponseRecorder, error) {
+
 	req, err := http.NewRequest(method, route, body)
+
+	if len(testParams) > 0 {
+		for _, cookie := range testParams[0].Cookies {
+			req.AddCookie(cookie)
+		}
+
+		for key, value := range testParams[0].Headers {
+			req.Header.Set(key, value)
+		}
+	}
+
+	if len(testParams) > 0 && len(testParams[0].Cookies) > 0 {
+		for _, cookie := range testParams[0].Cookies {
+			req.AddCookie(cookie)
+		}
+	}
+
+	if len(testParams) > 0 && len(testParams[0].Headers) > 0 {
+		for key, value := range testParams[0].Headers {
+			req.Header.Set(key, value)
+		}
+	}
+
+	w := httptest.NewRecorder()
 	if err != nil {
 		return *w, err
 	}
@@ -180,11 +226,18 @@ func (s *server) Test(method string, route string, body io.Reader) (httptest.Res
 	return *w, nil
 }
 
+// Router returns the router instance
+func (s *server) Router() *httprouter.Router {
+	return s.router
+}
+
 // wrapHandlerFunc wraps the handler function with the httprouter.Handle
 // this is done to pass the gsk context to the handler function
-func wrapHandlerFunc(handler HandlerFunc, s *server) httprouter.Handle {
+func wrapHandlerFunc(handler HandlerFunc, s *server) http.HandlerFunc {
 
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		p := httprouter.ParamsFromContext(r.Context())
 
 		handlerContext := &gskContext{
 			params:        p,

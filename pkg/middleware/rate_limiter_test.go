@@ -2,7 +2,6 @@ package middleware_test
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -38,18 +37,14 @@ func TestRateLimiter(t *testing.T) {
 	s.Get("/test", dummyHandler)
 
 	for i := 0; i < requestsPerInterval; i++ {
-		req, _ := http.NewRequest("GET", "/test", nil)
-		respRec := httptest.NewRecorder()
-		s.GetRouter().ServeHTTP(respRec, req)
+		rr, _ := s.Test("GET", "/test", nil)
 
-		if respRec.Code != http.StatusOK {
-			t.Errorf("Expected 200 OK, got: %d for request %d", respRec.Code, i+1)
+		if rr.Code != http.StatusOK {
+			t.Errorf("Expected 200 OK, got: %d for request %d", rr.Code, i+1)
 		}
 	}
 
-	req, _ := http.NewRequest("GET", "/test", nil)
-	respRec := httptest.NewRecorder()
-	s.GetRouter().ServeHTTP(respRec, req)
+	rr, _ := s.Test("GET", "/test", nil)
 
-	assert.Equal(t, http.StatusTooManyRequests, respRec.Code)
+	assert.Equal(t, http.StatusTooManyRequests, rr.Code)
 }
