@@ -63,7 +63,7 @@ func initConfig(config ...*ServerConfig) *ServerConfig {
 	}
 
 	if initConfig.BodySizeLimit == 0 {
-		initConfig.BodySizeLimit = int64(1 << 20)
+		initConfig.BodySizeLimit = 1
 	}
 
 	return initConfig
