@@ -11,7 +11,7 @@ import (
 )
 
 type gskContext struct {
-	// server config
+	// server
 	request *http.Request
 	writer  http.ResponseWriter
 
@@ -78,6 +78,10 @@ func (c *gskContext) GetQueryParam(key string) string {
 func (c *gskContext) DecodeJSONBody(v interface{}) error {
 	// TODO: config from server
 	bodySizeLimit := int64(c.bodySizeLimit << 20) // 1 MB
+
+	if c.request.Body == nil {
+		return ErrInvalidJSON
+	}
 
 	// Set a maximum limit for the request body size to avoid possible malicious requests
 	c.request.Body = http.MaxBytesReader(c.writer, c.request.Body, bodySizeLimit)
@@ -147,18 +151,22 @@ func (c *gskContext) Logger() *logrus.Logger {
 	return c.logger
 }
 
+// Set cookie using http.Cookie
 func (c *gskContext) SetCookie(cookie *http.Cookie) {
 	http.SetCookie(c.writer, cookie)
 }
 
+// Get cookie using cookie name
 func (c *gskContext) GetCookie(name string) (*http.Cookie, error) {
 	return c.request.Cookie(name)
 }
 
+// Get the status code set for the response
 func (c *gskContext) GetStatusCode() int {
 	return c.responseStatus
 }
 
+// returns a copy of the context, now it's safe to use
 func (c *gskContext) eject() gskContext {
 	return *c
 }
