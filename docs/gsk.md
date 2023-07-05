@@ -4,6 +4,31 @@ The GSK server package is a lightweight, flexible HTTP server for Golang applica
 
 ## Basic Usage
 
+Here's a simple and basic hello world server
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/adharshmk96/stk/gsk"
+)
+
+func main() {
+	// create new server
+	server := gsk.New()
+
+	// add routes
+	server.Get("/", func(gc gsk.Context) {
+		gc.Status(http.StatusOK).JSONResponse(gsk.Map{"message": "Hello World"})
+	})
+
+	// start server
+	server.Start()
+}
+```
+
 1. **Initialization:** Initialize a new server instance by calling the `New` function.
 
 ```go
@@ -30,6 +55,64 @@ server.Start()
 err := server.Shutdown()
 if err != nil {
     // handle error
+}
+```
+
+Graceful Shutdown: an example function to start and gracefully shutdown the server
+
+
+```go
+func setupRoutes(server gsk.Server) {
+    server.Get("/", func(c gsk.Context) {
+        c.Status(http.StatusOK).JSONResponse(gsk.Map{"message": "Hello World"})
+    })
+}
+
+func StartHttpServer(port string) (gsk.Server, chan bool) {
+
+	serverConfig := &gsk.ServerConfig{
+		Port:   port,
+		Logger: logger,
+	}
+
+	server := gsk.New(serverConfig)
+
+    // add middlewares
+	rateLimiter := rateLimiter()
+	server.Use(rateLimiter)
+	server.Use(middleware.RequestLogger)
+
+    // setup routes after adding middleware
+	setupRoutes(server)
+
+	server.Start()
+
+	// for graceful shutdown
+	done := make(chan bool)
+
+	// A go routine that listens for os signals
+	// it will block until it receives a signal
+	// once it receives a signal, it will shutdown close the done channel
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
+		<-sigint
+
+		if err := server.Shutdown(); err != nil {
+			logger.Error(err)
+		}
+
+		close(done)
+	}()
+
+	return server, done
+}
+
+
+func main() {
+    server, done := StartHttpServer("8080")
+    <-done
+    logger.Info("Server Stopped")
 }
 ```
 
