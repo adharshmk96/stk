@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var version = "v0.5.3"
+var version = "v0.5.4"
 var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands

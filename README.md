@@ -19,6 +19,9 @@ go install github.com/adharshmk96/stk
 ```
 
 ## GSK - Web server framework ( library )
+
+[docs](docs/gsk.md)
+
 - A web server framework with go's native http server wrapper and httprouter for routing
 - Middleware support
 - Logrus Logger
@@ -37,16 +40,12 @@ import (
 )
 
 func main() {
-	config := gsk.ServerConfig{
-		Port:           "0.0.0.0:8080",
-		RequestLogging: true,
-	}
 	// create new server
-	server := gsk.NewServer(&config)
+	server := gsk.New(&config)
 
 	// add routes
-	server.Get("/", func(c gsk.Context) {
-		c.Status(http.StatusOK).JSONResponse(gsk.Map{"message": "Hello World"})
+	server.Get("/", func(gc gsk.Context) {
+		gc.Status(http.StatusOK).JSONResponse(gsk.Map{"message": "Hello World"})
 	})
 
 	// start server
