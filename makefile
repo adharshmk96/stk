@@ -71,3 +71,10 @@ define update_file
     @git add cmd/root.go
     @git commit -m "bump version to $(NEW_TAG)" > /dev/null
 endef
+
+##########################
+### configuration
+##########################
+
+init:
+	@git config core.hooksPath .githooks
