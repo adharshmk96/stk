@@ -1,0 +1,92 @@
+# GSK Server Package Documentation
+
+The GSK server package is a lightweight, flexible HTTP server for Golang applications. It provides an interface for managing server lifecycle, adding middleware, routing HTTP methods, and handling static files. The package includes features for automated testing of server responses.
+
+## Basic Usage
+
+1. **Initialization:** Initialize a new server instance by calling the `New` function.
+
+```go
+server := gsk.New()
+```
+
+Optionally, a `ServerConfig` object can be passed to `New` to set the server's configurations, such as the port, logger, and body size limit.
+
+```go
+config := &gsk.ServerConfig{
+	Port:          ":8081",
+	Logger:        logrus.New(),
+	BodySizeLimit: 1<<20, // 1 MB
+}
+server := gsk.New(config)
+```
+
+2. **Starting and Stopping:** Use `Start` to start the server and `Shutdown` to stop it.
+
+```go
+server.Start()
+
+// and later...
+err := server.Shutdown()
+if err != nil {
+    // handle error
+}
+```
+
+3. **Routing HTTP methods:** You can define routes for each HTTP method (Get, Post, Put, Delete, Patch) by calling the appropriate function.
+
+```go
+server.Get("/path", func(c gsk.Context) {
+    // handle the request
+})
+```
+
+4. **Serving Static Files:** The `Static` function enables the server to serve static files from a directory.
+
+```go
+server.Static("/assets/*filepath", "/path/to/your/static/files")
+```
+
+## Usage with Middleware
+
+Middleware can be used to execute code before the request is handled by the route handler. Middleware functions are defined separately and then added to the server using the `Use` function.
+
+```go
+// Define your middleware
+var MyMiddleware gsk.Middleware = func(next gsk.HandlerFunc) gsk.HandlerFunc {
+    return func(c gsk.Context) {
+        // Middleware code here
+
+        next(c)
+    }
+}
+
+// Add middleware to the server
+server.Use(MyMiddleware)
+```
+
+Note that middleware will be applied when the route is registered, so make sure to register routes after adding the middleware.
+
+## Testing Usage
+
+The server package also provides a `Test` function that can be used to simulate HTTP requests and test server responses. This function takes the HTTP method, path, body, and optional parameters (cookies and headers) and returns a `httptest.ResponseRecorder` and an error.
+
+```go
+w, err := server.Test("GET", "/path", nil)
+
+// w is a *httptest.ResponseRecorder, and can be used to check the response
+// err should be checked to ensure the request was processed successfully
+```
+
+If you need to send headers or cookies with your test request, you can use the `TestParams` struct.
+
+```go
+params := gsk.TestParams{
+	Cookies: []*http.Cookie{{Name: "name", Value: "value"}},
+	Headers: map[string]string{"Content-Type": "application/json"},
+}
+
+w, err := server.Test("GET", "/path", nil, params)
+```
+
+Please note that the above documentation is an abstracted guide to using the GSK package. To use it in its entirety, please ensure to properly handle error cases and correctly use the `Context` object in your route handlers and middleware.

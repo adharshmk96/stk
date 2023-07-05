@@ -19,6 +19,9 @@ go install github.com/adharshmk96/stk
 ```
 
 ## GSK - Web server framework ( library )
+
+[docs](docs/gsk.md)
+
 - A web server framework with go's native http server wrapper and httprouter for routing
 - Middleware support
 - Logrus Logger
