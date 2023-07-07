@@ -35,6 +35,8 @@ type Server interface {
 	Shutdown() error
 	// Middleware
 	Use(Middleware)
+	// RouteGroup
+	RouteGroup(path string) RouteGroup
 
 	// HTTP methods
 	Get(path string, handler HandlerFunc)
