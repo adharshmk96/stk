@@ -98,5 +98,7 @@ func (b *sqlQuery) On(conditions ...string) SqlQuery {
 func (b *sqlQuery) Build() string {
 	query := strings.Join(b.parts, " ")
 	b.query.WriteString(query)
-	return b.query.String()
+	queryString := b.query.String()
+	b.query.Reset()
+	return queryString
 }
