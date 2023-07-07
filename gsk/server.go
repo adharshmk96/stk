@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,7 +22,7 @@ type ServerConfig struct {
 
 type server struct {
 	httpServer  *http.Server
-	router      *httprouter.Router
+	router      Router
 	middlewares []Middleware
 	// configurations
 	config *ServerConfig
@@ -52,9 +51,6 @@ type Server interface {
 
 	// Helpers
 	Test(method string, path string, body io.Reader, params ...TestParams) (httptest.ResponseRecorder, error)
-
-	// Internals
-	Router() *httprouter.Router
 }
 
 // New creates a new server instance
@@ -64,7 +60,7 @@ func New(userconfig ...*ServerConfig) Server {
 	config := initConfig(userconfig...)
 
 	startingPort := NormalizePort(config.Port)
-	router := httprouter.New()
+	router := newGskRouter()
 
 	newSTKServer := &server{
 		httpServer: &http.Server{
@@ -127,18 +123,14 @@ func (s *server) Shutdown() error {
 // server.Use(stk.RequestLogger())
 // NOTE: Middlewares will be applied when the route is registered
 // SO Make sure to register the routes after adding the middlewares
-func (s *server) Use(middleware Middleware) {
-	s.middlewares = append(s.middlewares, middleware)
+func (s *server) Use(mw Middleware) {
+	s.middlewares = append(s.middlewares, mw)
 
-	// This is to ensure that CORS Middleware will be applied
-	// and the preflight request will be handled properly via middleware.
-	// It is a confusing pattern, but it works and the impact is lower on performance.
-	s.router.GlobalOPTIONS = wrapHandlerFunc(
-		s,
-		applyMiddlewares(s.middlewares, func(gc Context) {
-			gc.Status(http.StatusNoContent)
-		}),
-	)
+	// Add preflight handler if CORS middleware is used
+	// this is a hack to make sure that the preflight handler works with CORS Middleware
+	router := s.router.Router()
+	router.GlobalOPTIONS = wrapHandlerFunc(s, applyMiddlewares(s.middlewares, preFlightHandler))
+
 }
 
 // Register handlers for the HTTP methods
@@ -162,6 +154,10 @@ func (s *server) Delete(path string, handler HandlerFunc) {
 
 func (s *server) Patch(path string, handler HandlerFunc) {
 	s.Handle(http.MethodPatch, path, handler)
+}
+
+func preFlightHandler(gc Context) {
+	gc.Status(http.StatusNoContent)
 }
 
 func (s *server) Handle(method string, path string, handler HandlerFunc) {
@@ -228,18 +224,13 @@ func (s *server) Test(method string, route string, body io.Reader, testParams ..
 	return *w, nil
 }
 
-// Router returns the router instance
-func (s *server) Router() *httprouter.Router {
-	return s.router
-}
-
-// wrapHandlerFunc wraps the handler function with the httprouter.Handle
+// wrapHandlerFunc wraps the handler function with the router.Handle
 // this is done to pass the gsk context to the handler function
 func wrapHandlerFunc(s *server, handler HandlerFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		p := httprouter.ParamsFromContext(r.Context())
+		p := s.router.ParamsFromContext(r.Context())
 
 		handlerContext := &gskContext{
 			params:        p,
