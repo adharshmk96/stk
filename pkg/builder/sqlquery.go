@@ -7,6 +7,7 @@ import (
 type SqlQuery interface {
 	InsertInto(table string) SqlQuery
 	Update(table string) SqlQuery
+	DeleteFrom(table string) SqlQuery
 	Fields(fields ...string) SqlQuery
 	Values(values ...string) SqlQuery
 	Set(values ...string) SqlQuery
@@ -43,6 +44,12 @@ func (b *sqlQuery) Fields(fields ...string) SqlQuery {
 
 func (b *sqlQuery) Update(table string) SqlQuery {
 	part := "UPDATE " + table
+	b.parts = append(b.parts, part)
+	return b
+}
+
+func (b *sqlQuery) DeleteFrom(table string) SqlQuery {
+	part := "DELETE FROM " + table
 	b.parts = append(b.parts, part)
 	return b
 }
