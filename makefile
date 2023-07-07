@@ -1,3 +1,4 @@
+t := $(shell git pull --tags)
 VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
 MAJOR := $(shell echo $(VERSION) | cut -d . -f 1 | sed 's/v//')
 MINOR := $(shell echo $(VERSION) | cut -d . -f 2)
