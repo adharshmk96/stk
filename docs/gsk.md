@@ -2,11 +2,11 @@
 
 [back to main](../README.md)
 
-The GSK server package is a lightweight, flexible HTTP server for Golang applications. It provides an interface for managing server lifecycle, adding middleware, routing HTTP methods, and handling static files. The package includes features for automated testing of server responses.
+The GSK server package is a lightweight and flexible HTTP server for Golang applications. It provides an interface for managing server lifecycle, adding middleware, routing HTTP methods, and handling static files. Moreover, the package includes features for automated testing of server responses.
 
 ## Basic Usage
 
-Here's a simple and basic hello world server
+Here's a basic "hello world" server example:
 
 ```go
 package main
@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	// create new server
+	// create a new server
 	server := gsk.New()
 
 	// add routes
@@ -26,18 +26,18 @@ func main() {
 		gc.Status(http.StatusOK).JSONResponse(gsk.Map{"message": "Hello World"})
 	})
 
-	// start server
+	// start the server
 	server.Start()
 }
 ```
 
-1. **Initialization:** Initialize a new server instance by calling the `New` function.
+1. **Initialization:** Initialize a new server instance by invoking the `New` function.
 
 ```go
 server := gsk.New()
 ```
 
-Optionally, a `ServerConfig` object can be passed to `New` to set the server's configurations, such as the port, logger, and body size limit.
+Optionally, you can pass a `ServerConfig` object to `New` to set the server's configurations, such as the port, logger, and body size limit.
 
 ```go
 config := &gsk.ServerConfig{
@@ -60,8 +60,7 @@ if err != nil {
 }
 ```
 
-Graceful Shutdown: an example function to start and gracefully shutdown the server
-
+Here is an example function to start and gracefully shutdown the server:
 
 ```go
 func setupRoutes(server gsk.Server) {
@@ -71,8 +70,7 @@ func setupRoutes(server gsk.Server) {
 }
 
 func StartHttpServer(port string) (gsk.Server, chan bool) {
-
-	serverConfig := &gsk.ServerConfig{
+    serverConfig := &gsk.ServerConfig{
 		Port:   port,
 		Logger: logger,
 	}
@@ -89,12 +87,12 @@ func StartHttpServer(port string) (gsk.Server, chan bool) {
 
 	server.Start()
 
-	// for graceful shutdown
+	// prepare for graceful shutdown
 	done := make(chan bool)
 
-	// A go routine that listens for os signals
+	// A goroutine that listens for OS signals
 	// it will block until it receives a signal
-	// once it receives a signal, it will shutdown close the done channel
+	// once it receives a signal, it will shutdown and close the done channel
 	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
@@ -118,7 +116,7 @@ func main() {
 }
 ```
 
-3. **Routing HTTP methods:** You can define routes for each HTTP method (Get, Post, Put, Delete, Patch) by calling the appropriate function.
+3. **Routing HTTP methods:** Define routes for each HTTP method (Get, Post, Put, Delete, Patch) by calling the appropriate function.
 
 ```go
 server.Get("/path", func(c gsk.Context) {
@@ -126,7 +124,7 @@ server.Get("/path", func(c gsk.Context) {
 })
 ```
 
-4. **Serving Static Files:** The `Static` function enables the server to serve static files from a directory.
+4. **Serving Static Files:** Use the `Static` function to serve static files from a specific directory.
 
 ```go
 server.Static("/assets/*filepath", "/path/to/your/static/files")
@@ -134,7 +132,7 @@ server.Static("/assets/*filepath", "/path/to/your/static/files")
 
 ## Usage with Middleware
 
-Middleware can be used to execute code before the request is handled by the route handler. Middleware functions are defined separately and then added to the server using the `Use` function.
+Middleware executes code before the request is handled by the route handler. Middleware functions are defined separately and then added to the server using the `Use` function.
 
 ```go
 // Define your middleware
@@ -150,11 +148,11 @@ var MyMiddleware gsk.Middleware = func(next gsk.HandlerFunc) gsk.HandlerFunc {
 server.Use(MyMiddleware)
 ```
 
-Note that middleware will be applied when the route is registered, so make sure to register routes after adding the middleware.
+Note that middleware is applied when the route is registered. Therefore, make sure to register routes after adding the middleware.
 
 ### Middleware Ordering
 
-Middlewares will be applied only to the routes registered after the middleware is added. You can add some routes which doesn't require a specific middleware
+Middlewares apply only to the routes registered after the middleware is added. You can add some routes which do not require a specific middleware.
 
 ```go
 server.Use(MyMiddleware)
@@ -170,12 +168,11 @@ server.Use(AnotherMiddleware)
 server.Get("/path2", func(c gsk.Context) {
     // handle the request
 })
-
 ```
 
-### Route grouping
+### Route Grouping
 
-You can group routes and apply middleware to the group
+Group routes and apply middleware to the group:
 
 ```go
 server.Use(MyMiddleware)
@@ -195,11 +192,9 @@ publicGroup.Get("/home", func(c gsk.Context) {
 })
 ```
 
-```
-
 ## Testing Usage
 
-The server package also provides a `Test` function that can be used to simulate HTTP requests and test server responses. This function takes the HTTP method, path, body, and optional parameters (cookies and headers) and returns a `httptest.ResponseRecorder` and an error.
+The server package provides a `Test` function to simulate HTTP requests and test server responses. This function takes the HTTP method, path, body, and optional parameters (cookies and headers), and returns a `httptest.ResponseRecorder` and an error.
 
 ```go
 w, err := server.Test("GET", "/path", nil)
@@ -208,7 +203,7 @@ w, err := server.Test("GET", "/path", nil)
 // err should be checked to ensure the request was processed successfully
 ```
 
-If you need to send headers or cookies with your test request, you can use the `TestParams` struct.
+If you need to send headers or cookies with your test request, use the `TestParams` struct.
 
 ```go
 params := gsk.TestParams{
@@ -219,4 +214,5 @@ params := gsk.TestParams{
 w, err := server.Test("GET", "/path", nil, params)
 ```
 
-Please note that the above documentation is an abstracted guide to using the GSK package. To use it in its entirety, please ensure to properly handle error cases and correctly use the `Context` object in your route handlers and middleware.
+Please note that this documentation is a simplified guide to using the GSK package. To use it fully, ensure to handle error cases properly and use the `Context` object correctly in your route handlers and middleware.
+
