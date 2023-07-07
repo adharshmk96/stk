@@ -3,10 +3,8 @@ package gsk
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
 )
 
@@ -16,7 +14,7 @@ type gskContext struct {
 	writer  http.ResponseWriter
 
 	// request params
-	params httprouter.Params
+	params Params
 
 	// logging
 	logger        *logrus.Logger
@@ -93,7 +91,7 @@ func (c *gskContext) DecodeJSONBody(v interface{}) error {
 	c.request.Body = http.MaxBytesReader(c.writer, c.request.Body, bodySizeLimit)
 
 	// Manually check if the request body size exceeds the limit
-	body, err := ioutil.ReadAll(c.request.Body)
+	body, err := io.ReadAll(c.request.Body)
 	if err != nil {
 		c.writer.Header().Set("Content-Type", "application/json")
 		http.Error(c.writer, ErrBodyTooLarge.Error(), http.StatusRequestEntityTooLarge)
