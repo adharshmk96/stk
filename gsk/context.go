@@ -33,6 +33,7 @@ type Context interface {
 	// http objects
 	GetRequest() *http.Request
 	GetWriter() http.ResponseWriter
+	GetPath() string
 
 	// get data from request
 	GetStatusCode() int
@@ -45,6 +46,7 @@ type Context interface {
 	SetHeader(string, string)
 	RawResponse(raw []byte)
 	JSONResponse(data interface{})
+	StringResponse(data string)
 
 	// cookies
 	SetCookie(cookie *http.Cookie)
@@ -63,6 +65,10 @@ func (c *gskContext) GetRequest() *http.Request {
 
 func (c *gskContext) GetWriter() http.ResponseWriter {
 	return c.writer
+}
+
+func (c *gskContext) GetPath() string {
+	return c.request.URL.Path
 }
 
 // GetParam gets the params within the path mentioned as a wildcard
@@ -139,6 +145,12 @@ func (c *gskContext) JSONResponse(data interface{}) {
 	}
 
 	c.responseBody = response
+}
+
+// StringResponse writes the provided string to the response writer
+func (c *gskContext) StringResponse(data string) {
+	c.writer.Header().Set("Content-Type", "text/plain")
+	c.responseBody = []byte(data)
 }
 
 // sets response body as byte array

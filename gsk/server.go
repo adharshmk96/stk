@@ -35,6 +35,8 @@ type Server interface {
 	Shutdown() error
 	// Middleware
 	Use(Middleware)
+	// RouteGroup
+	RouteGroup(path string) RouteGroup
 
 	// HTTP methods
 	Get(path string, handler HandlerFunc)
@@ -53,8 +55,6 @@ type Server interface {
 
 	// Internals
 	Router() *httprouter.Router
-	// to Apply middlewares
-	applyMiddlewares(HandlerFunc) HandlerFunc
 }
 
 // New creates a new server instance
@@ -134,10 +134,10 @@ func (s *server) Use(middleware Middleware) {
 	// and the preflight request will be handled properly via middleware.
 	// It is a confusing pattern, but it works and the impact is lower on performance.
 	s.router.GlobalOPTIONS = wrapHandlerFunc(
-		s.applyMiddlewares(func(gc Context) {
+		s,
+		applyMiddlewares(s.middlewares, func(gc Context) {
 			gc.Status(http.StatusNoContent)
 		}),
-		s,
 	)
 }
 
@@ -145,31 +145,45 @@ func (s *server) Use(middleware Middleware) {
 // usage example:
 // server.Get("/test", func(c stk.Context) { gc.Status(http.StatusOK).JSONResponse("OK") })
 func (s *server) Get(path string, handler HandlerFunc) {
-	s.router.HandlerFunc(http.MethodGet, path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+	s.Handle(http.MethodGet, path, handler)
 }
 
 func (s *server) Post(path string, handler HandlerFunc) {
-	s.router.HandlerFunc(http.MethodPost, path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+	s.Handle(http.MethodPost, path, handler)
 }
 
 func (s *server) Put(path string, handler HandlerFunc) {
-	s.router.HandlerFunc(http.MethodPut, path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+	s.Handle(http.MethodPut, path, handler)
 }
 
 func (s *server) Delete(path string, handler HandlerFunc) {
-	s.router.HandlerFunc(http.MethodDelete, path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+	s.Handle(http.MethodDelete, path, handler)
 }
 
 func (s *server) Patch(path string, handler HandlerFunc) {
-	s.router.HandlerFunc(http.MethodPatch, path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+	s.Handle(http.MethodPatch, path, handler)
 }
 
 func (s *server) Handle(method string, path string, handler HandlerFunc) {
-	s.router.HandlerFunc(method, path, wrapHandlerFunc(s.applyMiddlewares(handler), s))
+	s.router.HandlerFunc(method, path, wrapHandlerFunc(s, applyMiddlewares(s.middlewares, handler)))
 }
 
 func (s *server) Static(path string, dir string) {
 	s.router.ServeFiles(path, http.Dir(dir))
+}
+
+// RouteGroup returns a new RouteGroup instance
+// RouteGroup is used to register routes with the same path prefix
+// It will also ensure that the middlewares are applied to the routes exclusively
+// usage example:
+// rg := server.RouteGroup("/api")
+// rg.Get("/users", func(c stk.Context) { gc.Status(http.StatusOK).JSONResponse("OK") })
+func (s *server) RouteGroup(path string) RouteGroup {
+	return &routeGroup{
+		server:      s,
+		pathPrefix:  path,
+		middlewares: s.middlewares,
+	}
 }
 
 type TestParams struct {
@@ -221,7 +235,7 @@ func (s *server) Router() *httprouter.Router {
 
 // wrapHandlerFunc wraps the handler function with the httprouter.Handle
 // this is done to pass the gsk context to the handler function
-func wrapHandlerFunc(handler HandlerFunc, s *server) http.HandlerFunc {
+func wrapHandlerFunc(s *server, handler HandlerFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
