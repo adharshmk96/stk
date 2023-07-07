@@ -8,7 +8,6 @@ type routeGroup struct {
 
 type RouteGroup interface {
 	Use(middleware Middleware)
-	applyMiddlewares(handler HandlerFunc) HandlerFunc
 
 	Get(path string, handler HandlerFunc)
 	Post(path string, handler HandlerFunc)
@@ -33,43 +32,25 @@ func (rg *routeGroup) RouteGroup(path string) RouteGroup {
 }
 
 func (rg *routeGroup) Get(path string, handler HandlerFunc) {
-	rg.server.Get(rg.pathPrefix+path, rg.applyMiddlewares(handler))
+	rg.server.Get(rg.pathPrefix+path, applyMiddlewares(rg.middlewares, handler))
 }
 
 func (rg *routeGroup) Post(path string, handler HandlerFunc) {
-	rg.server.Post(rg.pathPrefix+path, rg.applyMiddlewares(handler))
+	rg.server.Post(rg.pathPrefix+path, applyMiddlewares(rg.middlewares, handler))
 }
 
 func (rg *routeGroup) Put(path string, handler HandlerFunc) {
-	rg.server.Put(rg.pathPrefix+path, rg.applyMiddlewares(handler))
+	rg.server.Put(rg.pathPrefix+path, applyMiddlewares(rg.middlewares, handler))
 }
 
 func (rg *routeGroup) Delete(path string, handler HandlerFunc) {
-	rg.server.Delete(rg.pathPrefix+path, rg.applyMiddlewares(handler))
+	rg.server.Delete(rg.pathPrefix+path, applyMiddlewares(rg.middlewares, handler))
 }
 
 func (rg *routeGroup) Patch(path string, handler HandlerFunc) {
-	rg.server.Patch(rg.pathPrefix+path, rg.applyMiddlewares(handler))
+	rg.server.Patch(rg.pathPrefix+path, applyMiddlewares(rg.middlewares, handler))
 }
 
 func (rg *routeGroup) Handle(method string, path string, handler HandlerFunc) {
-	rg.server.Handle(method, rg.pathPrefix+path, rg.applyMiddlewares(handler))
-}
-
-// Here we apply the RouteGroup middlewares to a handler
-func (rg *routeGroup) applyMiddlewares(handler HandlerFunc) HandlerFunc {
-	finalHandler := handler
-	for i := len(rg.middlewares) - 1; i >= 0; i-- {
-		finalHandler = rg.middlewares[i](finalHandler)
-	}
-	return finalHandler
-}
-
-// Extend the server interface and server struct
-func (s *server) RouteGroup(path string) RouteGroup {
-	return &routeGroup{
-		server:      s,
-		pathPrefix:  path,
-		middlewares: s.middlewares,
-	}
+	rg.server.Handle(method, rg.pathPrefix+path, applyMiddlewares(rg.middlewares, handler))
 }
