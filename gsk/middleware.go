@@ -5,10 +5,10 @@ type Middleware func(HandlerFunc) HandlerFunc
 
 // applyMiddlewares applies all the middlewares to the handler
 // in the reverse order, chaining the middlewares independently
-func (s *server) applyMiddlewares(handler HandlerFunc) HandlerFunc {
-	updatedHandler := handler
-	for i := len(s.middlewares) - 1; i >= 0; i-- {
-		updatedHandler = s.middlewares[i](updatedHandler)
+func applyMiddlewares(middlewares []Middleware, handler HandlerFunc) HandlerFunc {
+	finalHandler := handler
+	for i := len(middlewares) - 1; i >= 0; i-- {
+		finalHandler = middlewares[i](finalHandler)
 	}
-	return updatedHandler
+	return finalHandler
 }

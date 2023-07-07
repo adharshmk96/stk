@@ -69,7 +69,7 @@ define update_file
     @sed -i.bak "s/var version = \"[^\"]*\"/var version = \"$(NEW_TAG)\"/g" ./cmd/root.go
     @rm cmd/root.go.bak
     @git add cmd/root.go
-    @git commit -m "bump version to $(NEW_TAG)" > /dev/null
+    @git commit --amend --no-edit > /dev/null
 endef
 
 ##########################
