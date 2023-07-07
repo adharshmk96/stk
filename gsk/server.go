@@ -176,9 +176,8 @@ func (s *server) Static(path string, dir string) {
 // rg.Get("/users", func(c stk.Context) { gc.Status(http.StatusOK).JSONResponse("OK") })
 func (s *server) RouteGroup(path string) RouteGroup {
 	return &routeGroup{
-		server:      s,
-		pathPrefix:  path,
-		middlewares: s.middlewares,
+		server:     s,
+		pathPrefix: path,
 	}
 }
 
@@ -239,8 +238,6 @@ func wrapHandlerFunc(s *server, handler HandlerFunc) http.HandlerFunc {
 			logger:        s.config.Logger,
 			bodySizeLimit: s.config.BodySizeLimit,
 		}
-
-		s.config.Logger.Info("handling request")
 
 		handler(handlerContext)
 
