@@ -14,7 +14,7 @@ import (
 
 func TestStatus(t *testing.T) {
 	config := &gsk.ServerConfig{
-		Port: "8080",
+		Port: "8888",
 	}
 	s := gsk.New(config)
 
@@ -85,7 +85,7 @@ type TestPayload struct {
 func TestJSONResponse(t *testing.T) {
 
 	config := &gsk.ServerConfig{
-		Port: "8080",
+		Port: "8888",
 	}
 	s := gsk.New(config)
 
@@ -306,7 +306,7 @@ func TestDecodeJSONBodySizeLimit(t *testing.T) {
 func TestRawResponse(t *testing.T) {
 	t.Run("sets raw response", func(t *testing.T) {
 		config := &gsk.ServerConfig{
-			Port: "8080",
+			Port: "8888",
 		}
 		s := gsk.New(config)
 
@@ -324,7 +324,7 @@ func TestRawResponse(t *testing.T) {
 func TestGetRequestMethod(t *testing.T) {
 	t.Run("returns correct request method", func(t *testing.T) {
 		config := &gsk.ServerConfig{
-			Port: "8080",
+			Port: "8888",
 		}
 		s := gsk.New(config)
 
@@ -340,7 +340,7 @@ func TestGetRequestMethod(t *testing.T) {
 func TestSetHeader(t *testing.T) {
 	t.Run("adds header to the response", func(t *testing.T) {
 		config := &gsk.ServerConfig{
-			Port: "8080",
+			Port: "8888",
 		}
 		s := gsk.New(config)
 
@@ -357,7 +357,7 @@ func TestSetHeader(t *testing.T) {
 func TestContext(t *testing.T) {
 	t.Run("context is desn't overlap between handlers", func(t *testing.T) {
 		config := &gsk.ServerConfig{
-			Port: "8080",
+			Port: "8888",
 		}
 		s1 := gsk.New(config)
 		s2 := gsk.New(config)
@@ -423,7 +423,7 @@ func TestContext(t *testing.T) {
 func TestCookie(t *testing.T) {
 
 	config := &gsk.ServerConfig{
-		Port: "8080",
+		Port: "8888",
 	}
 	s := gsk.New(config)
 

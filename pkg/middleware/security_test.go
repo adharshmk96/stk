@@ -12,7 +12,7 @@ import (
 func TestSecurityHeaders(t *testing.T) {
 	// Create a new server instance
 	config := &gsk.ServerConfig{
-		Port: "8080",
+		Port: "8888",
 	}
 	s := gsk.New(config)
 

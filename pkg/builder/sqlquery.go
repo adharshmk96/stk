@@ -22,7 +22,6 @@ type SqlQuery interface {
 }
 
 type sqlQuery struct {
-	query strings.Builder
 	parts []string
 }
 
@@ -104,8 +103,6 @@ func (b *sqlQuery) On(conditions ...string) SqlQuery {
 
 func (b *sqlQuery) Build() string {
 	query := strings.Join(b.parts, " ")
-	b.query.WriteString(query)
-	queryString := b.query.String()
-	b.query.Reset()
-	return queryString
+	b.parts = nil
+	return query
 }

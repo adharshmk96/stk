@@ -12,7 +12,7 @@ import (
 func TestCORSDefault(t *testing.T) {
 	// Create a new server instance
 	config := &gsk.ServerConfig{
-		Port: "8080",
+		Port: "8888",
 	}
 	s := gsk.New(config)
 
@@ -55,7 +55,7 @@ func TestCORSDefault(t *testing.T) {
 func TestCORSAllowedOrigin(t *testing.T) {
 	// Create a new server instance
 	config := &gsk.ServerConfig{
-		Port: "8080",
+		Port: "8888",
 	}
 
 	AllowedOrigins := []string{

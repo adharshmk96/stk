@@ -57,6 +57,24 @@ func TestSqlQueryBuilder(t *testing.T) {
 		expected := "SELECT users.id, users.name, orders.order_id FROM users JOIN orders ON users.id=orders.user_id WHERE users.age > 18 ORDER BY users.name"
 		assert.Equal(t, expected, result)
 	})
+
+	t.Run("build resets the query", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.Select(
+			"users.id",
+			"users.name",
+			"orders.order_id",
+		).From("users").
+			Join("orders").
+			On("users.id=orders.user_id").
+			Where("users.age > 18").OrderBy("users.name").
+			Build()
+		expected := "SELECT users.id, users.name, orders.order_id FROM users JOIN orders ON users.id=orders.user_id WHERE users.age > 18 ORDER BY users.name"
+		assert.Equal(t, expected, result)
+
+		result = builder.Build()
+		assert.Equal(t, "", result)
+	})
 }
 
 func TestSqlBuilderShort(t *testing.T) {
