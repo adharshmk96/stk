@@ -251,6 +251,13 @@ func TestMiddlewares(t *testing.T) {
 		gc.Status(http.StatusOK).JSONResponse("ok")
 	}
 
+	laterMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
+		return func(gc gsk.Context) {
+			gc.SetHeader("X-LaterMiddleware", "true")
+			next(gc)
+		}
+	}
+
 	t.Run("server with two middlewares", func(t *testing.T) {
 		config := &gsk.ServerConfig{
 			Port: "8080",
@@ -345,6 +352,40 @@ func TestMiddlewares(t *testing.T) {
 		body, _ := io.ReadAll(resp.Body)
 
 		assert.Equal(t, "\"blocked\"", string(body))
+	})
+
+	t.Run("middleware will be applied only for routes below it", func(t *testing.T) {
+		config := &gsk.ServerConfig{
+			Port: "8080",
+		}
+		s := gsk.New(config)
+
+		s.Use(firstMiddleware)
+		s.Use(secondMiddleware)
+
+		s.Get("/", myHandler)
+
+		w, _ := s.Test("GET", "/", nil)
+
+		s.Use(laterMiddleware)
+
+		s.Get("/later", myHandler)
+
+		w2, _ := s.Test("GET", "/later", nil)
+
+		resp := w.Result()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.Equal(t, "true", resp.Header.Get("X-FirstMiddleware"))
+		assert.Equal(t, "true", resp.Header.Get("X-SecondMiddleware"))
+		assert.Equal(t, "", resp.Header.Get("X-LaterMiddleware"))
+
+		resp2 := w2.Result()
+
+		assert.Equal(t, http.StatusOK, resp2.StatusCode)
+		assert.Equal(t, "true", resp2.Header.Get("X-FirstMiddleware"))
+		assert.Equal(t, "true", resp2.Header.Get("X-SecondMiddleware"))
+		assert.Equal(t, "true", resp2.Header.Get("X-LaterMiddleware"))
 	})
 
 }
