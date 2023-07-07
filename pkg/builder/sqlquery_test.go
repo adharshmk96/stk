@@ -6,34 +6,123 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSqlBuilder(t *testing.T) {
-	t.Run("should build a simple query", func(t *testing.T) {
-		query := NewSqlQuery().Select("id", "name").From("users").Build()
-		expected := "SELECT (id, name) FROM users"
-		assert.Equal(t, expected, query)
+func TestSqlQueryBuilder(t *testing.T) {
+	t.Run("LongInsert", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.InsertInto("users").
+			Fields(
+				"name",
+				"email",
+				"age",
+				"address",
+				"phone",
+			).
+			Values(
+				"'John Doe'",
+				"'john@example.com'",
+				"30",
+				"'123 St, City, State, Country'",
+				"'1234567890'",
+			).Build()
+		expected := "INSERT INTO users (name, email, age, address, phone) VALUES ('John Doe', 'john@example.com', 30, '123 St, City, State, Country', '1234567890')"
+		assert.Equal(t, expected, result)
 	})
 
-	t.Run("should build a query with where clause", func(t *testing.T) {
-		query := NewSqlQuery().Select("id", "name").From("users").Where("id = 1").Build()
-		expected := "SELECT (id, name) FROM users WHERE id = 1"
-		assert.Equal(t, expected, query)
+	t.Run("LongUpdate", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.Update("users").
+			Set(
+				"name='John Doe'",
+				"email='john@example.com'",
+				"age=30",
+				"address='123 St, City, State, Country'",
+				"phone='1234567890'",
+			).
+			Where("id=1").Build()
+		expected := "UPDATE users SET name='John Doe', email='john@example.com', age=30, address='123 St, City, State, Country', phone='1234567890' WHERE id=1"
+		assert.Equal(t, expected, result)
 	})
 
-	t.Run("should build a query with order by clause", func(t *testing.T) {
-		query := NewSqlQuery().Select("id", "name").From("users").OrderBy("name").Build()
-		expected := "SELECT (id, name) FROM users ORDER BY name"
-		assert.Equal(t, expected, query)
+	t.Run("LongSelect", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.Select(
+			"users.id",
+			"users.name",
+			"orders.order_id",
+		).From("users").
+			Join("orders").
+			On("users.id=orders.user_id").
+			Where("users.age > 18").OrderBy("users.name").
+			Build()
+		expected := "SELECT users.id, users.name, orders.order_id FROM users JOIN orders ON users.id=orders.user_id WHERE users.age > 18 ORDER BY users.name"
+		assert.Equal(t, expected, result)
+	})
+}
+
+func TestSqlBuilderShort(t *testing.T) {
+	t.Run("InsertInto", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.InsertInto("users").Build()
+		assert.Equal(t, "INSERT INTO users", result)
 	})
 
-	t.Run("should build a query with multiple where and order by clause", func(t *testing.T) {
-		query := NewSqlQuery().Select("id", "name").From("users").Where("id = 1", "name = 'John'").OrderBy("name").Build()
-		expected := "SELECT (id, name) FROM users WHERE id = 1 AND name = 'John' ORDER BY name"
-		assert.Equal(t, expected, query)
+	t.Run("Update", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.Update("users").Build()
+		assert.Equal(t, "UPDATE users", result)
 	})
 
-	t.Run("should build a query with join clause", func(t *testing.T) {
-		query := NewSqlQuery().Select("id", "name").From("users").Join("roles").On("users.role_id = roles.id").Build()
-		expected := "SELECT (id, name) FROM users JOIN roles ON users.role_id = roles.id"
-		assert.Equal(t, expected, query)
+	t.Run("Fields", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.Fields("name", "email").Build()
+		assert.Equal(t, "(name, email)", result)
+	})
+
+	t.Run("Values", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.Values("'John'", "'john@example.com'").Build()
+		assert.Equal(t, "VALUES ('John', 'john@example.com')", result)
+	})
+
+	t.Run("Set", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.Set("name='John'").Build()
+		assert.Equal(t, "SET name='John'", result)
+	})
+
+	t.Run("Select", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.Select("name", "email").From("users").Build()
+		assert.Equal(t, "SELECT name, email FROM users", result)
+	})
+
+	t.Run("From", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.From("users").Build()
+		assert.Equal(t, "FROM users", result)
+	})
+
+	t.Run("Where", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.Where("id=1").Build()
+		assert.Equal(t, "WHERE id=1", result)
+	})
+
+	t.Run("OrderBy", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.OrderBy("name").Build()
+		assert.Equal(t, "ORDER BY name", result)
+	})
+
+	t.Run("Join", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.Join("orders").Build()
+		assert.Equal(t, "JOIN orders", result)
+	})
+
+	t.Run("On", func(t *testing.T) {
+		builder := NewSqlQuery()
+		result := builder.On("users.id=orders.user_id").Build()
+		assert.Equal(t, "ON users.id=orders.user_id", result)
 	})
 }

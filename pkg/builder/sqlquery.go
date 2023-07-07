@@ -1,10 +1,16 @@
 package builder
 
-type sqlQuery struct {
-	query string
-}
+import (
+	"strings"
+)
 
 type SqlQuery interface {
+	InsertInto(table string) SqlQuery
+	Update(table string) SqlQuery
+	Fields(fields ...string) SqlQuery
+	Values(values ...string) SqlQuery
+	Set(values ...string) SqlQuery
+
 	Select(columns ...string) SqlQuery
 	From(tables ...string) SqlQuery
 	Where(conditions ...string) SqlQuery
@@ -14,54 +20,83 @@ type SqlQuery interface {
 	Build() string
 }
 
+type sqlQuery struct {
+	query strings.Builder
+	parts []string
+}
+
 func NewSqlQuery() SqlQuery {
-	return &sqlQuery{
-		query: "",
-	}
+	return &sqlQuery{}
 }
 
-func join(arr []string, sep string) string {
-	var str string
-	for i, v := range arr {
-		if i == len(arr)-1 {
-			str += v
-		} else {
-			str += v + sep
-		}
-	}
-	return str
+func (b *sqlQuery) InsertInto(table string) SqlQuery {
+	part := "INSERT INTO " + table
+	b.parts = append(b.parts, part)
+	return b
 }
 
-func (s *sqlQuery) Select(columns ...string) SqlQuery {
-	s.query += "SELECT (" + join(columns, ", ") + ")"
-	return s
+func (b *sqlQuery) Fields(fields ...string) SqlQuery {
+	part := "(" + strings.Join(fields, ", ") + ")"
+	b.parts = append(b.parts, part)
+	return b
 }
 
-func (s *sqlQuery) From(tables ...string) SqlQuery {
-	s.query += " FROM " + join(tables, ", ")
-	return s
+func (b *sqlQuery) Update(table string) SqlQuery {
+	part := "UPDATE " + table
+	b.parts = append(b.parts, part)
+	return b
 }
 
-func (s *sqlQuery) Where(conditions ...string) SqlQuery {
-	s.query += " WHERE " + join(conditions, " AND ")
-	return s
+func (b *sqlQuery) Set(values ...string) SqlQuery {
+	part := "SET " + strings.Join(values, ", ")
+	b.parts = append(b.parts, part)
+	return b
 }
 
-func (s *sqlQuery) OrderBy(columns ...string) SqlQuery {
-	s.query += " ORDER BY " + join(columns, ", ")
-	return s
+func (b *sqlQuery) Values(values ...string) SqlQuery {
+	part := "VALUES (" + strings.Join(values, ", ") + ")"
+	b.parts = append(b.parts, part)
+	return b
 }
 
-func (s *sqlQuery) Join(tables ...string) SqlQuery {
-	s.query += " JOIN " + join(tables, ", ")
-	return s
+func (b *sqlQuery) Select(columns ...string) SqlQuery {
+	part := "SELECT " + strings.Join(columns, ", ")
+	b.parts = append(b.parts, part)
+	return b
 }
 
-func (s *sqlQuery) On(conditions ...string) SqlQuery {
-	s.query += " ON " + join(conditions, " AND ")
-	return s
+func (b *sqlQuery) From(tables ...string) SqlQuery {
+	part := "FROM " + strings.Join(tables, ", ")
+	b.parts = append(b.parts, part)
+	return b
 }
 
-func (s *sqlQuery) Build() string {
-	return s.query
+func (b *sqlQuery) Where(conditions ...string) SqlQuery {
+	part := "WHERE " + strings.Join(conditions, " AND ")
+	b.parts = append(b.parts, part)
+	return b
+}
+
+func (b *sqlQuery) OrderBy(columns ...string) SqlQuery {
+	part := "ORDER BY " + strings.Join(columns, ", ")
+	b.parts = append(b.parts, part)
+	return b
+}
+
+func (b *sqlQuery) Join(tables ...string) SqlQuery {
+	part := "JOIN " + strings.Join(tables, " JOIN ")
+	b.parts = append(b.parts, part)
+	return b
+}
+
+func (b *sqlQuery) On(conditions ...string) SqlQuery {
+	part := "ON " + strings.Join(conditions, " AND ")
+	b.parts = append(b.parts, part)
+	return b
+}
+
+func (b *sqlQuery) Build() string {
+	query := strings.Join(b.parts, " ")
+	b.query.WriteString(query)
+	return b.query.String()
 }
