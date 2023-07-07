@@ -173,6 +173,30 @@ server.Get("/path2", func(c gsk.Context) {
 
 ```
 
+### Route grouping
+
+You can group routes and apply middleware to the group
+
+```go
+server.Use(MyMiddleware)
+// applies MyMiddleware to all routes registered after this
+authGroup := server.RouteGroup("/auth")
+authGroup.Use(AuthMiddleware)
+
+// applies auth middleware to all routes registered after this
+authGroup.Get("/login", func(c gsk.Context) {
+	// handle the /auth/login request
+})
+
+publicGroup := server.RouteGroup("/public")
+// applies only MyMiddleware to all routes registered after this
+publicGroup.Get("/home", func(c gsk.Context) {
+	// handle the /public/home request
+})
+```
+
+```
+
 ## Testing Usage
 
 The server package also provides a `Test` function that can be used to simulate HTTP requests and test server responses. This function takes the HTTP method, path, body, and optional parameters (cookies and headers) and returns a `httptest.ResponseRecorder` and an error.
