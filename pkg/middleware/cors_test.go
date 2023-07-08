@@ -27,7 +27,7 @@ func TestCORSDefault(t *testing.T) {
 		// Run the test request
 		testParams := gsk.TestParams{
 			Headers: map[string]string{
-				"Host": "example.com",
+				"Origin": "example.com",
 			},
 		}
 		rr, _ := s.Test("GET", "/", nil, testParams)
@@ -77,7 +77,7 @@ func TestCORSAllowedOrigin(t *testing.T) {
 		// Run the test request
 		testParams := gsk.TestParams{
 			Headers: map[string]string{
-				"Host": "example.com",
+				"Origin": "example.com",
 			},
 		}
 		rr, _ := s.Test("GET", "/", nil, testParams)
@@ -101,7 +101,7 @@ func TestCORSAllowedOrigin(t *testing.T) {
 		// Run the test request
 		testParams := gsk.TestParams{
 			Headers: map[string]string{
-				"Host": "invalid.com",
+				"Origin": "invalid.com",
 			},
 		}
 		rr, _ := s.Test("GET", "/", nil, testParams)
@@ -125,7 +125,7 @@ func TestCORSAllowedOrigin(t *testing.T) {
 		// Run the test request
 		testParams := gsk.TestParams{
 			Headers: map[string]string{
-				"Host":                          "example.com",
+				"Origin":                        "example.com",
 				"Access-Control-Request-Method": "POST",
 			},
 		}
@@ -152,7 +152,7 @@ func TestCORSAllowedOrigin(t *testing.T) {
 		// Run the test request
 		testParams := gsk.TestParams{
 			Headers: map[string]string{
-				"Host":                          "invalid.com",
+				"Origin":                        "invalid.com",
 				"Access-Control-Request-Method": "POST",
 			},
 		}

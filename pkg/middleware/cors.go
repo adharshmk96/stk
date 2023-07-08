@@ -46,7 +46,7 @@ func CORS(config ...CORSConfig) gsk.Middleware {
 		return func(c gsk.Context) {
 			allowedOrigins := getAllowedOrigins(corsConfig.AllowedOrigins)
 
-			origin := c.GetRequest().Header.Get("Host")
+			origin := c.GetRequest().Header.Get("Origin")
 			// Check if the origin is in the allowedOrigins list
 			isAllowed := false
 			for _, allowedOrigin := range allowedOrigins {
@@ -73,6 +73,9 @@ func CORS(config ...CORSConfig) gsk.Middleware {
 			allowedHeaders := strings.Join(defaultAllowHeaders, ", ")
 			if len(corsConfig.AllowedHeaders) != 0 {
 				allowedHeaders = strings.Join(corsConfig.AllowedHeaders, ", ")
+			}
+			if corsConfig.AllowAll {
+				origin = "*"
 			}
 
 			headers.Set(AccessControlAllowOrigin, origin)
