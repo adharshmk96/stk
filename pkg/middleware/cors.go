@@ -12,15 +12,16 @@ var (
 	// "POST, GET, OPTIONS, PUT, DELETE, PATCH"
 	defaultAllowHeaders = []string{"Accept", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"}
 	// "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
-
+	defaultAllowCredentials = "true"
 )
 
 const (
 	defaultCORSOrigin = "same-origin"
 
-	AccessControlAllowOrigin  = "Access-Control-Allow-Origin"
-	AccessControlAllowMethods = "Access-Control-Allow-Methods"
-	AccessControlAllowHeaders = "Access-Control-Allow-Headers"
+	AccessControlAllowOrigin      = "Access-Control-Allow-Origin"
+	AccessControlAllowMethods     = "Access-Control-Allow-Methods"
+	AccessControlAllowHeaders     = "Access-Control-Allow-Headers"
+	AccessControlAllowCredentials = "Access-Control-Allow-Credentials"
 )
 
 type CORSConfig struct {
@@ -81,6 +82,7 @@ func CORS(config ...CORSConfig) gsk.Middleware {
 			headers.Set(AccessControlAllowOrigin, origin)
 			headers.Set(AccessControlAllowMethods, allowedMethods)
 			headers.Set(AccessControlAllowHeaders, allowedHeaders)
+			headers.Set(AccessControlAllowCredentials, defaultAllowCredentials)
 
 			next(c)
 
