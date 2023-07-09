@@ -33,6 +33,8 @@ type Context interface {
 	GetWriter() http.ResponseWriter
 	GetPath() string
 
+	Origin() string
+
 	// get data from request
 	GetStatusCode() int
 	GetParam(key string) string
@@ -67,6 +69,10 @@ func (c *gskContext) GetWriter() http.ResponseWriter {
 
 func (c *gskContext) GetPath() string {
 	return c.request.URL.Path
+}
+
+func (c *gskContext) Origin() string {
+	return c.request.Header.Get("Origin")
 }
 
 // GetParam gets the params within the path mentioned as a wildcard
