@@ -29,16 +29,16 @@ type Map map[string]interface{}
 
 type Context interface {
 	// http objects
-	GetRequest() *http.Request
-	GetWriter() http.ResponseWriter
-	GetPath() string
+	Request() *http.Request
+	Writer() http.ResponseWriter
+	Path() string
 
 	Origin() string
 
 	// get data from request
 	GetStatusCode() int
-	GetParam(key string) string
-	GetQueryParam(key string) string
+	Param(key string) string
+	QueryParam(key string) string
 	DecodeJSONBody(v interface{}) error
 
 	// set data for response
@@ -59,15 +59,15 @@ type Context interface {
 	eject() gskContext
 }
 
-func (c *gskContext) GetRequest() *http.Request {
+func (c *gskContext) Request() *http.Request {
 	return c.request
 }
 
-func (c *gskContext) GetWriter() http.ResponseWriter {
+func (c *gskContext) Writer() http.ResponseWriter {
 	return c.writer
 }
 
-func (c *gskContext) GetPath() string {
+func (c *gskContext) Path() string {
 	return c.request.URL.Path
 }
 
@@ -75,13 +75,13 @@ func (c *gskContext) Origin() string {
 	return c.request.Header.Get("Origin")
 }
 
-// GetParam gets the params within the path mentioned as a wildcard
-func (c *gskContext) GetParam(key string) string {
+// Param gets the params within the path mentioned as a wildcard
+func (c *gskContext) Param(key string) string {
 	return c.params.ByName(key)
 }
 
-// GetQueryParam gets the query parameters passed eg: /?name=value
-func (c *gskContext) GetQueryParam(key string) string {
+// QueryParam gets the query parameters passed eg: /?name=value
+func (c *gskContext) QueryParam(key string) string {
 	return c.request.URL.Query().Get(key)
 }
 

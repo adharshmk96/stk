@@ -12,16 +12,16 @@ func RequestLogger(next gsk.HandlerFunc) gsk.HandlerFunc {
 	return func(c gsk.Context) {
 		startTime := time.Now()
 		c.Logger().WithFields(logrus.Fields{
-			"method": c.GetRequest().Method,
-			"url":    c.GetRequest().URL.String(),
+			"method": c.Request().Method,
+			"url":    c.Request().URL.String(),
 		}).Info("incoming_request")
 
 		next(c)
 
 		timeTaken := time.Since(startTime).Milliseconds()
 		c.Logger().WithFields(logrus.Fields{
-			"method":    c.GetRequest().Method,
-			"url":       c.GetRequest().URL.String(),
+			"method":    c.Request().Method,
+			"url":       c.Request().URL.String(),
 			"status":    c.GetStatusCode(),
 			"timeTaken": fmt.Sprintf("%d ms", timeTaken),
 		}).Info("response_served")

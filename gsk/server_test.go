@@ -53,7 +53,7 @@ func TestServerRoutes(t *testing.T) {
 	test_status := http.StatusNoContent
 
 	sampleHandler := func(gc gsk.Context) {
-		method := gc.GetRequest().Method
+		method := gc.Request().Method
 		gc.Status(test_status)
 		gc.RawResponse([]byte(method))
 	}
@@ -66,7 +66,7 @@ func TestServerRoutes(t *testing.T) {
 
 	queryParamHandler := func(gc gsk.Context) {
 		gc.Status(test_status)
-		gc.RawResponse([]byte(gc.GetQueryParam("name")))
+		gc.RawResponse([]byte(gc.QueryParam("name")))
 	}
 
 	s.Get("/test/p", queryParamHandler)
@@ -77,7 +77,7 @@ func TestServerRoutes(t *testing.T) {
 
 	paramsHandler := func(gc gsk.Context) {
 		gc.Status(test_status)
-		gc.RawResponse([]byte(gc.GetParam("id")))
+		gc.RawResponse([]byte(gc.Param("id")))
 	}
 
 	s.Get("/test/d/:id", paramsHandler)
@@ -139,7 +139,7 @@ func TestServerRoutes(t *testing.T) {
 	t.Run("server handles same routes and different http methods", func(t *testing.T) {
 
 		sampleHandler := func(gc gsk.Context) {
-			method := gc.GetRequest().Method
+			method := gc.Request().Method
 			gc.Status(test_status)
 			gc.RawResponse([]byte(method))
 		}
@@ -165,7 +165,7 @@ func TestServerRoutes(t *testing.T) {
 	t.Run("server handles same routes and different http methods with dynamic routes", func(t *testing.T) {
 
 		sampleHandler := func(gc gsk.Context) {
-			method := gc.GetRequest().Method
+			method := gc.Request().Method
 			gc.Status(test_status)
 			gc.RawResponse([]byte(method))
 		}
@@ -320,7 +320,7 @@ func TestMiddlewares(t *testing.T) {
 	t.Run("middleware blocks certain routes", func(t *testing.T) {
 		blockerMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
 			return func(gc gsk.Context) {
-				if gc.GetRequest().URL.Path == "/blocked" {
+				if gc.Request().URL.Path == "/blocked" {
 					gc.Status(http.StatusForbidden).JSONResponse("blocked")
 					return
 				}

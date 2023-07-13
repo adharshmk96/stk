@@ -329,7 +329,7 @@ func TestGetRequestMethod(t *testing.T) {
 		s := gsk.New(config)
 
 		s.Get("/", func(c gsk.Context) {
-			assert.Equal(t, http.MethodGet, c.GetRequest().Method)
+			assert.Equal(t, http.MethodGet, c.Request().Method)
 		})
 
 		s.Test("GET", "/", nil)

@@ -75,7 +75,7 @@ func CORS(config ...CORSConfig) gsk.Middleware {
 			}
 
 			// Set CORS headers
-			headers := c.GetWriter().Header()
+			headers := c.Writer().Header()
 
 			headers.Set(AccessControlAllowOrigin, origin)
 			headers.Set(AccessControlAllowMethods, allowedMethods)

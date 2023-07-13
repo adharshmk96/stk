@@ -13,7 +13,7 @@ func TestRouteGroup(t *testing.T) {
 		server := gsk.New()
 
 		handler := func(c gsk.Context) {
-			c.Status(http.StatusTeapot).StringResponse(c.GetPath())
+			c.Status(http.StatusTeapot).StringResponse(c.Path())
 		}
 
 		server.Get("/users", handler)
@@ -36,7 +36,7 @@ func TestRouteGroup(t *testing.T) {
 		server := gsk.New()
 
 		handler := func(c gsk.Context) {
-			c.Status(http.StatusTeapot).StringResponse(c.GetPath())
+			c.Status(http.StatusTeapot).StringResponse(c.Path())
 		}
 
 		globalMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
