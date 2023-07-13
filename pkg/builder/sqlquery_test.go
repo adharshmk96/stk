@@ -94,7 +94,7 @@ func TestSqlQueryBuilder(t *testing.T) {
 			Join("orders").
 			On("users.id=orders.user_id").
 			Where("users.age > 18").OrderBy("users.name").
-			Limit(10).Offset(10).
+			Limit("10").Offset("10").
 			Build()
 		expected := "SELECT users.id, users.name, orders.order_id FROM users JOIN orders ON users.id=orders.user_id WHERE users.age > 18 ORDER BY users.name LIMIT 10 OFFSET 10"
 		assert.Equal(t, expected, result)
@@ -170,13 +170,13 @@ func TestSqlBuilderShort(t *testing.T) {
 
 	t.Run("Limit", func(t *testing.T) {
 		builder := NewSqlQuery()
-		result := builder.Limit(10).Build()
+		result := builder.Limit("10").Build()
 		assert.Equal(t, "LIMIT 10", result)
 	})
 
 	t.Run("Offset", func(t *testing.T) {
 		builder := NewSqlQuery()
-		result := builder.Offset(10).Build()
+		result := builder.Offset("10").Build()
 		assert.Equal(t, "OFFSET 10", result)
 	})
 }

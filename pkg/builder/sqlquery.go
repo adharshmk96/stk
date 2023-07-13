@@ -1,7 +1,6 @@
 package builder
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -20,8 +19,8 @@ type SqlQuery interface {
 	Join(tables ...string) SqlQuery
 	On(conditions ...string) SqlQuery
 
-	Limit(limit int) SqlQuery
-	Offset(offset int) SqlQuery
+	Limit(limit string) SqlQuery
+	Offset(offset string) SqlQuery
 	Build() string
 }
 
@@ -105,14 +104,14 @@ func (b *sqlQuery) On(conditions ...string) SqlQuery {
 	return b
 }
 
-func (b *sqlQuery) Limit(limit int) SqlQuery {
-	part := "LIMIT " + fmt.Sprintf("%d", limit)
+func (b *sqlQuery) Limit(limit string) SqlQuery {
+	part := "LIMIT " + limit
 	b.parts = append(b.parts, part)
 	return b
 }
 
-func (b *sqlQuery) Offset(offset int) SqlQuery {
-	part := "OFFSET " + fmt.Sprintf("%d", offset)
+func (b *sqlQuery) Offset(offset string) SqlQuery {
+	part := "OFFSET " + offset
 	b.parts = append(b.parts, part)
 	return b
 }
