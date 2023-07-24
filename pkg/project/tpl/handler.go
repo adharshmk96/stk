@@ -34,7 +34,7 @@ Response:
 - 200: OK
 - 500: Internal Server Error
 */
-func (h *pingHandler) PingHandler(gc gsk.Context) {
+func (h *pingHandler) PingHandler(gc *gsk.Context) {
 	
 	ping := h.pingService.PingService()
 

@@ -12,7 +12,7 @@ func TestRouteGroup(t *testing.T) {
 	t.Run("route group registers routes with the correct path prefix", func(t *testing.T) {
 		server := gsk.New()
 
-		handler := func(c gsk.Context) {
+		handler := func(c *gsk.Context) {
 			c.Status(http.StatusTeapot).StringResponse(c.Path())
 		}
 
@@ -35,26 +35,26 @@ func TestRouteGroup(t *testing.T) {
 	t.Run("route group registers routes with the correct middlewares", func(t *testing.T) {
 		server := gsk.New()
 
-		handler := func(c gsk.Context) {
+		handler := func(c *gsk.Context) {
 			c.Status(http.StatusTeapot).StringResponse(c.Path())
 		}
 
 		globalMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
-			return func(c gsk.Context) {
+			return func(c *gsk.Context) {
 				c.SetHeader("X-Global", "global")
 				next(c)
 			}
 		}
 
 		authMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
-			return func(c gsk.Context) {
+			return func(c *gsk.Context) {
 				c.SetHeader("X-Auth", "auth")
 				next(c)
 			}
 		}
 
 		adminMiddleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
-			return func(c gsk.Context) {
+			return func(c *gsk.Context) {
 				c.SetHeader("X-Admin", "admin")
 				next(c)
 			}

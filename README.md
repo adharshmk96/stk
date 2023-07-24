@@ -44,7 +44,7 @@ func main() {
 	server := gsk.New(&config)
 
 	// add routes
-	server.Get("/", func(gc gsk.Context) {
+	server.Get("/", func(gc *gsk.Context) {
 		gc.Status(http.StatusOK).JSONResponse(gsk.Map{"message": "Hello World"})
 	})
 

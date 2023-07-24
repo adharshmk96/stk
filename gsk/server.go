@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type HandlerFunc func(Context)
+type HandlerFunc func(*Context)
 
 type ServerConfig struct {
 	Port   string
@@ -28,35 +28,37 @@ type server struct {
 	config *ServerConfig
 }
 
-type Server interface {
-	// Start and Stop
-	Start()
-	Shutdown() error
-	// Middleware
-	Use(Middleware)
-	// RouteGroup
-	RouteGroup(path string) RouteGroup
+// type Server interface {
+// 	// Start and Stop
+// 	Start()
+// 	Shutdown() error
+// 	// Middleware
+// 	Use(Middleware)
+// 	// RouteGroup
+// 	RouteGroup(path string) RouteGroup
 
-	// HTTP methods
-	Get(path string, handler HandlerFunc)
-	Post(path string, handler HandlerFunc)
-	Put(path string, handler HandlerFunc)
-	Delete(path string, handler HandlerFunc)
-	Patch(path string, handler HandlerFunc)
-	// Handle arbitrary HTTP methods
-	Handle(method string, path string, handler HandlerFunc)
+// 	// HTTP methods
+// 	Get(path string, handler HandlerFunc)
+// 	Post(path string, handler HandlerFunc)
+// 	Put(path string, handler HandlerFunc)
+// 	Delete(path string, handler HandlerFunc)
+// 	Patch(path string, handler HandlerFunc)
+// 	// Handle arbitrary HTTP methods
+// 	Handle(method string, path string, handler HandlerFunc)
 
-	// Other Server methods
-	Static(string, string)
+// 	// Other Server methods
+// 	Static(string, string)
 
-	// Helpers
-	Test(method string, path string, body io.Reader, params ...TestParams) (httptest.ResponseRecorder, error)
-}
+// 	// Helpers
+// 	Test(method string, path string, body io.Reader, params ...TestParams) (httptest.ResponseRecorder, error)
+// }
 
 // New creates a new server instance
 // Configurations can be passed as a parameter and It's optional
 // If no configurations are passed, default values are used
-func New(userconfig ...*ServerConfig) Server {
+// Returning server struct pointer because its more performant
+// interface{} is slower than concrete types, because it slows down garbage collector
+func New(userconfig ...*ServerConfig) *server {
 	config := initConfig(userconfig...)
 
 	startingPort := NormalizePort(config.Port)
@@ -156,7 +158,7 @@ func (s *server) Patch(path string, handler HandlerFunc) {
 	s.Handle(http.MethodPatch, path, handler)
 }
 
-func preFlightHandler(gc Context) {
+func preFlightHandler(gc *Context) {
 	gc.Status(http.StatusNoContent)
 }
 
@@ -231,10 +233,10 @@ func wrapHandlerFunc(s *server, handler HandlerFunc) http.HandlerFunc {
 
 		p := s.router.ParamsFromContext(r.Context())
 
-		handlerContext := &gskContext{
+		handlerContext := &Context{
 			params:        p,
-			request:       r,
-			writer:        w,
+			Request:       r,
+			Writer:        w,
 			logger:        s.config.Logger,
 			bodySizeLimit: s.config.BodySizeLimit,
 		}

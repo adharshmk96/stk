@@ -20,7 +20,7 @@ func TestStatus(t *testing.T) {
 
 	t.Run("sets status and jsonresponse methods by chaining", func(t *testing.T) {
 
-		s.Get("/", func(c gsk.Context) {
+		s.Get("/", func(c *gsk.Context) {
 			c.Status(http.StatusTeapot).JSONResponse("Hello, this is a JSON response!")
 		})
 
@@ -31,7 +31,7 @@ func TestStatus(t *testing.T) {
 
 	t.Run("using status method sets http response", func(t *testing.T) {
 
-		s.Get("/st", func(c gsk.Context) {
+		s.Get("/st", func(c *gsk.Context) {
 			c.Status(http.StatusTeapot)
 		})
 
@@ -42,7 +42,7 @@ func TestStatus(t *testing.T) {
 
 	t.Run("set status and json response without chaining", func(t *testing.T) {
 
-		s.Get("/js", func(c gsk.Context) {
+		s.Get("/js", func(c *gsk.Context) {
 			c.Status(http.StatusBadGateway)
 			c.JSONResponse("Hello, this is a JSON response!")
 		})
@@ -54,7 +54,7 @@ func TestStatus(t *testing.T) {
 
 	t.Run("json response method default gives 200", func(t *testing.T) {
 
-		s.Get("/jso", func(c gsk.Context) {
+		s.Get("/jso", func(c *gsk.Context) {
 			c.JSONResponse("Hello, this is a JSON response!")
 		})
 
@@ -65,7 +65,7 @@ func TestStatus(t *testing.T) {
 
 	t.Run("json response method used before status gives proper response", func(t *testing.T) {
 
-		s.Get("/json", func(c gsk.Context) {
+		s.Get("/json", func(c *gsk.Context) {
 			c.JSONResponse("Hello, this is a JSON response!")
 			c.Status(http.StatusBadGateway)
 		})
@@ -135,7 +135,7 @@ func TestJSONResponse(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 
-			s.Get(tc.path, func(c gsk.Context) {
+			s.Get(tc.path, func(c *gsk.Context) {
 				c.Status(tc.status).JSONResponse(tc.data)
 			})
 
@@ -167,7 +167,7 @@ func TestDecodeJSONBody(t *testing.T) {
 	t.Run("decodes valid json", func(t *testing.T) {
 		server := gsk.New(&gsk.ServerConfig{})
 
-		server.Post("/", func(c gsk.Context) {
+		server.Post("/", func(c *gsk.Context) {
 			var res SampleStruct
 			err := c.DecodeJSONBody(&res)
 
@@ -187,7 +187,7 @@ func TestDecodeJSONBody(t *testing.T) {
 	t.Run("returns error on invalid json", func(t *testing.T) {
 		server := gsk.New(&gsk.ServerConfig{})
 
-		server.Post("/", func(c gsk.Context) {
+		server.Post("/", func(c *gsk.Context) {
 			var res SampleStruct
 			err := c.DecodeJSONBody(&res)
 
@@ -206,7 +206,7 @@ func TestDecodeJSONBody(t *testing.T) {
 
 	t.Run("decodes to empty struct on empty json", func(t *testing.T) {
 		server := gsk.New(&gsk.ServerConfig{})
-		server.Post("/", func(c gsk.Context) {
+		server.Post("/", func(c *gsk.Context) {
 			var res SampleStruct
 			err := c.DecodeJSONBody(&res)
 
@@ -224,7 +224,7 @@ func TestDecodeJSONBody(t *testing.T) {
 
 	t.Run("returns err if body is nil", func(t *testing.T) {
 		server := gsk.New(&gsk.ServerConfig{})
-		server.Post("/", func(c gsk.Context) {
+		server.Post("/", func(c *gsk.Context) {
 			var res SampleStruct
 			err := c.DecodeJSONBody(&res)
 
@@ -284,7 +284,7 @@ func TestDecodeJSONBodySizeLimit(t *testing.T) {
 				BodySizeLimit: tt.bodySizeLimit,
 			})
 
-			server.Post("/", func(c gsk.Context) {
+			server.Post("/", func(c *gsk.Context) {
 				var res SampleStruct
 				err := c.DecodeJSONBody(&res)
 
@@ -310,7 +310,7 @@ func TestRawResponse(t *testing.T) {
 		}
 		s := gsk.New(config)
 
-		s.Get("/", func(c gsk.Context) {
+		s.Get("/", func(c *gsk.Context) {
 			c.RawResponse([]byte("Hello, this is a raw response!"))
 		})
 
@@ -328,8 +328,8 @@ func TestGetRequestMethod(t *testing.T) {
 		}
 		s := gsk.New(config)
 
-		s.Get("/", func(c gsk.Context) {
-			assert.Equal(t, http.MethodGet, c.Request().Method)
+		s.Get("/", func(c *gsk.Context) {
+			assert.Equal(t, http.MethodGet, c.Request.Method)
 		})
 
 		s.Test("GET", "/", nil)
@@ -344,7 +344,7 @@ func TestSetHeader(t *testing.T) {
 		}
 		s := gsk.New(config)
 
-		s.Get("/", func(c gsk.Context) {
+		s.Get("/", func(c *gsk.Context) {
 			c.SetHeader("X-Header", "Added")
 		})
 
@@ -366,31 +366,31 @@ func TestContext(t *testing.T) {
 			t.Errorf("Servers should be different")
 		}
 
-		var context1 gsk.Context
-		var context2 gsk.Context
-		var context3 gsk.Context
-		var context4 gsk.Context
+		var context1 *gsk.Context
+		var context2 *gsk.Context
+		var context3 *gsk.Context
+		var context4 *gsk.Context
 
 		s1.Use(func(next gsk.HandlerFunc) gsk.HandlerFunc {
-			return func(c gsk.Context) {
+			return func(c *gsk.Context) {
 				context1 = c
 				next(c)
 			}
 		})
 
 		s2.Use(func(next gsk.HandlerFunc) gsk.HandlerFunc {
-			return func(c gsk.Context) {
+			return func(c *gsk.Context) {
 				context2 = c
 				next(c)
 			}
 		})
 
-		s1.Get("/", func(c gsk.Context) {
+		s1.Get("/", func(c *gsk.Context) {
 			context3 = c
 			c.SetHeader("X-Header", "Added")
 		})
 
-		s2.Get("/", func(c gsk.Context) {
+		s2.Get("/", func(c *gsk.Context) {
 			context4 = c
 		})
 
@@ -436,7 +436,7 @@ func TestCookie(t *testing.T) {
 			HttpOnly: true,
 		}
 
-		s.Get("/", func(c gsk.Context) {
+		s.Get("/", func(c *gsk.Context) {
 			c.SetCookie(cookie)
 		})
 
@@ -461,7 +461,7 @@ func TestCookie(t *testing.T) {
 
 		s.Test("GET", "/c", nil, testParams)
 
-		s.Get("/c", func(c gsk.Context) {
+		s.Get("/c", func(c *gsk.Context) {
 			reqCookie, _ := c.GetCookie("X-Cookie")
 			assert.Equal(t, cookie.Value, reqCookie.Value)
 			assert.Equal(t, cookie.Name, reqCookie.Name)
@@ -473,7 +473,7 @@ func TestCookie(t *testing.T) {
 
 		s.Test("GET", "/ce", nil)
 
-		s.Get("/ce", func(c gsk.Context) {
+		s.Get("/ce", func(c *gsk.Context) {
 			_, err := c.GetCookie("X-Cookie")
 			assert.Error(t, err)
 		})

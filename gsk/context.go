@@ -8,10 +8,42 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type gskContext struct {
+// type Context interface {
+// 	// http objects
+// 	Request() *http.Request
+// 	Writer() http.ResponseWriter
+// 	Path() string
+
+// 	Origin() string
+
+// 	// get data from request
+// 	GetStatusCode() int
+// 	Param(key string) string
+// 	QueryParam(key string) string
+// 	DecodeJSONBody(v interface{}) error
+
+// 	// set data for response
+// 	Status(status int) Context
+// 	SetHeader(string, string)
+// 	RawResponse(raw []byte)
+// 	JSONResponse(data interface{})
+// 	StringResponse(data string)
+
+// 	// cookies
+// 	SetCookie(cookie *http.Cookie)
+// 	GetCookie(name string) (*http.Cookie, error)
+
+// 	// logger
+// 	Logger() *logrus.Logger
+
+// 	// Internals
+// 	eject() gskContext
+// }
+
+type Context struct {
 	// server
-	request *http.Request
-	writer  http.ResponseWriter
+	Request *http.Request
+	Writer  http.ResponseWriter
 
 	// request params
 	params Params
@@ -27,87 +59,47 @@ type gskContext struct {
 
 type Map map[string]interface{}
 
-type Context interface {
-	// http objects
-	Request() *http.Request
-	Writer() http.ResponseWriter
-	Path() string
-
-	Origin() string
-
-	// get data from request
-	GetStatusCode() int
-	Param(key string) string
-	QueryParam(key string) string
-	DecodeJSONBody(v interface{}) error
-
-	// set data for response
-	Status(status int) Context
-	SetHeader(string, string)
-	RawResponse(raw []byte)
-	JSONResponse(data interface{})
-	StringResponse(data string)
-
-	// cookies
-	SetCookie(cookie *http.Cookie)
-	GetCookie(name string) (*http.Cookie, error)
-
-	// logger
-	Logger() *logrus.Logger
-
-	// Internals
-	eject() gskContext
+func (c *Context) Path() string {
+	return c.Request.URL.Path
 }
 
-func (c *gskContext) Request() *http.Request {
-	return c.request
-}
-
-func (c *gskContext) Writer() http.ResponseWriter {
-	return c.writer
-}
-
-func (c *gskContext) Path() string {
-	return c.request.URL.Path
-}
-
-func (c *gskContext) Origin() string {
-	return c.request.Header.Get("Origin")
+func (c *Context) Origin() string {
+	return c.Request.Header.Get("Origin")
 }
 
 // Param gets the params within the path mentioned as a wildcard
-func (c *gskContext) Param(key string) string {
+func (c *Context) Param(key string) string {
 	return c.params.ByName(key)
 }
 
 // QueryParam gets the query parameters passed eg: /?name=value
-func (c *gskContext) QueryParam(key string) string {
-	return c.request.URL.Query().Get(key)
+func (c *Context) QueryParam(key string) string {
+	return c.Request.URL.Query().Get(key)
 }
 
-func (c *gskContext) DecodeJSONBody(v interface{}) error {
+func (c *Context) DecodeJSONBody(v interface{}) error {
 	// TODO: config from server
 	bodySizeLimit := int64(c.bodySizeLimit << 20) // 1 MB
 
-	if c.request.Body == nil {
+	if c.Request.Body == nil {
 		return ErrInvalidJSON
 	}
 
 	// Set a maximum limit for the request body size to avoid possible malicious requests
-	c.request.Body = http.MaxBytesReader(c.writer, c.request.Body, bodySizeLimit)
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, bodySizeLimit)
 
 	// Manually check if the request body size exceeds the limit
-	body, err := io.ReadAll(c.request.Body)
+	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		c.writer.Header().Set("Content-Type", "application/json")
-		http.Error(c.writer, ErrBodyTooLarge.Error(), http.StatusRequestEntityTooLarge)
+		c.Writer.Header().Set("Content-Type", "application/json")
+		http.Error(c.Writer, ErrBodyTooLarge.Error(), http.StatusRequestEntityTooLarge)
 		return ErrBodyTooLarge
 	}
 
 	// Decode the JSON body into the provided interface
 	err = json.Unmarshal(body, v)
 
-	defer c.request.Body.Close()
+	defer c.Request.Body.Close()
 
 	// Check if there is an error in decoding the JSON, and return a user-friendly error message
 	if err != nil {
@@ -124,22 +116,22 @@ func (c *gskContext) DecodeJSONBody(v interface{}) error {
 }
 
 // Status sets the status code of the response
-func (c *gskContext) Status(status int) Context {
+func (c *Context) Status(status int) *Context {
 	c.responseStatus = status
 	return c
 }
 
 // sets response header key value
-func (c *gskContext) SetHeader(key string, value string) {
-	c.writer.Header().Add(key, value)
+func (c *Context) SetHeader(key string, value string) {
+	c.Writer.Header().Add(key, value)
 }
 
 // JSONResponse marshals the provided interface into JSON and writes it to the response writer
 // If there is an error in marshalling the JSON, an internal server error is returned
-func (c *gskContext) JSONResponse(data interface{}) {
+func (c *Context) JSONResponse(data interface{}) {
 	response, err := json.Marshal(data)
 	// Set the content type to JSON
-	c.writer.Header().Set("Content-Type", "application/json")
+	c.Writer.Header().Set("Content-Type", "application/json")
 
 	// Check if there is an error in marshalling the JSON (internal server error)
 	if err != nil {
@@ -152,37 +144,37 @@ func (c *gskContext) JSONResponse(data interface{}) {
 }
 
 // StringResponse writes the provided string to the response writer
-func (c *gskContext) StringResponse(data string) {
-	c.writer.Header().Set("Content-Type", "text/plain")
+func (c *Context) StringResponse(data string) {
+	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.responseBody = []byte(data)
 }
 
 // sets response body as byte array
-func (c *gskContext) RawResponse(raw []byte) {
+func (c *Context) RawResponse(raw []byte) {
 	c.responseBody = raw
 }
 
 // get the logger
-func (c *gskContext) Logger() *logrus.Logger {
+func (c *Context) Logger() *logrus.Logger {
 	return c.logger
 }
 
 // Set cookie using http.Cookie
-func (c *gskContext) SetCookie(cookie *http.Cookie) {
-	http.SetCookie(c.writer, cookie)
+func (c *Context) SetCookie(cookie *http.Cookie) {
+	http.SetCookie(c.Writer, cookie)
 }
 
 // Get cookie using cookie name
-func (c *gskContext) GetCookie(name string) (*http.Cookie, error) {
-	return c.request.Cookie(name)
+func (c *Context) GetCookie(name string) (*http.Cookie, error) {
+	return c.Request.Cookie(name)
 }
 
 // Get the status code set for the response
-func (c *gskContext) GetStatusCode() int {
+func (c *Context) GetStatusCode() int {
 	return c.responseStatus
 }
 
 // returns a copy of the context, now it's safe to use
-func (c *gskContext) eject() gskContext {
+func (c *Context) eject() Context {
 	return *c
 }

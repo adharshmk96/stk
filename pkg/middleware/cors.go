@@ -54,7 +54,7 @@ func CORS(config ...CORSConfig) gsk.Middleware {
 	}
 
 	return func(next gsk.HandlerFunc) gsk.HandlerFunc {
-		return func(c gsk.Context) {
+		return func(c *gsk.Context) {
 			allowedOrigins := getAllowedOrigins(corsConfig.AllowedOrigins)
 
 			origin := c.Origin()
@@ -75,7 +75,7 @@ func CORS(config ...CORSConfig) gsk.Middleware {
 			}
 
 			// Set CORS headers
-			headers := c.Writer().Header()
+			headers := c.Writer.Header()
 
 			headers.Set(AccessControlAllowOrigin, origin)
 			headers.Set(AccessControlAllowMethods, allowedMethods)

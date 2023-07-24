@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func dummyHandler(c gsk.Context) {
+func dummyHandler(c *gsk.Context) {
 	c.Status(http.StatusOK).JSONResponse("OK")
 }
 
