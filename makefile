@@ -1,76 +1,73 @@
-t := $(shell git pull --tags)
-VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-MAJOR := $(shell echo $(VERSION) | cut -d . -f 1 | sed 's/v//')
-MINOR := $(shell echo $(VERSION) | cut -d . -f 2)
-PATCH := $(shell echo $(VERSION) | cut -d . -f 3)
-NEW_PATCH := $(shell echo $$(($(PATCH) + 1)))
-NEW_MINOR := $(shell echo $$(($(MINOR) + 1)))
-NEW_MAJOR := $(shell echo $$(($(MAJOR) + 1)))
-NEW_TAG_PATCH := v$(MAJOR).$(MINOR).$(NEW_PATCH)
-NEW_TAG_MINOR := v$(MAJOR).$(NEW_MINOR).0
-NEW_TAG_MAJOR := v$(NEW_MAJOR).0.0
-
-.PHONY: patch minor major build test testci publish
-
 ##########################
-### Manage Commands
+### Version Commands
 ##########################
 
 patch:
-	$(eval NEW_TAG := $(NEW_TAG_PATCH))
-	$(call tag)
+	$(eval NEW_TAG := $(shell git semver patch --dryrun))
+	$(call update_file)
+	@git semver patch
 
 minor:
-	$(eval NEW_TAG := $(NEW_TAG_MINOR))
-	$(call tag)
+	$(eval NEW_TAG := $(shell git semver minor --dryrun))
+	$(call update_file)
+	@git semver minor
 
 major:
-	$(eval NEW_TAG := $(NEW_TAG_MAJOR))
-	$(call tag)
+	$(eval NEW_TAG := $(shell git semver major --dryrun))
+	$(call update_file)
+	@git semver major
 
 publish:
-	@git push origin $(VERSION)
+	@git push origin $(shell git semver get)
+
+
+##########################
+### Build Commands
+##########################
+
+BINARY_NAME=stk
 
 build:
-	@go build .	
+	@go build -o ./out/$(BINARY_NAME) -v
 
 test:
+	@go test ./... -coverprofile=coverage.out
+
+coverage:
 	@go test -v ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
 
 testci:
 	@go test ./... -coverprofile=coverage.out
 
+clean:
+	@go clean
+	@rm -f ./out/$(BINARY_NAME)
+	@rm -f coverage.out
+	@rm -f stk.db
+
+deps:
+	@go mod download
+
+tidy:
+	@go mod tidy
+
+vet:
+	@go vet
+
 clean-branch:
-	@git branch --merged | egrep -v "(^\*|main|master)" | xargs git branch -d
+	@git branch | egrep -v "(^\*|main|master)" | xargs git branch -D
 
-
-set_upstream:
-	@current_branch=$(shell git branch --show-current); git branch --set-upstream-to=origin/$$current_branch $$current_branch
-
-
-
+	
 ##########################
 ### Helpers
 ##########################
-
-define tag
-	@echo "current version is $(VERSION)"
-    $(eval EXISTING_TAG := $(shell git tag -l $(NEW_TAG) 2>/dev/null))
-    @if [ "$(EXISTING_TAG)" = "$(NEW_TAG)" ]; then \
-        echo "Tag $(NEW_TAG) already exists. reapplying the tag."; \
-        git tag -d $(NEW_TAG); \
-    fi
-   $(call update_file)
-    @git tag $(NEW_TAG)
-    @echo "created new version $(NEW_TAG)."
-endef
 
 define update_file
     @echo "updating files to version $(NEW_TAG)"
     @sed -i.bak "s/var version = \"[^\"]*\"/var version = \"$(NEW_TAG)\"/g" ./cmd/root.go
     @rm cmd/root.go.bak
     @git add cmd/root.go
-    @git commit --amend --no-edit > /dev/null
+    @git commit -m "bump version to $(NEW_TAG)" > /dev/null
 endef
 
 ##########################
