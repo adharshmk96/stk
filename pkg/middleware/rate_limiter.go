@@ -50,8 +50,8 @@ func NewRateLimiter(rlConfig ...RateLimiterConfig) *RateLimiter {
 	}
 
 	middleware := func(next gsk.HandlerFunc) gsk.HandlerFunc {
-		return func(c gsk.Context) {
-			clientIP := c.GetRequest().RemoteAddr
+		return func(c *gsk.Context) {
+			clientIP := c.Request.RemoteAddr
 			rl.mux.Lock()
 			defer rl.mux.Unlock()
 

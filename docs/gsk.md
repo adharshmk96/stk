@@ -22,7 +22,7 @@ func main() {
 	server := gsk.New()
 
 	// add routes
-	server.Get("/", func(gc gsk.Context) {
+	server.Get("/", func(gc *gsk.Context) {
 		gc.Status(http.StatusOK).JSONResponse(gsk.Map{"message": "Hello World"})
 	})
 
@@ -64,7 +64,7 @@ Here is an example function to start and gracefully shutdown the server:
 
 ```go
 func setupRoutes(server gsk.Server) {
-    server.Get("/", func(c gsk.Context) {
+    server.Get("/", func(c *gsk.Context) {
         c.Status(http.StatusOK).JSONResponse(gsk.Map{"message": "Hello World"})
     })
 }
@@ -119,7 +119,7 @@ func main() {
 3. **Routing HTTP methods:** Define routes for each HTTP method (Get, Post, Put, Delete, Patch) by calling the appropriate function.
 
 ```go
-server.Get("/path", func(c gsk.Context) {
+server.Get("/path", func(c *gsk.Context) {
     // handle the request
 })
 ```
@@ -137,7 +137,7 @@ Middleware executes code before the request is handled by the route handler. Mid
 ```go
 // Define your middleware
 var MyMiddleware gsk.Middleware = func(next gsk.HandlerFunc) gsk.HandlerFunc {
-    return func(c gsk.Context) {
+    return func(c *gsk.Context) {
         // Middleware code here
 
         next(c)
@@ -157,7 +157,7 @@ Middlewares apply only to the routes registered after the middleware is added. Y
 ```go
 server.Use(MyMiddleware)
 // applies my middleware to all routes registered after this
-server.Get("/path", func(c gsk.Context) {
+server.Get("/path", func(c *gsk.Context) {
     // handle the request
 })
 
@@ -165,7 +165,7 @@ server.Use(AnotherMiddleware)
 // applies another middleware to all routes registered after this
 // but not to the route registered before this
 // *my middleware will still be applied to this route*
-server.Get("/path2", func(c gsk.Context) {
+server.Get("/path2", func(c *gsk.Context) {
     // handle the request
 })
 ```
@@ -181,13 +181,13 @@ authGroup := server.RouteGroup("/auth")
 authGroup.Use(AuthMiddleware)
 
 // applies auth middleware to all routes registered after this
-authGroup.Get("/login", func(c gsk.Context) {
+authGroup.Get("/login", func(c *gsk.Context) {
 	// handle the /auth/login request
 })
 
 publicGroup := server.RouteGroup("/public")
 // applies only MyMiddleware to all routes registered after this
-publicGroup.Get("/home", func(c gsk.Context) {
+publicGroup.Get("/home", func(c *gsk.Context) {
 	// handle the /public/home request
 })
 ```
@@ -199,7 +199,7 @@ Middlewares will be applied only to the routes registered after the middleware i
 ```go
 server.Use(MyMiddleware)
 // applies my middleware to all routes registered after this
-server.Get("/path", func(c gsk.Context) {
+server.Get("/path", func(c *gsk.Context) {
     // handle the request
 })
 
@@ -207,7 +207,7 @@ server.Use(AnotherMiddleware)
 // applies another middleware to all routes registered after this
 // but not to the route registered before this
 // *my middleware will still be applied to this route*
-server.Get("/path2", func(c gsk.Context) {
+server.Get("/path2", func(c *gsk.Context) {
     // handle the request
 })
 

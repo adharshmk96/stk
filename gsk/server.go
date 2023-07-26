@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type HandlerFunc func(Context)
+type HandlerFunc func(*Context)
 
 type ServerConfig struct {
 	Port   string
@@ -20,7 +20,7 @@ type ServerConfig struct {
 	BodySizeLimit int64
 }
 
-type server struct {
+type Server struct {
 	httpServer  *http.Server
 	router      Router
 	middlewares []Middleware
@@ -28,41 +28,43 @@ type server struct {
 	config *ServerConfig
 }
 
-type Server interface {
-	// Start and Stop
-	Start()
-	Shutdown() error
-	// Middleware
-	Use(Middleware)
-	// RouteGroup
-	RouteGroup(path string) RouteGroup
+// type Server interface {
+// 	// Start and Stop
+// 	Start()
+// 	Shutdown() error
+// 	// Middleware
+// 	Use(Middleware)
+// 	// RouteGroup
+// 	RouteGroup(path string) RouteGroup
 
-	// HTTP methods
-	Get(path string, handler HandlerFunc)
-	Post(path string, handler HandlerFunc)
-	Put(path string, handler HandlerFunc)
-	Delete(path string, handler HandlerFunc)
-	Patch(path string, handler HandlerFunc)
-	// Handle arbitrary HTTP methods
-	Handle(method string, path string, handler HandlerFunc)
+// 	// HTTP methods
+// 	Get(path string, handler HandlerFunc)
+// 	Post(path string, handler HandlerFunc)
+// 	Put(path string, handler HandlerFunc)
+// 	Delete(path string, handler HandlerFunc)
+// 	Patch(path string, handler HandlerFunc)
+// 	// Handle arbitrary HTTP methods
+// 	Handle(method string, path string, handler HandlerFunc)
 
-	// Other Server methods
-	Static(string, string)
+// 	// Other Server methods
+// 	Static(string, string)
 
-	// Helpers
-	Test(method string, path string, body io.Reader, params ...TestParams) (httptest.ResponseRecorder, error)
-}
+// 	// Helpers
+// 	Test(method string, path string, body io.Reader, params ...TestParams) (httptest.ResponseRecorder, error)
+// }
 
 // New creates a new server instance
 // Configurations can be passed as a parameter and It's optional
 // If no configurations are passed, default values are used
-func New(userconfig ...*ServerConfig) Server {
+// Returning server struct pointer because its more performant
+// interface{} is slower than concrete types, because it slows down garbage collector
+func New(userconfig ...*ServerConfig) *Server {
 	config := initConfig(userconfig...)
 
 	startingPort := NormalizePort(config.Port)
 	router := newGskRouter()
 
-	newSTKServer := &server{
+	newSTKServer := &Server{
 		httpServer: &http.Server{
 			Addr:    startingPort,
 			Handler: router,
@@ -76,7 +78,7 @@ func New(userconfig ...*ServerConfig) Server {
 }
 
 // Start starts the server on the configured port
-func (s *server) Start() {
+func (s *Server) Start() {
 
 	startingPort := NormalizePort(s.config.Port)
 	s.config.Logger.WithField("port", startingPort).Info("starting server")
@@ -110,7 +112,7 @@ go func() {
 
 return server, done
 */
-func (s *server) Shutdown() error {
+func (s *Server) Shutdown() error {
 	s.config.Logger.Info("shutting down server")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -123,7 +125,7 @@ func (s *server) Shutdown() error {
 // server.Use(stk.RequestLogger())
 // NOTE: Middlewares will be applied when the route is registered
 // SO Make sure to register the routes after adding the middlewares
-func (s *server) Use(mw Middleware) {
+func (s *Server) Use(mw Middleware) {
 	s.middlewares = append(s.middlewares, mw)
 
 	// Add preflight handler if CORS middleware is used
@@ -136,35 +138,35 @@ func (s *server) Use(mw Middleware) {
 // Register handlers for the HTTP methods
 // usage example:
 // server.Get("/test", func(c stk.Context) { gc.Status(http.StatusOK).JSONResponse("OK") })
-func (s *server) Get(path string, handler HandlerFunc) {
+func (s *Server) Get(path string, handler HandlerFunc) {
 	s.Handle(http.MethodGet, path, handler)
 }
 
-func (s *server) Post(path string, handler HandlerFunc) {
+func (s *Server) Post(path string, handler HandlerFunc) {
 	s.Handle(http.MethodPost, path, handler)
 }
 
-func (s *server) Put(path string, handler HandlerFunc) {
+func (s *Server) Put(path string, handler HandlerFunc) {
 	s.Handle(http.MethodPut, path, handler)
 }
 
-func (s *server) Delete(path string, handler HandlerFunc) {
+func (s *Server) Delete(path string, handler HandlerFunc) {
 	s.Handle(http.MethodDelete, path, handler)
 }
 
-func (s *server) Patch(path string, handler HandlerFunc) {
+func (s *Server) Patch(path string, handler HandlerFunc) {
 	s.Handle(http.MethodPatch, path, handler)
 }
 
-func preFlightHandler(gc Context) {
+func preFlightHandler(gc *Context) {
 	gc.Status(http.StatusNoContent)
 }
 
-func (s *server) Handle(method string, path string, handler HandlerFunc) {
+func (s *Server) Handle(method string, path string, handler HandlerFunc) {
 	s.router.HandlerFunc(method, path, wrapHandlerFunc(s, applyMiddlewares(s.middlewares, handler)))
 }
 
-func (s *server) Static(path string, dir string) {
+func (s *Server) Static(path string, dir string) {
 	s.router.ServeFiles(path, http.Dir(dir))
 }
 
@@ -174,8 +176,8 @@ func (s *server) Static(path string, dir string) {
 // usage example:
 // rg := server.RouteGroup("/api")
 // rg.Get("/users", func(c stk.Context) { gc.Status(http.StatusOK).JSONResponse("OK") })
-func (s *server) RouteGroup(path string) RouteGroup {
-	return &routeGroup{
+func (s *Server) RouteGroup(path string) *RouteGroup {
+	return &RouteGroup{
 		server:     s,
 		pathPrefix: path,
 	}
@@ -189,7 +191,7 @@ type TestParams struct {
 // Helper function to test the server
 // Usage example:
 // w, err := server.Test("GET", "/test", nil)
-func (s *server) Test(method string, route string, body io.Reader, testParams ...TestParams) (httptest.ResponseRecorder, error) {
+func (s *Server) Test(method string, route string, body io.Reader, testParams ...TestParams) (httptest.ResponseRecorder, error) {
 
 	req, err := http.NewRequest(method, route, body)
 
@@ -225,16 +227,16 @@ func (s *server) Test(method string, route string, body io.Reader, testParams ..
 
 // wrapHandlerFunc wraps the handler function with the router.Handle
 // this is done to pass the gsk context to the handler function
-func wrapHandlerFunc(s *server, handler HandlerFunc) http.HandlerFunc {
+func wrapHandlerFunc(s *Server, handler HandlerFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		p := s.router.ParamsFromContext(r.Context())
 
-		handlerContext := &gskContext{
+		handlerContext := &Context{
 			params:        p,
-			request:       r,
-			writer:        w,
+			Request:       r,
+			Writer:        w,
 			logger:        s.config.Logger,
 			bodySizeLimit: s.config.BodySizeLimit,
 		}

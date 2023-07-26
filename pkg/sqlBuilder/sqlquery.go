@@ -1,4 +1,4 @@
-package builder
+package sqlBuilder
 
 import (
 	"strings"
@@ -18,6 +18,9 @@ type SqlQuery interface {
 	OrderBy(columns ...string) SqlQuery
 	Join(tables ...string) SqlQuery
 	On(conditions ...string) SqlQuery
+
+	Limit(limit string) SqlQuery
+	Offset(offset string) SqlQuery
 	Build() string
 }
 
@@ -97,6 +100,18 @@ func (b *sqlQuery) Join(tables ...string) SqlQuery {
 
 func (b *sqlQuery) On(conditions ...string) SqlQuery {
 	part := "ON " + strings.Join(conditions, " AND ")
+	b.parts = append(b.parts, part)
+	return b
+}
+
+func (b *sqlQuery) Limit(limit string) SqlQuery {
+	part := "LIMIT " + limit
+	b.parts = append(b.parts, part)
+	return b
+}
+
+func (b *sqlQuery) Offset(offset string) SqlQuery {
+	part := "OFFSET " + offset
 	b.parts = append(b.parts, part)
 	return b
 }
