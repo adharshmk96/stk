@@ -41,7 +41,7 @@ import (
 
 func main() {
 	// create new server
-	server := gsk.New(&config)
+	server := gsk.New()
 
 	// add routes
 	server.Get("/", func(gc *gsk.Context) {
