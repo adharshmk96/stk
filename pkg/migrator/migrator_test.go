@@ -12,25 +12,6 @@ import (
 )
 
 func TestApplyMigration(t *testing.T) {
-
-	t.Run("Test dry run", func(t *testing.T) {
-		mockDBRepo := mocks.NewDatabaseRepo(t)
-		mockMigration := &migrator.Migration{
-			Number: 001,
-			Name:   "test_migration",
-			Type:   migrator.MigrationUp,
-		}
-		mockConfig := &migrator.MigratorConfig{
-			DryRun: true,
-			DBRepo: mockDBRepo,
-		}
-
-		err := migrator.ApplyMigration(mockConfig, mockMigration)
-		assert.NoError(t, err)
-
-		mockDBRepo.AssertNotCalled(t, "ApplyMigration")
-	})
-
 	t.Run("Test apply migration success", func(t *testing.T) {
 		mockDBRepo := mocks.NewDatabaseRepo(t)
 		mockMigration := &migrator.Migration{
@@ -210,14 +191,13 @@ func TestMigrateUp(t *testing.T) {
 
 		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationUp).Return(migrations, nil)
 		dbRepo.On("LoadLastAppliedMigration").Return(nil, nil)
-		fsRepo.On("LoadMigrationQuery", mock.AnythingOfType("*migrator.Migration")).Return(nil)
 
 		migrations, err := migrator.MigrateUp(mockConfig)
 		assert.NoError(t, err)
 		assert.Equal(t, 5, len(migrations))
 
 		dbRepo.AssertNotCalled(t, "ApplyMigration")
-		fsRepo.AssertNumberOfCalls(t, "LoadMigrationQuery", len(migrations))
+		fsRepo.AssertNotCalled(t, "LoadMigrationQuery")
 	})
 
 	t.Run("migrate up with num to migrate", func(t *testing.T) {
@@ -411,6 +391,26 @@ func TestMigrateDown(t *testing.T) {
 			fsRepo.AssertExpectations(t)
 			dbRepo.AssertExpectations(t)
 		})
+	})
+
+	t.Run("migrate down with dry run", func(t *testing.T) {
+		fsRepo := mocks.NewFileRepo(t)
+		dbRepo := mocks.NewDatabaseRepo(t)
+		mockConfig := &migrator.MigratorConfig{
+			FSRepo: fsRepo,
+			DBRepo: dbRepo,
+			DryRun: true,
+		}
+
+		fsRepo.On("LoadMigrationsFromFile", migrator.MigrationDown).Return(downMigrations, nil)
+		dbRepo.On("LoadLastAppliedMigration").Return(nil, nil)
+
+		migrations, err := migrator.MigrateDown(mockConfig)
+		assert.NoError(t, err)
+		assert.Equal(t, 5, len(migrations))
+
+		dbRepo.AssertNotCalled(t, "ApplyMigration")
+		fsRepo.AssertNotCalled(t, "LoadMigrationQuery")
 	})
 }
 

@@ -24,6 +24,11 @@ func MigrateUp(config *MigratorConfig) ([]*Migration, error) {
 		return nil, nil
 	}
 
+	if config.DryRun {
+		DryApplyMigrations(migrationsToApply)
+		return migrationsToApply, nil
+	}
+
 	// Apply migrations
 	err = ApplyMigrations(config, migrationsToApply)
 	if err != nil {
@@ -46,6 +51,11 @@ func MigrateDown(config *MigratorConfig) ([]*Migration, error) {
 	if len(migrationsToApply) == 0 {
 		log.Println("No migrations to apply")
 		return nil, nil
+	}
+
+	if config.DryRun {
+		DryApplyMigrations(migrationsToApply)
+		return migrationsToApply, nil
 	}
 
 	// Apply migrations
@@ -103,11 +113,6 @@ func ApplyMigrations(config *MigratorConfig, migrationsToApply []*Migration) err
 
 // TODO: apply all as one transaction ?. if one fails, rollback all
 func ApplyMigration(config *MigratorConfig, migration *Migration) error {
-	if config.DryRun {
-		log.Println("dry run: ", migration.Number, migration.Name)
-		return nil
-	}
-
 	log.Println("applying migration: ", migration.Number, migration.Name)
 	err := config.DBRepo.ApplyMigration(migration)
 	if err != nil {
@@ -116,6 +121,12 @@ func ApplyMigration(config *MigratorConfig, migration *Migration) error {
 	}
 
 	return nil
+}
+
+func DryApplyMigrations(migrationsToApply []*Migration) {
+	for _, migration := range migrationsToApply {
+		log.Println("dry run: ", migration.Number, migration.Name)
+	}
 }
 
 func CalculateUpMigrationsToApply(lastMigration *Migration, migrations []*Migration, numberToMigrate int) []*Migration {
