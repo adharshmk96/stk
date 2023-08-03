@@ -57,6 +57,8 @@ func main() {
 
 you can add any middleware by simply creating a function like this and adding it to server.Use()
 
+NOTE: Middleware functions only wraps registered routes.
+
 ```go
 middleware := func(next stk.HandlerFunc) stk.HandlerFunc {
 	return func(gc stk.Context) {
