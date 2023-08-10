@@ -1,11 +1,14 @@
 package project
 
 import (
+	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"text/template"
+	"time"
 
 	"github.com/adharshmk96/stk/pkg/project/tpl"
 )
@@ -98,7 +101,12 @@ func RandomName() string {
 		"nice",
 	}
 
-	// randomize
+	randSrc := rand.NewSource(time.Now().UnixNano())
+	randGen := rand.New(randSrc)
 
-	return adjectives[0] + "-" + nouns[0]
+	adjective := adjectives[randGen.Intn(len(adjectives))]
+	noun := nouns[randGen.Intn(len(nouns))]
+
+	return fmt.Sprintf("%s%s", adjective, noun)
+
 }
