@@ -6,17 +6,17 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"text/template"
 	"time"
+
+	"github.com/adharshmk96/stk/pkg/project/tpl"
 )
 
-func Generate(config *Config) (err error) {
-
-	config.DirTree = dirTree
-	config.DirNames = dirNames
-
+func GenerateProject(config *Config) error {
 	// use existing repo name as package name
 	// or initialize git repo
-	err = initializePackageWithGit(config)
+	err := initializePackageWithGit(config)
 	if err != nil {
 		log.Fatal("error initializing go package with git: ", err)
 		return err
@@ -29,29 +29,77 @@ func Generate(config *Config) (err error) {
 		return err
 	}
 
-	// create dirs
-	CreateProjectStructure(dirList)
+	// create boilerplate
+	generateBoilerplate(config)
 
-	err = CreateProjectFiles(config)
-	if err != nil {
-		log.Fatal("error creating project files: ", err)
-		return err
-	}
-
-	log.Println("Running go mod tidy...")
 	// run go mod tidy
 	err = exec.Command("go", "mod", "tidy").Run()
 	if err != nil {
-		log.Fatal("error initializing go module: ", err)
+		log.Fatal("error running go mod tidy: ", err)
 		return err
 	}
 
 	return nil
 }
 
+func generateBoilerplate(config *Config) {
+	destDir := config.RootPath
+	templates := tpl.BoilerPlateTemplates
+
+	for _, tf := range templates {
+		fullPath := filepath.Join(destDir, tf.FilePath)
+		dir := filepath.Dir(fullPath)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			log.Fatalf("Failed to create directory for file %s: %v\n", tf.FilePath, err)
+			continue
+		}
+
+		f, err := os.Create(fullPath)
+		if err != nil {
+			log.Fatalf("Failed to create file %s: %v\n", tf.FilePath, err)
+			continue
+		}
+		defer f.Close()
+
+		tpl := template.Must(template.New(tf.FilePath).Parse(tf.Content))
+
+		if err := tpl.Execute(f, config); err != nil {
+			log.Fatalf("Failed to execute template for file %s: %v\n", tf.FilePath, err)
+			continue
+		}
+
+	}
+}
+
 func RandomName() string {
-	adjectives := []string{"dusty", "shiny", "noisy", "happy", "chubby", "fluffy"}
-	nouns := []string{"donuts", "bears", "kittens", "ducks", "apples", "oranges"}
+	nouns := []string{
+		"apple",
+		"ball",
+		"cat",
+		"dog",
+		"elephant",
+		"fish",
+		"gorilla",
+		"horse",
+		"iguana",
+		"jellyfish",
+		"kangaroo",
+	}
+
+	adjectives := []string{
+		"angry",
+		"big",
+		"cold",
+		"dark",
+		"fast",
+		"good",
+		"happy",
+		"jolly",
+		"kind",
+		"little",
+		"merry",
+		"nice",
+	}
 
 	randSrc := rand.NewSource(time.Now().UnixNano())
 	randGen := rand.New(randSrc)
@@ -60,40 +108,5 @@ func RandomName() string {
 	noun := nouns[randGen.Intn(len(nouns))]
 
 	return fmt.Sprintf("%s%s", adjective, noun)
-}
 
-func CreateProjectFiles(config *Config) (err error) {
-
-	filesToCreate := [][]FileTemplate{
-		cmdFileTemplate(config),
-		entityFileTemplate(config),
-		serviceFileTemplate(config),
-		handlerFileTemplate(config),
-		serverFileTemplate(config),
-		storageFileTemplate(config),
-	}
-
-	for _, files := range filesToCreate {
-		err = CreateFilesFromTemplate(files, config)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func CreateFilesFromTemplate(files []FileTemplate, config *Config) (err error) {
-	for _, file := range files {
-		f, err := os.Create(file.Path)
-		if err != nil {
-			return err
-		}
-
-		err = file.Template.Execute(f, config)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

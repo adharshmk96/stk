@@ -121,6 +121,16 @@ func (c *Context) Status(status int) *Context {
 	return c
 }
 
+// Redirect redirects the request to the provided URL
+func (c *Context) Redirect(url string) {
+	status := c.responseStatus
+	if status == 0 {
+		status = http.StatusTemporaryRedirect
+	}
+	// Set the default redirect status code
+	http.Redirect(c.Writer, c.Request, url, status)
+}
+
 // sets response header key value
 func (c *Context) SetHeader(key string, value string) {
 	c.Writer.Header().Add(key, value)
