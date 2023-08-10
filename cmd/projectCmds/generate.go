@@ -102,7 +102,7 @@ var GenerateCmd = &cobra.Command{
 			AppName:  app,
 		}
 
-		err = project.Generate(config)
+		err = project.GenerateProject(config)
 		if err != nil {
 			log.Fatal(err)
 			return

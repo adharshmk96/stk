@@ -29,6 +29,7 @@
             "args": [
                 "project",
                 "generate",
+                "./test"
             ]
         },
         {

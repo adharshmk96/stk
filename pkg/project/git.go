@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/adharshmk96/stk/pkg/project/tpl"
 )
 
 func initializePackageWithGit(config *Config) error {
@@ -23,7 +25,7 @@ func initializePackageWithGit(config *Config) error {
 	}
 	defer file.Close()
 
-	file.Write([]byte(gitIgnoreTemplate))
+	file.Write([]byte(tpl.GITIGNORE_TPL.Content))
 
 	return nil
 }
