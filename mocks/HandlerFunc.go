@@ -13,7 +13,7 @@ type HandlerFunc struct {
 }
 
 // Execute provides a mock function with given fields: _a0
-func (_m *HandlerFunc) Execute(_a0 gsk.Context) {
+func (_m *HandlerFunc) Execute(_a0 *gsk.Context) {
 	_m.Called(_a0)
 }
 
