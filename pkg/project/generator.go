@@ -43,11 +43,10 @@ func GenerateProject(config *Config) error {
 }
 
 func generateBoilerplate(config *Config) {
-	destDir := config.RootPath
 	templates := tpl.BoilerPlateTemplates
 
 	for _, tf := range templates {
-		fullPath := filepath.Join(destDir, tf.FilePath)
+		fullPath := tf.FilePath
 		dir := filepath.Dir(fullPath)
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			log.Fatalf("Failed to create directory for file %s: %v\n", tf.FilePath, err)
