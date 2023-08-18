@@ -3,19 +3,18 @@ package gsk
 import (
 	"context"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 type HandlerFunc func(*Context)
 
 type ServerConfig struct {
 	Port   string
-	Logger *logrus.Logger
+	Logger *slog.Logger
 	// Input
 	BodySizeLimit int64
 }
@@ -81,10 +80,10 @@ func New(userconfig ...*ServerConfig) *Server {
 func (s *Server) Start() {
 
 	startingPort := NormalizePort(s.config.Port)
-	s.config.Logger.WithField("port", startingPort).Info("starting server")
+	s.config.Logger.Info("starting server", "port", startingPort)
 	err := s.httpServer.ListenAndServe()
 	if err != nil {
-		s.config.Logger.WithError(err).Error("error starting server")
+		s.config.Logger.Error("error starting server", "error", err)
 		panic(err)
 	}
 }

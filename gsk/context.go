@@ -3,9 +3,8 @@ package gsk
 import (
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
-
-	"github.com/sirupsen/logrus"
 )
 
 // type Context interface {
@@ -34,7 +33,7 @@ import (
 // 	GetCookie(name string) (*http.Cookie, error)
 
 // 	// logger
-// 	Logger() *logrus.Logger
+// 	Logger() *slog.Logger
 
 // 	// Internals
 // 	eject() gskContext
@@ -49,7 +48,7 @@ type Context struct {
 	params Params
 
 	// logging
-	logger        *logrus.Logger
+	logger        *slog.Logger
 	bodySizeLimit int64
 
 	// to write response
@@ -165,7 +164,7 @@ func (c *Context) RawResponse(raw []byte) {
 }
 
 // get the logger
-func (c *Context) Logger() *logrus.Logger {
+func (c *Context) Logger() *slog.Logger {
 	return c.logger
 }
 

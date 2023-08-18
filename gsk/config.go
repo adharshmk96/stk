@@ -17,7 +17,7 @@ func initConfig(config ...*ServerConfig) *ServerConfig {
 	}
 
 	if initConfig.Logger == nil {
-		initConfig.Logger = logging.NewLogrusLogger()
+		initConfig.Logger = logging.NewSlogLogger()
 	}
 
 	if initConfig.BodySizeLimit == 0 {
