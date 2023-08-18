@@ -24,7 +24,7 @@ go install github.com/adharshmk96/stk
 
 - A web server framework with go's native http server wrapper and httprouter for routing
 - Middleware support
-- Logrus Logger
+- slog Logger
 - DB Connection helper functions
 - Utilities
 

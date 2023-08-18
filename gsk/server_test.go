@@ -3,13 +3,12 @@ package gsk_test
 import (
 	"bytes"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/adharshmk96/stk/gsk"
@@ -17,8 +16,7 @@ import (
 
 func TestServer_Start(t *testing.T) {
 	buffer := new(bytes.Buffer)
-	logger := logrus.New()
-	logger.Out = io.MultiWriter(os.Stdout, buffer)
+	logger := slog.New(slog.NewJSONHandler(buffer, nil))
 
 	// Create a ServerConfig
 	config := &gsk.ServerConfig{

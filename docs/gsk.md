@@ -42,7 +42,7 @@ Optionally, you can pass a `ServerConfig` object to `New` to set the server's co
 ```go
 config := &gsk.ServerConfig{
 	Port:          ":8081",
-	Logger:        logrus.New(),
+	Logger:        slog.New(),
 	BodySizeLimit: 1<<20, // 1 MB
 }
 server := gsk.New(config)
