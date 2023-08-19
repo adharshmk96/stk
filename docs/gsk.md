@@ -192,27 +192,6 @@ publicGroup.Get("/home", func(c *gsk.Context) {
 })
 ```
 
-### Middleware Ordering
-
-Middlewares will be applied only to the routes registered after the middleware is added. You can add some routes which doesn't require a specific middleware
-
-```go
-server.Use(MyMiddleware)
-// applies my middleware to all routes registered after this
-server.Get("/path", func(c *gsk.Context) {
-    // handle the request
-})
-
-server.Use(AnotherMiddleware)
-// applies another middleware to all routes registered after this
-// but not to the route registered before this
-// *my middleware will still be applied to this route*
-server.Get("/path2", func(c *gsk.Context) {
-    // handle the request
-})
-
-```
-
 ## Testing Usage
 
 The server package provides a `Test` function to simulate HTTP requests and test server responses. This function takes the HTTP method, path, body, and optional parameters (cookies and headers), and returns a `httptest.ResponseRecorder` and an error.
