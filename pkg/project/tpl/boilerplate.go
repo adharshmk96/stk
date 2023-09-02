@@ -1,5 +1,38 @@
 package tpl
 
+var GITIGNORE_TPL = Template{
+	FilePath: ".gitignore",
+	Content: `# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+*.db`,
+}
+
+var MAINGO_TPL = Template{
+	FilePath: "main.go",
+	Content: `package main
+
+import "{{ .PkgName }}/cmd"
+
+func main() {
+	cmd.Execute()
+}
+`,
+}
+
 var MAKEFILE_TPL = Template{
 	FilePath: "makefile",
 	Content: `##########################
@@ -34,7 +67,7 @@ BINARY_NAME=app
 build:
 	@go build -o ./out/$(BINARY_NAME) -v
 
-run: build
+run: 
 	@go run . serve -p 8080
 
 test:
@@ -101,44 +134,6 @@ mockgen:
 `,
 }
 
-var GITIGNORE_TPL = Template{
-	FilePath: ".gitignore",
-	Content: `# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
-# Test binary
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-*.db`,
-}
-
-var REQUESTHTTP_TPL = Template{
-	FilePath: "request.http",
-	Content:  `GET http://localhost:8080/ping`,
-}
-
-var MAINGO_TPL = Template{
-	FilePath: "main.go",
-	Content: `package main
-
-import "{{ .PkgName }}/cmd"
-
-func main() {
-	cmd.Execute()
-}
-`,
-}
-
 var READMEMD_TPL = Template{
 	FilePath: "README.md",
 	Content: `# templates-for-go
@@ -146,180 +141,17 @@ repo with some files for go
 `,
 }
 
-var PKG_SERVICE_SERVICEGO_TPL = Template{
-	FilePath: "pkg/service/service.go",
-	Content: `package service
-
-import (
-	"{{ .PkgName }}/pkg/core"
-)
-
-type pingService struct {
-	pingStorage core.PingStorage
+var REQUESTHTTP_TPL = Template{
+	FilePath: "request.http",
+	Content:  `GET http://localhost:8080/ping`,
 }
 
-func NewPingService(storage core.PingStorage) core.PingService {
-	return &pingService{
-		pingStorage: storage,
-	}
-}
-`,
+var SINGLEMODGO_TPL = Template{
+	FilePath: "singlemod.go",
+	Content:  ``,
 }
 
-var PKG_SERVICE_PINGGO_TPL = Template{
-	FilePath: "pkg/service/ping.go",
-	Content: `package service
-
-func (s *pingService) PingService() string {
-	err := s.pingStorage.Ping()
-	if err != nil {
-		return "error"
-	}
-	return "pong"
-}
-`,
-}
-
-var PKG_CORE_HANDLERGO_TPL = Template{
-	FilePath: "pkg/core/handler.go",
-	Content: `package core
-
-import "github.com/adharshmk96/stk/gsk"
-
-type PingHandlers interface {
-	PingHandler(gc *gsk.Context)
-}
-`,
-}
-
-var PKG_CORE_SERVICEGO_TPL = Template{
-	FilePath: "pkg/core/service.go",
-	Content: `package core
-
-type PingService interface {
-	PingService() string
-}
-`,
-}
-
-var PKG_CORE_STORAGEGO_TPL = Template{
-	FilePath: "pkg/core/storage.go",
-	Content: `package core
-
-type PingStorage interface {
-	Ping() error
-}
-`,
-}
-
-var PKG_CORE_SERR_PINGERRGO_TPL = Template{
-	FilePath: "pkg/core/serr/pingerr.go",
-	Content: `package serr
-
-import "errors"
-
-var (
-	ErrPingFailed = errors.New("ping failed")
-)
-`,
-}
-
-var PKG_CORE_DS_PINGGO_TPL = Template{
-	FilePath: "pkg/core/ds/ping.go",
-	Content: `package ds
-
-type User struct {
-	pong string
-}
-`,
-}
-
-var PKG_HTTP_HANDLER_HANDLERGO_TPL = Template{
-	FilePath: "pkg/http/handler/handler.go",
-	Content: `package handler
-
-import (
-	"{{ .PkgName }}/pkg/core"
-)
-
-type pingHandler struct {
-	pingService core.PingService
-}
-
-func NewPingHandler(pingService core.PingService) core.PingHandlers {
-	return &pingHandler{
-		pingService: pingService,
-	}
-}
-`,
-}
-
-var PKG_HTTP_HANDLER_PINGGO_TPL = Template{
-	FilePath: "pkg/http/handler/ping.go",
-	Content: `package handler
-
-import (
-	"net/http"
-
-	"github.com/adharshmk96/stk/gsk"
-)
-
-/*
-PingHandler returns ping 200 response
-Response:
-- 200: OK
-- 500: Internal Server Error
-*/
-func (h *pingHandler) PingHandler(gc *gsk.Context) {
-	
-	ping := h.pingService.PingService()
-
-	gc.Status(http.StatusOK).JSONResponse(gsk.Map{
-		"message": ping,
-	})
-}	
-`,
-}
-
-var PKG_STORAGE_SQLITE_SQLITEGO_TPL = Template{
-	FilePath: "pkg/storage/sqlite/sqlite.go",
-	Content: `package sqlite
-
-import (
-	"database/sql"
-
-	"{{ .PkgName }}/pkg/core"
-)
-
-type sqliteRepo struct {
-	conn *sql.DB
-}
-
-func NewSqliteRepo(conn *sql.DB) core.PingStorage {
-	return &sqliteRepo{
-		conn: conn,
-	}
-}
-`,
-}
-
-var PKG_STORAGE_SQLITE_PINGGO_TPL = Template{
-	FilePath: "pkg/storage/sqlite/ping.go",
-	Content: `package sqlite
-
-import "{{ .PkgName }}/pkg/core/serr"
-
-func (s *sqliteRepo) Ping() error {
-	err := s.conn.Ping()
-	if err != nil {
-		return serr.ErrPingFailed
-	}
-	return nil
-}
-`,
-}
-
-var CMD_ROOTGO_TPL = Template{
+var CMDROOTGO_TPL = Template{
 	FilePath: "cmd/root.go",
 	Content: `package cmd
 
@@ -376,7 +208,7 @@ func initConfig() {
 `,
 }
 
-var CMD_SERVEGO_TPL = Template{
+var CMDSERVEGO_TPL = Template{
 	FilePath: "cmd/serve.go",
 	Content: `package cmd
 
@@ -419,7 +251,7 @@ func init() {
 `,
 }
 
-var CMD_VERSIONGO_TPL = Template{
+var CMDVERSIONGO_TPL = Template{
 	FilePath: "cmd/version.go",
 	Content: `package cmd
 
@@ -444,7 +276,180 @@ func init() {
 `,
 }
 
-var SERVER_SETUPGO_TPL = Template{
+var INTERNALSCOREHANDLERGO_TPL = Template{
+	FilePath: "internals/core/handler.go",
+	Content: `package core
+
+import "github.com/adharshmk96/stk/gsk"
+
+type PingHandlers interface {
+	PingHandler(gc *gsk.Context)
+}
+`,
+}
+
+var INTERNALSCORESERVICEGO_TPL = Template{
+	FilePath: "internals/core/service.go",
+	Content: `package core
+
+type PingService interface {
+	PingService() string
+}
+`,
+}
+
+var INTERNALSCORESTORAGEGO_TPL = Template{
+	FilePath: "internals/core/storage.go",
+	Content: `package core
+
+type PingStorage interface {
+	Ping() error
+}
+`,
+}
+
+var INTERNALSCOREDSPINGGO_TPL = Template{
+	FilePath: "internals/core/ds/ping.go",
+	Content: `package ds
+
+type User struct {
+	pong string
+}
+`,
+}
+
+var INTERNALSCORESERRPINGERRGO_TPL = Template{
+	FilePath: "internals/core/serr/pingerr.go",
+	Content: `package serr
+
+import "errors"
+
+var (
+	ErrPingFailed = errors.New("ping failed")
+)
+`,
+}
+
+var INTERNALSHTTPHANDLERHANDLERGO_TPL = Template{
+	FilePath: "internals/http/handler/handler.go",
+	Content: `package handler
+
+import (
+	"{{ .PkgName }}/internals/core"
+)
+
+type pingHandler struct {
+	pingService core.PingService
+}
+
+func NewPingHandler(pingService core.PingService) core.PingHandlers {
+	return &pingHandler{
+		pingService: pingService,
+	}
+}
+`,
+}
+
+var INTERNALSHTTPHANDLERPINGGO_TPL = Template{
+	FilePath: "internals/http/handler/ping.go",
+	Content: `package handler
+
+import (
+	"net/http"
+
+	"github.com/adharshmk96/stk/gsk"
+)
+
+/*
+PingHandler returns ping 200 response
+Response:
+- 200: OK
+- 500: Internal Server Error
+*/
+func (h *pingHandler) PingHandler(gc *gsk.Context) {
+	
+	ping := h.pingService.PingService()
+
+	gc.Status(http.StatusOK).JSONResponse(gsk.Map{
+		"message": ping,
+	})
+}	
+`,
+}
+
+var INTERNALSSERVICEPINGGO_TPL = Template{
+	FilePath: "internals/service/ping.go",
+	Content: `package service
+
+func (s *pingService) PingService() string {
+	err := s.pingStorage.Ping()
+	if err != nil {
+		return "error"
+	}
+	return "pong"
+}
+`,
+}
+
+var INTERNALSSERVICESERVICEGO_TPL = Template{
+	FilePath: "internals/service/service.go",
+	Content: `package service
+
+import (
+	"{{ .PkgName }}/internals/core"
+)
+
+type pingService struct {
+	pingStorage core.PingStorage
+}
+
+func NewPingService(storage core.PingStorage) core.PingService {
+	return &pingService{
+		pingStorage: storage,
+	}
+}
+`,
+}
+
+var INTERNALSSTORAGESQLITEPINGGO_TPL = Template{
+	FilePath: "internals/storage/sqlite/ping.go",
+	Content: `package sqlite
+
+import "{{ .PkgName }}/internals/core/serr"
+
+func (s *sqliteRepo) Ping() error {
+	err := s.conn.Ping()
+	if err != nil {
+		return serr.ErrPingFailed
+	}
+	return nil
+}
+`,
+}
+
+var INTERNALSSTORAGESQLITESQLITEGO_TPL = Template{
+	FilePath: "internals/storage/sqlite/sqlite.go",
+	Content: `package sqlite
+
+import (
+	"database/sql"
+
+	"{{ .PkgName }}/internals/core"
+)
+
+type sqliteRepo struct {
+	conn *sql.DB
+}
+
+func NewSqliteRepo(conn *sql.DB) core.PingStorage {
+	return &sqliteRepo{
+		conn: conn,
+	}
+}
+`,
+}
+
+var SERVERSETUPGO_TPL = Template{
 	FilePath: "server/setup.go",
 	Content: `package server
 
@@ -453,9 +458,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"{{ .PkgName }}/pkg/http/handler"
-	"{{ .PkgName }}/pkg/service"
-	"{{ .PkgName }}/pkg/storage/sqlite"
+	"{{ .PkgName }}/internals/http/handler"
+	"{{ .PkgName }}/internals/service"
+	"{{ .PkgName }}/internals/storage/sqlite"
 	"{{ .PkgName }}/server/infra"
 	svrmw "{{ .PkgName }}/server/middleware"
 	"{{ .PkgName }}/server/routing"
@@ -521,44 +526,7 @@ func intializeServer(server *gsk.Server) {
 `,
 }
 
-var SERVER_ROUTING_ROUTINGGO_TPL = Template{
-	FilePath: "server/routing/routing.go",
-	Content: `package routing
-
-import (
-	"{{ .PkgName }}/pkg/core"
-	"github.com/adharshmk96/stk/gsk"
-)
-
-func SetupPingRoutes(server *gsk.Server, {{ .AppName }}Handler core.PingHandlers) {
-	server.Get("/ping", {{ .AppName }}Handler.PingHandler)
-}
-`,
-}
-
-var SERVER_MIDDLEWARE_MIDDLEWAREGO_TPL = Template{
-	FilePath: "server/middleware/middleware.go",
-	Content: `package server
-
-import (
-	"time"
-
-	"github.com/adharshmk96/stk/gsk"
-	"github.com/adharshmk96/stk/pkg/middleware"
-)
-
-func RateLimiter() gsk.Middleware {
-	rlConfig := middleware.RateLimiterConfig{
-		RequestsPerInterval: 10,
-		Interval:            60 * time.Second,
-	}
-	rateLimiter := middleware.NewRateLimiter(rlConfig)
-	return rateLimiter.Middleware
-}
-`,
-}
-
-var SERVER_INFRA_CONFIGGO_TPL = Template{
+var SERVERINFRACONFIGGO_TPL = Template{
 	FilePath: "server/infra/config.go",
 	Content: `package infra
 
@@ -575,7 +543,7 @@ func LoadDefaultConfig() {
 `,
 }
 
-var SERVER_INFRA_CONSTANTSGO_TPL = Template{
+var SERVERINFRACONSTANTSGO_TPL = Template{
 	FilePath: "server/infra/constants.go",
 	Content: `package infra
 
@@ -585,7 +553,7 @@ const (
 `,
 }
 
-var SERVER_INFRA_LOGGERGO_TPL = Template{
+var SERVERINFRALOGGERGO_TPL = Template{
 	FilePath: "server/infra/logger.go",
 	Content: `package infra
 
@@ -606,30 +574,68 @@ func GetLogger() *slog.Logger {
 `,
 }
 
+var SERVERMIDDLEWAREMIDDLEWAREGO_TPL = Template{
+	FilePath: "server/middleware/middleware.go",
+	Content: `package middleware
+
+import (
+	"time"
+
+	"github.com/adharshmk96/stk/gsk"
+	gskmw "github.com/adharshmk96/stk/pkg/middleware"
+)
+
+func RateLimiter() gsk.Middleware {
+	rlConfig := gskmw.RateLimiterConfig{
+		RequestsPerInterval: 10,
+		Interval:            60 * time.Second,
+	}
+	rateLimiter := gskmw.NewRateLimiter(rlConfig)
+	return rateLimiter.Middleware
+}
+`,
+}
+
+var SERVERROUTINGROUTINGGO_TPL = Template{
+	FilePath: "server/routing/routing.go",
+	Content: `package routing
+
+import (
+	"{{ .PkgName }}/internals/core"
+	"github.com/adharshmk96/stk/gsk"
+)
+
+func SetupPingRoutes(server *gsk.Server, {{ .AppName }}Handler core.PingHandlers) {
+	server.Get("/ping", {{ .AppName }}Handler.PingHandler)
+}
+`,
+}
+
 var BoilerPlateTemplates = []Template{
-	MAKEFILE_TPL,
 	GITIGNORE_TPL,
-	REQUESTHTTP_TPL,
 	MAINGO_TPL,
+	MAKEFILE_TPL,
 	READMEMD_TPL,
-	PKG_SERVICE_SERVICEGO_TPL,
-	PKG_SERVICE_PINGGO_TPL,
-	PKG_CORE_HANDLERGO_TPL,
-	PKG_CORE_SERVICEGO_TPL,
-	PKG_CORE_STORAGEGO_TPL,
-	PKG_CORE_SERR_PINGERRGO_TPL,
-	PKG_CORE_DS_PINGGO_TPL,
-	PKG_HTTP_HANDLER_HANDLERGO_TPL,
-	PKG_HTTP_HANDLER_PINGGO_TPL,
-	PKG_STORAGE_SQLITE_SQLITEGO_TPL,
-	PKG_STORAGE_SQLITE_PINGGO_TPL,
-	CMD_ROOTGO_TPL,
-	CMD_SERVEGO_TPL,
-	CMD_VERSIONGO_TPL,
-	SERVER_SETUPGO_TPL,
-	SERVER_ROUTING_ROUTINGGO_TPL,
-	SERVER_MIDDLEWARE_MIDDLEWAREGO_TPL,
-	SERVER_INFRA_CONFIGGO_TPL,
-	SERVER_INFRA_CONSTANTSGO_TPL,
-	SERVER_INFRA_LOGGERGO_TPL,
+	REQUESTHTTP_TPL,
+	SINGLEMODGO_TPL,
+	CMDROOTGO_TPL,
+	CMDSERVEGO_TPL,
+	CMDVERSIONGO_TPL,
+	INTERNALSCOREHANDLERGO_TPL,
+	INTERNALSCORESERVICEGO_TPL,
+	INTERNALSCORESTORAGEGO_TPL,
+	INTERNALSCOREDSPINGGO_TPL,
+	INTERNALSCORESERRPINGERRGO_TPL,
+	INTERNALSHTTPHANDLERHANDLERGO_TPL,
+	INTERNALSHTTPHANDLERPINGGO_TPL,
+	INTERNALSSERVICEPINGGO_TPL,
+	INTERNALSSERVICESERVICEGO_TPL,
+	INTERNALSSTORAGESQLITEPINGGO_TPL,
+	INTERNALSSTORAGESQLITESQLITEGO_TPL,
+	SERVERSETUPGO_TPL,
+	SERVERINFRACONFIGGO_TPL,
+	SERVERINFRACONSTANTSGO_TPL,
+	SERVERINFRALOGGERGO_TPL,
+	SERVERMIDDLEWAREMIDDLEWAREGO_TPL,
+	SERVERROUTINGROUTINGGO_TPL,
 }
