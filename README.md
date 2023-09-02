@@ -10,7 +10,7 @@ GSK - Web server framework [here](#gsk---web-server-framework--library-)
 
 There are few cli tools that comes with stk
 - Migrator - Database migration tool [here](#migrator)
-- Project generator - Generates a new project with gsk following clean architecture (WIP)
+- Project generator - Generates a new project with gsk following clean architecture
 - Verify - Verify the project structure for arch rules (WIP)
 
 ### Install
@@ -118,6 +118,85 @@ Number  Name               Type  Created
 000002  initial_migration  down  2023-07-01  
 000001  initial_migration  down  2023-07-01
 ```
+
+## Project Generator
+
+- Generates a new project with gsk following clean architecture
+
+### Get started
+
+1. goto working directory `cd <target directory>`
+2. run the following command
+
+```bash
+stk project generate
+```
+
+The command will generate a project with the following structure
+
+```
+│   .gitignore
+│   go.mod
+│   go.sum
+│   main.go
+│   makefile
+│   README.md
+│   request.http
+│
+├───.github
+│   └───workflows
+│           go-build-test.yml
+│           go-release.yml
+│
+├───cmd
+│       root.go
+│       serve.go
+│       version.go
+│
+├───internals
+│   ├───core
+│   │   │   handler.go
+│   │   │   service.go
+│   │   │   storage.go
+│   │   │
+│   │   ├───ds
+│   │   │       ping.go
+│   │   │
+│   │   └───serr
+│   │           pingerr.go
+│   │
+│   ├───http
+│   │   └───handler
+│   │           handler.go
+│   │           ping.go
+│   │
+│   ├───service
+│   │       ping.go
+│   │       service.go
+│   │
+│   └───storage
+│       └───sqlite
+│               ping.go
+│               sqlite.go
+│
+└───server
+    │   setup.go
+    │
+    ├───infra
+    │       config.go
+    │       constants.go
+    │       logger.go
+    │
+    ├───middleware
+    │       middleware.go
+    │
+    └───routing
+            routing.go
+
+```
+
+find more about the project structure [here](docs/project.md)
+
 
 
 ## Development
