@@ -18,6 +18,14 @@ There are few cli tools that comes with stk
 go install github.com/adharshmk96/stk
 ```
 
+If go isn't configured properly run this
+```bash
+echo 'export PATH="$PATH:/snap/bin"' >> ~/.profile
+echo 'export PATH="$PATH:~/go/bin"' >> ~/.profile
+source ~/.profile
+```
+
+
 ## GSK - Web server framework ( library )
 
 [docs](docs/gsk.md)
