@@ -9,9 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var projectRootFolder string
 var projectPackageName string
-var projectAppName string
 
 // projectCmd represents the project command
 var projectCmd = &cobra.Command{

@@ -43,7 +43,7 @@ func GenerateProject(config *Config) error {
 }
 
 func generateBoilerplate(config *Config) {
-	templates := tpl.BoilerPlateTemplates
+	templates := tpl.SingleModTemplates
 
 	for _, tf := range templates {
 		fullPath := tf.FilePath
