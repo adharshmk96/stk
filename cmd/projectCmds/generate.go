@@ -33,7 +33,7 @@ var GenerateCmd = &cobra.Command{
 			return
 		}
 
-		config := &project.Config{
+		config := &project.ProjectConfig{
 			RootPath: workdir,
 			PkgName:  pkg,
 			AppName:  app,

@@ -14,7 +14,7 @@ import (
 	"github.com/adharshmk96/stk/pkg/project/tpl"
 )
 
-func GenerateProject(config *Config) error {
+func GenerateProject(config *ProjectConfig) error {
 	// use existing repo name as package name
 	// or initialize git repo
 	err := initializePackageWithGit(config)
@@ -44,21 +44,21 @@ func GenerateProject(config *Config) error {
 }
 
 func formatModuleFilePath(pathTemplate string, modConfig *ModuleConfig) string {
-	filePath := strings.ReplaceAll(pathTemplate, "{{.ModName}}", modConfig.ModName)
+	filePath := strings.ReplaceAll(pathTemplate, "{{ .ModName }}", modConfig.ModName)
 	return filePath
 }
 
-func GenerateModule(config *Config, modConfig *ModuleConfig) error {
+func GenerateModule(modConfig *ModuleConfig) error {
 	templates := tpl.ModuleTemplates
 	for _, tf := range templates {
-		fullPath := formatModuleFilePath(tf.FilePath, modConfig)
-		dir := filepath.Dir(fullPath)
+		tf.FilePath = formatModuleFilePath(tf.FilePath, modConfig)
+		dir := filepath.Dir(tf.FilePath)
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			log.Fatalf("Failed to create directory for file %s: %v\n", tf.FilePath, err)
 			return err
 		}
 
-		f, err := os.Create(fullPath)
+		f, err := os.Create(tf.FilePath)
 		if err != nil {
 			log.Fatalf("Failed to create file %s: %v\n", tf.FilePath, err)
 			return err
@@ -67,7 +67,7 @@ func GenerateModule(config *Config, modConfig *ModuleConfig) error {
 
 		tpl := template.Must(template.New(tf.FilePath).Parse(tf.Content))
 
-		if err := tpl.Execute(f, config); err != nil {
+		if err := tpl.Execute(f, modConfig); err != nil {
 			log.Fatalf("Failed to execute template for file %s: %v\n", tf.FilePath, err)
 			return err
 		}
@@ -77,18 +77,17 @@ func GenerateModule(config *Config, modConfig *ModuleConfig) error {
 	return nil
 }
 
-func generateBoilerplate(config *Config) {
+func generateBoilerplate(config *ProjectConfig) {
 	templates := tpl.SingleModTemplates
 
 	for _, tf := range templates {
-		fullPath := tf.FilePath
-		dir := filepath.Dir(fullPath)
+		dir := filepath.Dir(tf.FilePath)
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			log.Fatalf("Failed to create directory for file %s: %v\n", tf.FilePath, err)
 			continue
 		}
 
-		f, err := os.Create(fullPath)
+		f, err := os.Create(tf.FilePath)
 		if err != nil {
 			log.Fatalf("Failed to create file %s: %v\n", tf.FilePath, err)
 			continue

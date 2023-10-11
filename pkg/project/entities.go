@@ -1,13 +1,16 @@
 package project
 
-type Config struct {
+type ProjectConfig struct {
 	PkgName  string
 	AppName  string
 	RootPath string
-	IsGit    bool
 }
 
+// TODO Compose this ?
 type ModuleConfig struct {
+	PkgName      string
+	AppName      string
+	RootPath     string
 	ModName      string
 	ExportedName string
 }
