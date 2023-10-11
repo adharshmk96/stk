@@ -21,6 +21,11 @@ var GITIGNORE_TPL = Template{
 *.db`,
 }
 
+var DATABASEDB_TPL = Template{
+	FilePath: "database.db",
+	Content: ``,
+}
+
 var MAINGO_TPL = Template{
 	FilePath: "main.go",
 	Content: `package main
@@ -490,14 +495,26 @@ var INTERNALSSTORAGEPINGSTORAGEPINGGO_TPL = Template{
 	FilePath: "internals/storage/pingStorage/ping.go",
 	Content: `package pingStorage
 
-import "{{ .PkgName }}/internals/core/serr"
+import (
+	"fmt"
+
+	"github.com/adharshmk96/stk-template/multimod/server/infra"
+	"{{ .PkgName }}/internals/core/serr"
+)
 
 // Repository Methods
 func (s *sqliteRepo) Ping() error {
-	err := s.conn.Ping()
+	res, err := s.conn.Exec("SELECT 1")
 	if err != nil {
 		return serr.ErrPingFailed
 	}
+	num, err := res.RowsAffected()
+	if err != nil {
+		return serr.ErrPingFailed
+	}
+
+	logger := infra.GetLogger()
+	logger.Info(fmt.Sprintf("Ping Success: %d", num))
 	return nil
 }
 `,
@@ -700,17 +717,18 @@ func setupPingRoutes(server *gsk.Server) {
 	dbConfig := viper.GetString(infra.ENV_SQLITE_FILEPATH)
 	conn := db.GetSqliteConnection(dbConfig)
 
-	{{ .AppName }}Storage := pingStorage.NewSqliteRepo(conn)
-	{{ .AppName }}Service := service.NewPingService({{ .AppName }}Storage)
-	{{ .AppName }}Handler := handler.NewPingHandler({{ .AppName }}Service)
+	pingStorage := pingStorage.NewSqliteRepo(conn)
+	pingService := service.NewPingService(pingStorage)
+	pingHandler := handler.NewPingHandler(pingService)
 
-	server.Get("/ping", {{ .AppName }}Handler.PingHandler)
+	server.Get("/ping", pingHandler.PingHandler)
 }
 `,
 }
 
 var SingleModTemplates = []Template{
 	GITIGNORE_TPL,
+	DATABASEDB_TPL,
 	MAINGO_TPL,
 	MAKEFILE_TPL,
 	READMEMD_TPL,

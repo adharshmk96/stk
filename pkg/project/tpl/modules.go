@@ -194,14 +194,26 @@ var INTERNALSSTORAGEPINGSTORAGEPINGGO_MOD = Template{
 	FilePath: "internals/storage/{{ .ModName }}Storage/{{ .ModName }}.go",
 	Content: `package {{ .ModName }}Storage
 
-import "{{ .PkgName }}/internals/core/serr"
+import (
+	"fmt"
+
+	"github.com/adharshmk96/stk-template/multimod/server/infra"
+	"{{ .PkgName }}/internals/core/serr"
+)
 
 // Repository Methods
 func (s *sqliteRepo) {{ .ExportedName }}() error {
-	err := s.conn.{{ .ExportedName }}()
+	res, err := s.conn.Exec("SELECT 1")
 	if err != nil {
 		return serr.Err{{ .ExportedName }}Failed
 	}
+	num, err := res.RowsAffected()
+	if err != nil {
+		return serr.Err{{ .ExportedName }}Failed
+	}
+
+	logger := infra.GetLogger()
+	logger.Info(fmt.Sprintf("{{ .ExportedName }} Success: %d", num))
 	return nil
 }
 `,
@@ -257,11 +269,11 @@ func setup{{ .ExportedName }}Routes(server *gsk.Server) {
 	dbConfig := viper.GetString(infra.ENV_SQLITE_FILEPATH)
 	conn := db.GetSqliteConnection(dbConfig)
 
-	{{ .AppName }}Storage := {{ .ModName }}Storage.NewSqliteRepo(conn)
-	{{ .AppName }}Service := service.New{{ .ExportedName }}Service({{ .AppName }}Storage)
-	{{ .AppName }}Handler := handler.New{{ .ExportedName }}Handler({{ .AppName }}Service)
+	{{ .ModName }}Storage := {{ .ModName }}Storage.NewSqliteRepo(conn)
+	{{ .ModName }}Service := service.New{{ .ExportedName }}Service({{ .ModName }}Storage)
+	{{ .ModName }}Handler := handler.New{{ .ExportedName }}Handler({{ .ModName }}Service)
 
-	server.Get("/{{ .ModName }}", {{ .AppName }}Handler.{{ .ExportedName }}Handler)
+	server.Get("/{{ .ModName }}", {{ .ModName }}Handler.{{ .ExportedName }}Handler)
 }
 `,
 }
