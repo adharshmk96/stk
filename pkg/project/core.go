@@ -5,3 +5,8 @@ type Config struct {
 	AppName  string
 	RootPath string
 }
+
+type ModuleConfig struct {
+	ModName      string
+	ExportedName string
+}

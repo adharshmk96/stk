@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 
@@ -37,6 +38,40 @@ func GenerateProject(config *Config) error {
 	if err != nil {
 		log.Fatal("error running go mod tidy: ", err)
 		return err
+	}
+
+	return nil
+}
+
+func formatModuleFilePath(pathTemplate string, modConfig *ModuleConfig) string {
+	filePath := strings.ReplaceAll(pathTemplate, "{{.ModName}}", modConfig.ModName)
+	return filePath
+}
+
+func GenerateModule(config *Config, modConfig *ModuleConfig) error {
+	templates := tpl.ModuleTemplates
+	for _, tf := range templates {
+		fullPath := formatModuleFilePath(tf.FilePath, modConfig)
+		dir := filepath.Dir(fullPath)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			log.Fatalf("Failed to create directory for file %s: %v\n", tf.FilePath, err)
+			continue
+		}
+
+		f, err := os.Create(fullPath)
+		if err != nil {
+			log.Fatalf("Failed to create file %s: %v\n", tf.FilePath, err)
+			continue
+		}
+		defer f.Close()
+
+		tpl := template.Must(template.New(tf.FilePath).Parse(tf.Content))
+
+		if err := tpl.Execute(f, config); err != nil {
+			log.Fatalf("Failed to execute template for file %s: %v\n", tf.FilePath, err)
+			continue
+		}
+
 	}
 
 	return nil
