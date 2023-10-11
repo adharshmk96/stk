@@ -1,6 +1,7 @@
 package projectCmds
 
 import (
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -13,20 +14,30 @@ import (
 func getPackageName(args []string) string {
 	repoName, err := getRepoName()
 	if err != nil && repoName != "" {
+		log.Println("Using repository name as package name.")
 		return repoName
+	}
+
+	packageName, err := getPackageNameFromGoMod()
+	if err == nil && packageName != "" {
+		log.Println("Using go module name as package name.")
+		return packageName
 	}
 
 	argName := getPackageNameFromArg(args)
 	if argName != "" {
+		log.Println("Using argument as package name.")
 		return argName
 	}
 
 	configName := viper.GetString("project.package")
 	if configName != "" {
+		log.Println("Using config project.package as package name.")
 		return configName
 	}
 
 	randomName := project.RandomName()
+	log.Println("Using random name as package name.")
 	return randomName
 }
 
@@ -56,13 +67,14 @@ func getRepoName() (string, error) {
 
 func isGoModule() bool {
 	_, err := os.Stat("go.mod")
-	if os.IsNotExist(err) {
-		return false
-	}
-	return true
+	return !os.IsNotExist(err)
 }
 
 func getPackageNameFromGoMod() (string, error) {
+	if !isGoModule() {
+		return "", nil
+	}
+
 	cmd := exec.Command("go", "list", "-m")
 	out, err := cmd.Output()
 	if err != nil {

@@ -7,8 +7,8 @@ var INTERNALSCOREENTITYPINGGO_MOD = Template{
 import "github.com/adharshmk96/stk/gsk"
 
 // Domain
-type User struct {
-	pong string
+type {{ .ExportedName }}Data struct {
+	{{ .ModName }} string
 }
 
 // Storage
