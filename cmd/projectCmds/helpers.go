@@ -5,8 +5,30 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/adharshmk96/stk/pkg/project"
 	"github.com/iancoleman/strcase"
+	"github.com/spf13/viper"
 )
+
+func getPackageName(args []string) string {
+	repoName, err := getRepoName()
+	if err != nil && repoName != "" {
+		return repoName
+	}
+
+	argName := getPackageNameFromArg(args)
+	if argName != "" {
+		return argName
+	}
+
+	configName := viper.GetString("project.package")
+	if configName != "" {
+		return configName
+	}
+
+	randomName := project.RandomName()
+	return randomName
+}
 
 func getPackageNameFromArg(args []string) string {
 	if len(args) == 0 {
@@ -30,6 +52,27 @@ func getRepoName() (string, error) {
 	repoUrl = strings.ReplaceAll(repoUrl, ":", "/")
 
 	return repoUrl, nil
+}
+
+func isGoModule() bool {
+	_, err := os.Stat("go.mod")
+	if os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+func getPackageNameFromGoMod() (string, error) {
+	cmd := exec.Command("go", "list", "-m")
+	out, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	pkgName := string(out)
+	pkgName = strings.TrimSuffix(pkgName, "\n")
+
+	return pkgName, nil
 }
 
 func getAppNameFromPkgName(s string) string {

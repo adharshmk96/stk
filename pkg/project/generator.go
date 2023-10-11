@@ -55,13 +55,13 @@ func GenerateModule(config *Config, modConfig *ModuleConfig) error {
 		dir := filepath.Dir(fullPath)
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			log.Fatalf("Failed to create directory for file %s: %v\n", tf.FilePath, err)
-			continue
+			return err
 		}
 
 		f, err := os.Create(fullPath)
 		if err != nil {
 			log.Fatalf("Failed to create file %s: %v\n", tf.FilePath, err)
-			continue
+			return err
 		}
 		defer f.Close()
 
@@ -69,7 +69,7 @@ func GenerateModule(config *Config, modConfig *ModuleConfig) error {
 
 		if err := tpl.Execute(f, config); err != nil {
 			log.Fatalf("Failed to execute template for file %s: %v\n", tf.FilePath, err)
-			continue
+			return err
 		}
 
 	}

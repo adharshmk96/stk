@@ -1,11 +1,6 @@
 package tpl
 
-var PINGGO_TPL_MOD = Template{
-	FilePath: "{{ .ModName }}.go",
-	Content:  ``,
-}
-
-var INTERNALSCOREENTITYPINGGO_TPL_MOD = Template{
+var INTERNALSCOREENTITYPINGGO_MOD = Template{
 	FilePath: "internals/core/entity/{{ .ModName }}.go",
 	Content: `package entity
 
@@ -23,7 +18,7 @@ type {{ .ExportedName }}Storage interface {
 
 // Service
 type {{ .ExportedName }}Service interface {
-	{{ .ExportedName }}Service() string
+	{{ .ExportedName }}Service() (string, error)
 }
 
 // Handler
@@ -33,7 +28,7 @@ type {{ .ExportedName }}Handlers interface {
 `,
 }
 
-var INTERNALSCORESERRPINGGO_TPL_MOD = Template{
+var INTERNALSCORESERRPINGGO_MOD = Template{
 	FilePath: "internals/core/serr/{{ .ModName }}.go",
 	Content: `package serr
 
@@ -45,15 +40,26 @@ var (
 `,
 }
 
-var INTERNALSHTTPHANDLERPINGGO_TPL_MOD = Template{
+var INTERNALSHTTPHANDLERPINGGO_MOD = Template{
 	FilePath: "internals/http/handler/{{ .ModName }}.go",
 	Content: `package handler
 
 import (
 	"net/http"
 
+	"{{ .PkgName }}/internals/core/entity"
 	"github.com/adharshmk96/stk/gsk"
 )
+
+type {{ .ModName }}Handler struct {
+	service entity.{{ .ExportedName }}Service
+}
+
+func New{{ .ExportedName }}Handler(service entity.{{ .ExportedName }}Service) entity.{{ .ExportedName }}Handlers {
+	return &{{ .ModName }}Handler{
+		service: service,
+	}
+}
 
 /*
 {{ .ExportedName }}Handler returns {{ .ModName }} 200 response
@@ -63,7 +69,13 @@ Response:
 */
 func (h *{{ .ModName }}Handler) {{ .ExportedName }}Handler(gc *gsk.Context) {
 
-	{{ .ModName }} := h.service.{{ .ExportedName }}Service()
+	{{ .ModName }}, err := h.service.{{ .ExportedName }}Service()
+	if err != nil {
+		gc.Status(http.StatusInternalServerError).JSONResponse(gsk.Map{
+			"error": err.Error(),
+		})
+		return
+	}
 
 	gc.Status(http.StatusOK).JSONResponse(gsk.Map{
 		"message": {{ .ModName }},
@@ -72,38 +84,119 @@ func (h *{{ .ModName }}Handler) {{ .ExportedName }}Handler(gc *gsk.Context) {
 `,
 }
 
-var INTERNALSHTTPHELPERSPINGGO_TPL_MOD = Template{
+var INTERNALSHTTPHANDLERPING_TESTGO_MOD = Template{
+	FilePath: "internals/http/handler/{{ .ModName }}_test.go",
+	Content: `package handler_test
+
+import (
+	"net/http"
+	"testing"
+
+	"{{ .PkgName }}/internals/http/handler"
+	"{{ .PkgName }}/mocks"
+	"github.com/adharshmk96/stk/gsk"
+	"github.com/stretchr/testify/assert"
+)
+
+func Test{{ .ExportedName }}Handler(t *testing.T) {
+	t.Run("{{ .ExportedName }} Handler returns 200", func(t *testing.T) {
+
+		// Arrange
+		s := gsk.New()
+		service := mocks.New{{ .ExportedName }}Service(t)
+		service.On("{{ .ExportedName }}Service").Return("pong", nil)
+
+		{{ .ModName }}Handler := handler.New{{ .ExportedName }}Handler(service)
+
+		s.Get("/{{ .ModName }}", {{ .ModName }}Handler.{{ .ExportedName }}Handler)
+
+		// Act
+		w, _ := s.Test("GET", "/{{ .ModName }}", nil)
+
+		// Assert
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+}
+`,
+}
+
+var INTERNALSHTTPHELPERSPINGGO_MOD = Template{
 	FilePath: "internals/http/helpers/{{ .ModName }}.go",
 	Content: `package helpers
 `,
 }
 
-var INTERNALSHTTPTRANSPORTPINGGO_TPL_MOD = Template{
+var INTERNALSHTTPTRANSPORTPINGGO_MOD = Template{
 	FilePath: "internals/http/transport/{{ .ModName }}.go",
 	Content: `package transport
 `,
 }
 
-var INTERNALSSERVICEPINGGO_TPL_MOD = Template{
+var INTERNALSSERVICEPINGGO_MOD = Template{
 	FilePath: "internals/service/{{ .ModName }}.go",
 	Content: `package service
 
-func (s *{{ .ModName }}Service) {{ .ExportedName }}Service() string {
+import "{{ .PkgName }}/internals/core/entity"
+
+type {{ .ModName }}Service struct {
+	storage entity.{{ .ExportedName }}Storage
+}
+
+func New{{ .ExportedName }}Service(storage entity.{{ .ExportedName }}Storage) entity.{{ .ExportedName }}Service {
+	return &{{ .ModName }}Service{
+		storage: storage,
+	}
+}
+
+func (s *{{ .ModName }}Service) {{ .ExportedName }}Service() (string, error) {
 	err := s.storage.{{ .ExportedName }}()
 	if err != nil {
-		return "error"
+		return "", err
 	}
-	return "pong"
+	return "pong", nil
 }
 `,
 }
 
-var INTERNALSSTORAGEPINGSTORAGEPINGGO_TPL_MOD = Template{
+var INTERNALSSERVICEPING_TESTGO_MOD = Template{
+	FilePath: "internals/service/{{ .ModName }}_test.go",
+	Content: `package service_test
+
+import (
+	"testing"
+
+	"{{ .PkgName }}/internals/service"
+	"{{ .PkgName }}/mocks"
+	"github.com/stretchr/testify/assert"
+)
+
+func Test{{ .ExportedName }}Service(t *testing.T) {
+	t.Run("{{ .ExportedName }}Service returns pong", func(t *testing.T) {
+
+		// Arrange
+		storage := mocks.New{{ .ExportedName }}Storage(t)
+		storage.On("{{ .ExportedName }}").Return(nil)
+
+		svc := service.New{{ .ExportedName }}Service(storage)
+
+		// Act
+		msg, err := svc.{{ .ExportedName }}Service()
+
+		// Assert
+		assert.NoError(t, err)
+		assert.Equal(t, "pong", msg)
+	})
+}
+`,
+}
+
+var INTERNALSSTORAGEPINGSTORAGEPINGGO_MOD = Template{
 	FilePath: "internals/storage/{{ .ModName }}Storage/{{ .ModName }}.go",
 	Content: `package {{ .ModName }}Storage
 
 import "{{ .PkgName }}/internals/core/serr"
 
+// Repository Methods
 func (s *sqliteRepo) {{ .ExportedName }}() error {
 	err := s.conn.{{ .ExportedName }}()
 	if err != nil {
@@ -114,7 +207,39 @@ func (s *sqliteRepo) {{ .ExportedName }}() error {
 `,
 }
 
-var SERVERROUTINGPINGGO_TPL_MOD = Template{
+var INTERNALSSTORAGEPINGSTORAGEPINGCONNECTIONGO_MOD = Template{
+	FilePath: "internals/storage/{{ .ModName }}Storage/{{ .ModName }}Connection.go",
+	Content: `package {{ .ModName }}Storage
+
+import (
+	"database/sql"
+
+	"{{ .PkgName }}/internals/core/entity"
+)
+
+type sqliteRepo struct {
+	conn *sql.DB
+}
+
+func NewSqliteRepo(conn *sql.DB) entity.{{ .ExportedName }}Storage {
+	return &sqliteRepo{
+		conn: conn,
+	}
+}
+`,
+}
+
+var INTERNALSSTORAGEPINGSTORAGEPINGQUERIESGO_MOD = Template{
+	FilePath: "internals/storage/{{ .ModName }}Storage/{{ .ModName }}Queries.go",
+	Content: `package {{ .ModName }}Storage
+
+const (
+	SELECT_ONE_TEST = "SELECT 1"
+)
+`,
+}
+
+var SERVERROUTINGPINGGO_MOD = Template{
 	FilePath: "server/routing/{{ .ModName }}.go",
 	Content: `package routing
 
@@ -142,13 +267,16 @@ func setup{{ .ExportedName }}Routes(server *gsk.Server) {
 }
 
 var ModuleTemplates = []Template{
-	PINGGO_TPL_MOD,
-	INTERNALSCOREENTITYPINGGO_TPL_MOD,
-	INTERNALSCORESERRPINGGO_TPL_MOD,
-	INTERNALSHTTPHANDLERPINGGO_TPL_MOD,
-	INTERNALSHTTPHELPERSPINGGO_TPL_MOD,
-	INTERNALSHTTPTRANSPORTPINGGO_TPL_MOD,
-	INTERNALSSERVICEPINGGO_TPL_MOD,
-	INTERNALSSTORAGEPINGSTORAGEPINGGO_TPL_MOD,
-	SERVERROUTINGPINGGO_TPL_MOD,
+	INTERNALSCOREENTITYPINGGO_MOD,
+	INTERNALSCORESERRPINGGO_MOD,
+	INTERNALSHTTPHANDLERPINGGO_MOD,
+	INTERNALSHTTPHANDLERPING_TESTGO_MOD,
+	INTERNALSHTTPHELPERSPINGGO_MOD,
+	INTERNALSHTTPTRANSPORTPINGGO_MOD,
+	INTERNALSSERVICEPINGGO_MOD,
+	INTERNALSSERVICEPING_TESTGO_MOD,
+	INTERNALSSTORAGEPINGSTORAGEPINGGO_MOD,
+	INTERNALSSTORAGEPINGSTORAGEPINGCONNECTIONGO_MOD,
+	INTERNALSSTORAGEPINGSTORAGEPINGQUERIESGO_MOD,
+	SERVERROUTINGPINGGO_MOD,
 }
