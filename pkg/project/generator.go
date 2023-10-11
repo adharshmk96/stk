@@ -53,7 +53,7 @@ func formatModuleFilePath(pathTemplate string, modConfig *ModuleConfig) string {
 }
 
 func GenerateModule(modConfig *ModuleConfig) error {
-	log.Println("Generating module files...")
+	log.Println("Adding boilerplate for module...")
 	templates := tpl.ModuleTemplates
 	for _, tf := range templates {
 		tf.FilePath = formatModuleFilePath(tf.FilePath, modConfig)
