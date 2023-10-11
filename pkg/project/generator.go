@@ -17,6 +17,7 @@ import (
 func GenerateProject(config *ProjectConfig) error {
 	// use existing repo name as package name
 	// or initialize git repo
+	log.Println("Initializing git repository...")
 	err := initializePackageWithGit(config)
 	if err != nil {
 		log.Fatal("error initializing go package with git: ", err)
@@ -24,6 +25,7 @@ func GenerateProject(config *ProjectConfig) error {
 	}
 
 	// run go mod init
+	log.Println("Running go mod init...")
 	err = exec.Command("go", "mod", "init", config.PkgName).Run()
 	if err != nil {
 		log.Fatal("error initializing go module: ", err)
@@ -31,9 +33,11 @@ func GenerateProject(config *ProjectConfig) error {
 	}
 
 	// create boilerplate
+	log.Println("Generating boilerplate...")
 	generateBoilerplate(config)
 
 	// run go mod tidy
+	log.Println("Running go mod tidy...")
 	err = exec.Command("go", "mod", "tidy").Run()
 	if err != nil {
 		log.Fatal("error running go mod tidy: ", err)
@@ -49,6 +53,7 @@ func formatModuleFilePath(pathTemplate string, modConfig *ModuleConfig) string {
 }
 
 func GenerateModule(modConfig *ModuleConfig) error {
+	log.Println("Generating module files...")
 	templates := tpl.ModuleTemplates
 	for _, tf := range templates {
 		tf.FilePath = formatModuleFilePath(tf.FilePath, modConfig)
