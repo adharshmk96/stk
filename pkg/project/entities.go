@@ -1,13 +1,10 @@
 package project
 
-type ProjectConfig struct {
-	PkgName  string
-	AppName  string
-	RootPath string
+type Generator struct {
+	Config *Config
 }
 
-// TODO Compose this ?
-type ModuleConfig struct {
+type Config struct {
 	PkgName      string
 	AppName      string
 	RootPath     string

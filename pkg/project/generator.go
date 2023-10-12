@@ -14,11 +14,17 @@ import (
 	"github.com/adharshmk96/stk/pkg/project/tpl"
 )
 
-func GenerateProject(config *ProjectConfig) error {
+func NewGenerator(config *Config) *Generator {
+	return &Generator{
+		Config: config,
+	}
+}
+
+func (g *Generator) GenerateProject() error {
 	// use existing repo name as package name
 	// or initialize git repo
 	log.Println("Initializing git repository...")
-	err := initializePackageWithGit(config)
+	err := initializePackageWithGit(g.Config)
 	if err != nil {
 		log.Fatal("error initializing go package with git: ", err)
 		return err
@@ -26,7 +32,7 @@ func GenerateProject(config *ProjectConfig) error {
 
 	// run go mod init
 	log.Println("Running go mod init...")
-	err = exec.Command("go", "mod", "init", config.PkgName).Run()
+	err = exec.Command("go", "mod", "init", g.Config.PkgName).Run()
 	if err != nil {
 		log.Fatal("error initializing go module: ", err)
 		return err
@@ -34,7 +40,8 @@ func GenerateProject(config *ProjectConfig) error {
 
 	// create boilerplate
 	log.Println("Generating boilerplate...")
-	generateBoilerplate(config)
+	templates := tpl.ProjectTemplates
+	generateBoilerplate(g.Config, templates)
 
 	// run go mod tidy
 	log.Println("Running go mod tidy...")
@@ -47,45 +54,22 @@ func GenerateProject(config *ProjectConfig) error {
 	return nil
 }
 
-func formatModuleFilePath(pathTemplate string, modConfig *ModuleConfig) string {
-	filePath := strings.ReplaceAll(pathTemplate, "{{ .ModName }}", modConfig.ModName)
-	return filePath
-}
-
-func GenerateModule(modConfig *ModuleConfig) error {
+func (g *Generator) GenerateModule() error {
 	log.Println("Adding boilerplate for module...")
 	templates := tpl.ModuleTemplates
-	for _, tf := range templates {
-		tf.FilePath = formatModuleFilePath(tf.FilePath, modConfig)
-		dir := filepath.Dir(tf.FilePath)
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			log.Fatalf("Failed to create directory for file %s: %v\n", tf.FilePath, err)
-			return err
-		}
-
-		f, err := os.Create(tf.FilePath)
-		if err != nil {
-			log.Fatalf("Failed to create file %s: %v\n", tf.FilePath, err)
-			return err
-		}
-		defer f.Close()
-
-		tpl := template.Must(template.New(tf.FilePath).Parse(tf.Content))
-
-		if err := tpl.Execute(f, modConfig); err != nil {
-			log.Fatalf("Failed to execute template for file %s: %v\n", tf.FilePath, err)
-			return err
-		}
-
-	}
+	generateBoilerplate(g.Config, templates)
 
 	return nil
 }
 
-func generateBoilerplate(config *ProjectConfig) {
-	templates := tpl.SingleModTemplates
+func formatModuleFilePath(pathTemplate string, config *Config) string {
+	filePath := strings.ReplaceAll(pathTemplate, "ping", config.ModName)
+	return filePath
+}
 
+func generateBoilerplate(config *Config, templates []tpl.Template) {
 	for _, tf := range templates {
+		tf.FilePath = formatModuleFilePath(tf.FilePath, config)
 		dir := filepath.Dir(tf.FilePath)
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			log.Fatalf("Failed to create directory for file %s: %v\n", tf.FilePath, err)
@@ -105,7 +89,6 @@ func generateBoilerplate(config *ProjectConfig) {
 			log.Fatalf("Failed to execute template for file %s: %v\n", tf.FilePath, err)
 			continue
 		}
-
 	}
 }
 

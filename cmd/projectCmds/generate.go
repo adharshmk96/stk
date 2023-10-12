@@ -33,13 +33,16 @@ var GenerateCmd = &cobra.Command{
 			return
 		}
 
-		config := &project.ProjectConfig{
-			RootPath: workdir,
-			PkgName:  pkg,
-			AppName:  app,
+		config := &project.Config{
+			RootPath:     workdir,
+			PkgName:      pkg,
+			AppName:      app,
+			ModName:      "ping",
+			ExportedName: "Ping",
 		}
 
-		err = project.GenerateProject(config)
+		generator := project.NewGenerator(config)
+		err = generator.GenerateProject()
 		if err != nil {
 			log.Fatal(err)
 			return

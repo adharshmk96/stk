@@ -41,7 +41,7 @@ var ModuleCmd = &cobra.Command{
 			return
 		}
 
-		modConfig := &project.ModuleConfig{
+		modConfig := &project.Config{
 			RootPath:     workdir,
 			PkgName:      pkg,
 			AppName:      app,
@@ -49,7 +49,8 @@ var ModuleCmd = &cobra.Command{
 			ExportedName: strcase.ToCamel(module),
 		}
 
-		err = project.GenerateModule(modConfig)
+		generator := project.NewGenerator(modConfig)
+		err = generator.GenerateModule()
 		if err != nil {
 			log.Fatal(err)
 			return
