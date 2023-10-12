@@ -2,43 +2,54 @@
 
 [back to main](../../README.md)
 
-## How the project structure is organized
+## Project Structure Documentation
 
-The structure follows a Technical Design Grouping. Let's explore the directories and their responsibilities in more detail:
+---
 
-- `cmd`: This directory contains the application's entry point(s). The files in this directory are responsible for initializing and starting your application. or any cli commands. ( using [cobra](https://github.com/spf13/cobra) cli )
+### **1. .github/workflows**
+This directory manages GitHub Actions, providing automated workflows for continuous integration (CI), continuous deployment (CD), and other GitHub event-triggered tasks. Developers can define various workflows to run tests, build binaries, deploy applications, and more.
 
-- `docs`: This directory contains documentation for the project. Any additional resources like images used in the documentation are located in the `img` subdirectory.
+---
 
-- `mocks`: Contains mock functions ( using [mockery](https://github.com/vektra/mockery) )
+### **2. .vscode**
+Holds configuration files for the Visual Studio Code editor, ensuring a consistent development environment for all contributors. Developers may find settings and recommendations for extensions that are conducive to the project’s development.
 
-- `pkg`: This directory includes the main application code.
+---
 
-  - `entities`: This subdirectory contains your domain entities, which represent the Primary Data structures and related functions.
-  
-  - `http`: The code related to HTTP resides here. The subdirectories are:
-  
-    - `handlers`: Code that handles HTTP requests and responses.
-    
-    - `transport`: Code related HTTP payload transport, operations with request and response body.
-    
-    - `validator`: This directory contains code for validating HTTP request payloads.
-    
-  - `infra`: This subdirectory contains the infrastructure layer code, like configurations shared across the application.
-  
-    - `constants`: Contains constant values that are shared across your project.
-  
-  - `services`: This directory contains the service layer, which contains business logic.
-  
-    - `helpers`: Contains helper functions that can be utilized across different services.
-  
-  - `storage`: This subdirectory contains code related to storage, like database or file system interactions.
-  
-    - `sqlite`: Specific implementations for SQLite storage.
-  
-  - `svrerr`: This directory includes server error types definitions for whole application.
+### **3. cmd**
+The entry point for the application or any related command-line interfaces (CLI). These scripts initialize and run the application, utilizing the Cobra CLI library. Developers should define CLI commands and flags in this directory.
 
-- `scripts`: This directory holds scripts for tasks like building, linting, testing, or deployment.
+---
 
-- `server`: The directory typically contains the main server code, server initialization, binding handlers, service, storage layers ( dependancy injection ) and adding routes and middleware.
+### **4. internals**
+Dedicated to housing the core application logic, organized into various segments:
+
+- **core**
+  - **entity**: Holds domain entities, which represent primary data structures and related functionalities.
+  - **serr**: Contains definitions and potentially, handling logic for server-specific errors.
+  
+- **http**
+  - **handler**: Responsible for handling HTTP requests and responses, essentially controlling the flow of HTTP traffic.
+  - **helpers**: A collection of helper functions and utilities that assist with HTTP-related logic and functionality.
+  - **transport**: Manages the transport layer of HTTP, handling the payload data transmission between client and server.
+  
+- **service**: Contains the service layer, encapsulating business logic and dictating how data is processed and handled within the application.
+  
+- **storage**
+  - **pingStorage**: Specific implementation directory, potentially dealing with storage operations related to "ping" entities or functionalities.
+
+---
+
+### **5. server**
+The server directory encompasses various elements related to the server-side of the application:
+
+- **infra**: Incorporates the infrastructure layer, housing configurations, constants, and shared logic utilized throughout the application.
+
+- **middleware**: Contains middleware components that process HTTP requests and responses in between client interaction and reaching the application's handler or route.
+
+- **routing**: Manages the routing of the server, defining paths, associating handlers, and ensuring that the HTTP request is adhered to the correct logic path.
+
+--- 
+
+For testing, [mockery](https://github.com/vektra/mockery) is reccomended.
 
