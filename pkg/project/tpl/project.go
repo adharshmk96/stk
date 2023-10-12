@@ -21,11 +21,6 @@ var GITIGNORE_TPL = Template{
 *.db`,
 }
 
-var DATABASEDB_TPL = Template{
-	FilePath: "database.db",
-	Content: ``,
-}
-
 var MAINGO_TPL = Template{
 	FilePath: "main.go",
 	Content: `package main
@@ -149,11 +144,6 @@ repo with some files for go
 var REQUESTHTTP_TPL = Template{
 	FilePath: "request.http",
 	Content: `GET http://localhost:8080/{{ .ModName }}`,
-}
-
-var SQLITEDB_TPL = Template{
-	FilePath: "sqlite.db",
-	Content: ``,
 }
 
 var VSCODE_LAUNCHJSON_TPL = Template{
@@ -748,12 +738,10 @@ func setup{{ .ExportedName }}Routes(server *gsk.Server) {
 
 var ProjectTemplates = []Template{
 	GITIGNORE_TPL,
-	DATABASEDB_TPL,
 	MAINGO_TPL,
 	MAKEFILE_TPL,
 	READMEMD_TPL,
 	REQUESTHTTP_TPL,
-	SQLITEDB_TPL,
 	VSCODE_LAUNCHJSON_TPL,
 	CMD_ROOTGO_TPL,
 	CMD_SERVEGO_TPL,
