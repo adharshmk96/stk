@@ -1,17 +1,33 @@
+/*
+Copyright © 2023 Adharsh M dev@adharsh.in
+*/
 package cmd
 
 import (
 	"fmt"
+	"runtime/debug"
 
 	"github.com/spf13/cobra"
 )
 
-// versionCmd represents the version command
+var SemVer = "v0.0.0"
+
+func GetSemverInfo() string {
+	if SemVer != "v0.0.0" {
+		return SemVer
+	}
+	version, ok := debug.ReadBuildInfo()
+	if ok && version.Main.Version != "(devel)" && version.Main.Version != "" {
+		return version.Main.Version
+	}
+	return SemVer
+}
+
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "display the version of singlemod",
+	Short: "Display the current version of semver",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("singlemod version: %s\n", version)
+		fmt.Println(GetSemverInfo())
 	},
 }
 

@@ -1,61 +1,64 @@
 package tpl
 
-var GITIGNORE_TPL = Template{
-	FilePath: ".gitignore",
-	Content: `# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+var GORELEASERYAML_TPL = Template{
+	FilePath: ".goreleaser.yaml",
+	Content: `project_name: semver
 
-# Test binary
-*.test
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+builds:
+  - main: ./main.go
+    binary: semver
+    ldflags:
+      - -s -w -X github.com/adharshmk96/sermver/cmd/version.SemVer={{.Version}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
 
-*.db`,
+archives:
+  - format: binary
+    # this name template makes the OS and Arch compatible with the results of `uname`.
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{ .Version }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+`,
 }
 
-var MAINGO_TPL = Template{
-	FilePath: "main.go",
-	Content: `package main
-
-import "github.com/adharshmk96/stk-template/{{ .AppName }}/cmd"
-
-func main() {
-	cmd.Execute()
-}
+var VERSIONYAML_TPL = Template{
+	FilePath: ".version.yaml",
+	Content: `alpha: 0
+beta: 0
+major: 0
+minor: 0
+patch: 0
+rc: 0
 `,
 }
 
 var MAKEFILE_TPL = Template{
 	FilePath: "makefile",
-	Content: `##########################
-### Version Commands
-##########################
-
-patch:
-	$(eval NEW_TAG := $(shell git semver patch --dryrun))
-	$(call update_file)
-	@git semver patch
-
-minor:
-	$(eval NEW_TAG := $(shell git semver minor --dryrun))
-	$(call update_file)
-	@git semver minor
-
-major:
-	$(eval NEW_TAG := $(shell git semver major --dryrun))
-	$(call update_file)
-	@git semver major
-
-publish:
-	@git push origin $(shell git semver get)
+	Content: `publish:
+	@git push && semver push
 
 
 ##########################
@@ -103,18 +106,6 @@ clean-branch:
 
 	
 ##########################
-### Helpers
-##########################
-
-define update_file
-    @echo "updating files to version $(NEW_TAG)"
-    @sed -i.bak "s/var version = \"[^\"]*\"/var version = \"$(NEW_TAG)\"/g" ./cmd/root.go
-    @rm cmd/root.go.bak
-    @git add cmd/root.go
-    @git commit -m "bump version to $(NEW_TAG)" > /dev/null
-endef
-
-##########################
 ### Setup Commands
 ##########################
 
@@ -131,6 +122,48 @@ mockgen:
 	@rm -rf ./mocks
 	@mockery --all	
 
+install-tools:
+	@go install github.com/adharshmk96/semver
+	@go install github.com/vektra/mockery/v2@v2.35.4
+
+`,
+}
+
+var GITIGNORE_TPL = Template{
+	FilePath: ".gitignore",
+	Content: `# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+*.db`,
+}
+
+var REQUESTHTTP_TPL = Template{
+	FilePath: "request.http",
+	Content: `GET http://localhost:8080/{{ .ModName }}`,
+}
+
+var MAINGO_TPL = Template{
+	FilePath: "main.go",
+	Content: `package main
+
+import "github.com/adharshmk96/stk-template/{{ .AppName }}/cmd"
+
+func main() {
+	cmd.Execute()
+}
 `,
 }
 
@@ -193,31 +226,6 @@ The server directory encompasses various elements related to the server-side of 
 --- 
 
 For testing, [mockery](https://github.com/vektra/mockery) is reccomended.`,
-}
-
-var REQUESTHTTP_TPL = Template{
-	FilePath: "request.http",
-	Content: `GET http://localhost:8080/{{ .ModName }}`,
-}
-
-var VSCODE_LAUNCHJSON_TPL = Template{
-	FilePath: ".vscode/launch.json",
-	Content: `{
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "serve in port 8080",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "program": "${workspaceFolder}/main.go",
-            "args": ["serve", "-p", "8080"]
-          }
-    ]
-}`,
 }
 
 var CMD_ROOTGO_TPL = Template{
@@ -322,20 +330,36 @@ func init() {
 
 var CMD_VERSIONGO_TPL = Template{
 	FilePath: "cmd/version.go",
-	Content: `package cmd
+	Content: `/*
+Copyright © 2023 Adharsh M dev@adharsh.in
+*/
+package cmd
 
 import (
 	"fmt"
+	"runtime/debug"
 
 	"github.com/spf13/cobra"
 )
 
-// versionCmd represents the version command
+var SemVer = "v0.0.0"
+
+func GetSemverInfo() string {
+	if SemVer != "v0.0.0" {
+		return SemVer
+	}
+	version, ok := debug.ReadBuildInfo()
+	if ok && version.Main.Version != "(devel)" && version.Main.Version != "" {
+		return version.Main.Version
+	}
+	return SemVer
+}
+
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "display the version of {{ .AppName }}",
+	Short: "Display the current version of semver",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("{{ .AppName }} version: %s\n", version)
+		fmt.Println(GetSemverInfo())
 	},
 }
 
@@ -345,275 +369,24 @@ func init() {
 `,
 }
 
-var INTERNALS_CORE_ENTITY_PINGGO_TPL = Template{
-	FilePath: "internals/core/entity/ping.go",
-	Content: `package entity
-
-import "github.com/adharshmk96/stk/gsk"
-
-// Domain
-type {{ .ExportedName }}Data struct {
-	{{ .ModName }} string
-}
-
-// Storage
-type {{ .ExportedName }}Storage interface {
-	{{ .ExportedName }}() error
-}
-
-// Service
-type {{ .ExportedName }}Service interface {
-	{{ .ExportedName }}Service() (string, error)
-}
-
-// Handler
-type {{ .ExportedName }}Handlers interface {
-	{{ .ExportedName }}Handler(gc *gsk.Context)
-}
-`,
-}
-
-var INTERNALS_CORE_SERR_PINGGO_TPL = Template{
-	FilePath: "internals/core/serr/ping.go",
-	Content: `package serr
-
-import "errors"
-
-var (
-	Err{{ .ExportedName }}Failed = errors.New("{{ .ModName }} failed")
-)
-`,
-}
-
-var INTERNALS_HTTP_HANDLER_PINGGO_TPL = Template{
-	FilePath: "internals/http/handler/ping.go",
-	Content: `package handler
-
-import (
-	"net/http"
-
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/entity"
-	"github.com/adharshmk96/stk/gsk"
-)
-
-type {{ .ModName }}Handler struct {
-	service entity.{{ .ExportedName }}Service
-}
-
-func New{{ .ExportedName }}Handler(service entity.{{ .ExportedName }}Service) entity.{{ .ExportedName }}Handlers {
-	return &{{ .ModName }}Handler{
-		service: service,
-	}
-}
-
-/*
-{{ .ExportedName }}Handler returns {{ .ModName }} 200 response
-Response:
-- 200: OK
-- 500: Internal Server Error
-*/
-func (h *{{ .ModName }}Handler) {{ .ExportedName }}Handler(gc *gsk.Context) {
-
-	{{ .ModName }}, err := h.service.{{ .ExportedName }}Service()
-	if err != nil {
-		gc.Status(http.StatusInternalServerError).JSONResponse(gsk.Map{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	gc.Status(http.StatusOK).JSONResponse(gsk.Map{
-		"message": {{ .ModName }},
-	})
-}
-`,
-}
-
-var INTERNALS_HTTP_HANDLER_PING_TESTGO_TPL = Template{
-	FilePath: "internals/http/handler/ping_test.go",
-	Content: `package handler_test
-
-// run the following command to generate mocks for {{ .ExportedName }} interfaces
-//
-// mockery --dir=internals/core/entity --name=^{{ .ExportedName }}.*
-//
-// and uncomment the following code
-
-/*
-
-import (
-	"net/http"
-	"testing"
-
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/http/handler"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/mocks"
-	"github.com/adharshmk96/stk/gsk"
-	"github.com/stretchr/testify/assert"
-)
-
-func Test{{ .ExportedName }}Handler(t *testing.T) {
-	t.Run("{{ .ExportedName }} Handler returns 200", func(t *testing.T) {
-
-		// Arrange
-		s := gsk.New()
-		service := mocks.New{{ .ExportedName }}Service(t)
-		service.On("{{ .ExportedName }}Service").Return("pong", nil)
-
-		{{ .ModName }}Handler := handler.New{{ .ExportedName }}Handler(service)
-
-		s.Get("/{{ .ModName }}", {{ .ModName }}Handler.{{ .ExportedName }}Handler)
-
-		// Act
-		w, _ := s.Test("GET", "/{{ .ModName }}", nil)
-
-		// Assert
-		assert.Equal(t, http.StatusOK, w.Code)
-	})
-}
-
-*/
-`,
-}
-
-var INTERNALS_HTTP_HELPERS_PINGGO_TPL = Template{
-	FilePath: "internals/http/helpers/ping.go",
-	Content: `package helpers
-`,
-}
-
-var INTERNALS_HTTP_TRANSPORT_PINGGO_TPL = Template{
-	FilePath: "internals/http/transport/ping.go",
-	Content: `package transport
-`,
-}
-
-var INTERNALS_SERVICE_PINGGO_TPL = Template{
-	FilePath: "internals/service/ping.go",
-	Content: `package service
-
-import "github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/entity"
-
-type {{ .ModName }}Service struct {
-	storage entity.{{ .ExportedName }}Storage
-}
-
-func New{{ .ExportedName }}Service(storage entity.{{ .ExportedName }}Storage) entity.{{ .ExportedName }}Service {
-	return &{{ .ModName }}Service{
-		storage: storage,
-	}
-}
-
-func (s *{{ .ModName }}Service) {{ .ExportedName }}Service() (string, error) {
-	err := s.storage.{{ .ExportedName }}()
-	if err != nil {
-		return "", err
-	}
-	return "pong", nil
-}
-`,
-}
-
-var INTERNALS_SERVICE_PING_TESTGO_TPL = Template{
-	FilePath: "internals/service/ping_test.go",
-	Content: `package service_test
-
-// run the following command to generate mocks for {{ .ExportedName }}Storage and {{ .ExportedName }} interfaces
-//
-// mockery --dir=internals/core/entity --name=^{{ .ExportedName }}.*
-//
-// and uncomment the following code
-
-/*
-
-import (
-	"testing"
-
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/service"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/mocks"
-	"github.com/stretchr/testify/assert"
-)
-
-func Test{{ .ExportedName }}Service(t *testing.T) {
-	t.Run("{{ .ExportedName }}Service returns pong", func(t *testing.T) {
-
-		// Arrange
-		storage := mocks.New{{ .ExportedName }}Storage(t)
-		storage.On("{{ .ExportedName }}").Return(nil)
-
-		svc := service.New{{ .ExportedName }}Service(storage)
-
-		// Act
-		msg, err := svc.{{ .ExportedName }}Service()
-
-		// Assert
-		assert.NoError(t, err)
-		assert.Equal(t, "pong", msg)
-	})
-}
-
-*/
-`,
-}
-
-var INTERNALS_STORAGE_PINGSTORAGE_PINGGO_TPL = Template{
-	FilePath: "internals/storage/pingStorage/ping.go",
-	Content: `package {{ .ModName }}Storage
-
-import (
-	"fmt"
-
-	"github.com/adharshmk96/stk-template/multimod/server/infra"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/serr"
-)
-
-// Repository Methods
-func (s *sqliteRepo) {{ .ExportedName }}() error {
-	res, err := s.conn.Exec("SELECT 1")
-	if err != nil {
-		return serr.Err{{ .ExportedName }}Failed
-	}
-	num, err := res.RowsAffected()
-	if err != nil {
-		return serr.Err{{ .ExportedName }}Failed
-	}
-
-	logger := infra.GetLogger()
-	logger.Info(fmt.Sprintf("{{ .ExportedName }} Success: %d", num))
-	return nil
-}
-`,
-}
-
-var INTERNALS_STORAGE_PINGSTORAGE_PINGCONNECTIONGO_TPL = Template{
-	FilePath: "internals/storage/pingStorage/pingConnection.go",
-	Content: `package {{ .ModName }}Storage
-
-import (
-	"database/sql"
-
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/entity"
-)
-
-type sqliteRepo struct {
-	conn *sql.DB
-}
-
-func NewSqliteRepo(conn *sql.DB) entity.{{ .ExportedName }}Storage {
-	return &sqliteRepo{
-		conn: conn,
-	}
-}
-`,
-}
-
-var INTERNALS_STORAGE_PINGSTORAGE_PINGQUERIESGO_TPL = Template{
-	FilePath: "internals/storage/pingStorage/pingQueries.go",
-	Content: `package {{ .ModName }}Storage
-
-const (
-	SELECT_ONE_TEST = "SELECT 1"
-)
-`,
+var VSCODE_LAUNCHJSON_TPL = Template{
+	FilePath: ".vscode/launch.json",
+	Content: `{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "serve in port 8080",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/main.go",
+            "args": ["serve", "-p", "8080"]
+          }
+    ]
+}`,
 }
 
 var SERVER_SETUPGO_TPL = Template{
@@ -679,6 +452,69 @@ func StartHttpServer(port string) (*gsk.Server, chan bool) {
 `,
 }
 
+var SERVER_ROUTING_INITROUTESGO_TPL = Template{
+	FilePath: "server/routing/initRoutes.go",
+	Content: `package routing
+
+import (
+	"github.com/adharshmk96/stk/gsk"
+)
+
+func SetupRoutes(server *gsk.Server) {
+	setup{{ .ExportedName }}Routes(server)
+}
+`,
+}
+
+var SERVER_ROUTING_PINGGO_TPL = Template{
+	FilePath: "server/routing/ping.go",
+	Content: `package routing
+
+import (
+	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/http/handler"
+	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/service"
+	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/storage/{{ .ModName }}Storage"
+	"github.com/adharshmk96/stk-template/{{ .AppName }}/server/infra"
+	"github.com/adharshmk96/stk/gsk"
+	"github.com/adharshmk96/stk/pkg/db"
+	"github.com/spf13/viper"
+)
+
+func setup{{ .ExportedName }}Routes(server *gsk.Server) {
+	dbConfig := viper.GetString(infra.ENV_SQLITE_FILEPATH)
+	conn := db.GetSqliteConnection(dbConfig)
+
+	{{ .ModName }}Storage := {{ .ModName }}Storage.NewSqliteRepo(conn)
+	{{ .ModName }}Service := service.New{{ .ExportedName }}Service({{ .ModName }}Storage)
+	{{ .ModName }}Handler := handler.New{{ .ExportedName }}Handler({{ .ModName }}Service)
+
+	server.Get("/{{ .ModName }}", {{ .ModName }}Handler.{{ .ExportedName }}Handler)
+}
+`,
+}
+
+var SERVER_MIDDLEWARE_MIDDLEWAREGO_TPL = Template{
+	FilePath: "server/middleware/middleware.go",
+	Content: `package middleware
+
+import (
+	"time"
+
+	"github.com/adharshmk96/stk/gsk"
+	gskmw "github.com/adharshmk96/stk/pkg/middleware"
+)
+
+func RateLimiter() gsk.Middleware {
+	rlConfig := gskmw.RateLimiterConfig{
+		RequestsPerInterval: 10,
+		Interval:            60 * time.Second,
+	}
+	rateLimiter := gskmw.NewRateLimiter(rlConfig)
+	return rateLimiter.Middleware
+}
+`,
+}
+
 var SERVER_INFRA_CONFIGGO_TPL = Template{
 	FilePath: "server/infra/config.go",
 	Content: `package infra
@@ -727,95 +563,305 @@ func GetLogger() *slog.Logger {
 `,
 }
 
-var SERVER_MIDDLEWARE_MIDDLEWAREGO_TPL = Template{
-	FilePath: "server/middleware/middleware.go",
-	Content: `package middleware
+var INTERNALS_SERVICE_PINGGO_TPL = Template{
+	FilePath: "internals/service/ping.go",
+	Content: `package service
 
-import (
-	"time"
+import "github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/entity"
 
-	"github.com/adharshmk96/stk/gsk"
-	gskmw "github.com/adharshmk96/stk/pkg/middleware"
-)
+type {{ .ModName }}Service struct {
+	storage entity.{{ .ExportedName }}Storage
+}
 
-func RateLimiter() gsk.Middleware {
-	rlConfig := gskmw.RateLimiterConfig{
-		RequestsPerInterval: 10,
-		Interval:            60 * time.Second,
+func New{{ .ExportedName }}Service(storage entity.{{ .ExportedName }}Storage) entity.{{ .ExportedName }}Service {
+	return &{{ .ModName }}Service{
+		storage: storage,
 	}
-	rateLimiter := gskmw.NewRateLimiter(rlConfig)
-	return rateLimiter.Middleware
+}
+
+func (s *{{ .ModName }}Service) {{ .ExportedName }}Service() (string, error) {
+	err := s.storage.{{ .ExportedName }}()
+	if err != nil {
+		return "", err
+	}
+	return "pong", nil
 }
 `,
 }
 
-var SERVER_ROUTING_INITROUTESGO_TPL = Template{
-	FilePath: "server/routing/initRoutes.go",
-	Content: `package routing
+var INTERNALS_SERVICE_TEST_PING_TESTGO_TPL = Template{
+	FilePath: "internals/service_test/ping_test.go",
+	Content: `package service_test
+
+// run the following command to generate mocks for {{ .ExportedName }}Storage and {{ .ExportedName }} interfaces
+//
+// mockery --dir=internals/core/entity --name=^{{ .ExportedName }}.*
+//
+// and uncomment the following code
+
+/*
 
 import (
-	"github.com/adharshmk96/stk/gsk"
-)
+	"testing"
 
-func SetupRoutes(server *gsk.Server) {
-	setup{{ .ExportedName }}Routes(server)
-}
-`,
-}
-
-var SERVER_ROUTING_PINGGO_TPL = Template{
-	FilePath: "server/routing/ping.go",
-	Content: `package routing
-
-import (
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/http/handler"
 	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/service"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/storage/{{ .ModName }}Storage"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/server/infra"
-	"github.com/adharshmk96/stk/gsk"
-	"github.com/adharshmk96/stk/pkg/db"
-	"github.com/spf13/viper"
+	"github.com/adharshmk96/stk-template/{{ .AppName }}/mocks"
+	"github.com/stretchr/testify/assert"
 )
 
-func setup{{ .ExportedName }}Routes(server *gsk.Server) {
-	dbConfig := viper.GetString(infra.ENV_SQLITE_FILEPATH)
-	conn := db.GetSqliteConnection(dbConfig)
+func Test{{ .ExportedName }}Service(t *testing.T) {
+	t.Run("{{ .ExportedName }}Service returns pong", func(t *testing.T) {
 
-	{{ .ModName }}Storage := {{ .ModName }}Storage.NewSqliteRepo(conn)
-	{{ .ModName }}Service := service.New{{ .ExportedName }}Service({{ .ModName }}Storage)
-	{{ .ModName }}Handler := handler.New{{ .ExportedName }}Handler({{ .ModName }}Service)
+		// Arrange
+		storage := mocks.New{{ .ExportedName }}Storage(t)
+		storage.On("{{ .ExportedName }}").Return(nil)
 
-	server.Get("/{{ .ModName }}", {{ .ModName }}Handler.{{ .ExportedName }}Handler)
+		svc := service.New{{ .ExportedName }}Service(storage)
+
+		// Act
+		msg, err := svc.{{ .ExportedName }}Service()
+
+		// Assert
+		assert.NoError(t, err)
+		assert.Equal(t, "pong", msg)
+	})
 }
+
+*/
+`,
+}
+
+var INTERNALS_CORE_SERR_PINGGO_TPL = Template{
+	FilePath: "internals/core/serr/ping.go",
+	Content: `package serr
+
+import "errors"
+
+var (
+	Err{{ .ExportedName }}Failed = errors.New("{{ .ModName }} failed")
+)
+`,
+}
+
+var INTERNALS_CORE_ENTITY_PINGGO_TPL = Template{
+	FilePath: "internals/core/entity/ping.go",
+	Content: `package entity
+
+import "github.com/adharshmk96/stk/gsk"
+
+// Domain
+type {{ .ExportedName }}Data struct {
+	{{ .ModName }} string
+}
+
+// Storage
+type {{ .ExportedName }}Storage interface {
+	{{ .ExportedName }}() error
+}
+
+// Service
+type {{ .ExportedName }}Service interface {
+	{{ .ExportedName }}Service() (string, error)
+}
+
+// Handler
+type {{ .ExportedName }}Handlers interface {
+	{{ .ExportedName }}Handler(gc *gsk.Context)
+}
+`,
+}
+
+var INTERNALS_HTTP_HELPERS_PINGGO_TPL = Template{
+	FilePath: "internals/http/helpers/ping.go",
+	Content: `package helpers
+`,
+}
+
+var INTERNALS_HTTP_HANDLER_PINGGO_TPL = Template{
+	FilePath: "internals/http/handler/ping.go",
+	Content: `package handler
+
+import (
+	"net/http"
+
+	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/entity"
+	"github.com/adharshmk96/stk/gsk"
+)
+
+type {{ .ModName }}Handler struct {
+	service entity.{{ .ExportedName }}Service
+}
+
+func New{{ .ExportedName }}Handler(service entity.{{ .ExportedName }}Service) entity.{{ .ExportedName }}Handlers {
+	return &{{ .ModName }}Handler{
+		service: service,
+	}
+}
+
+/*
+{{ .ExportedName }}Handler returns {{ .ModName }} 200 response
+Response:
+- 200: OK
+- 500: Internal Server Error
+*/
+func (h *{{ .ModName }}Handler) {{ .ExportedName }}Handler(gc *gsk.Context) {
+
+	{{ .ModName }}, err := h.service.{{ .ExportedName }}Service()
+	if err != nil {
+		gc.Status(http.StatusInternalServerError).JSONResponse(gsk.Map{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	gc.Status(http.StatusOK).JSONResponse(gsk.Map{
+		"message": {{ .ModName }},
+	})
+}
+`,
+}
+
+var INTERNALS_HTTP_TRANSPORT_PINGGO_TPL = Template{
+	FilePath: "internals/http/transport/ping.go",
+	Content: `package transport
+`,
+}
+
+var INTERNALS_HTTP_HANDLER_TEST_PING_TESTGO_TPL = Template{
+	FilePath: "internals/http/handler_test/ping_test.go",
+	Content: `package handler_test
+
+// run the following command to generate mocks for {{ .ExportedName }} interfaces
+//
+// mockery --dir=internals/core/entity --name=^{{ .ExportedName }}.*
+//
+// and uncomment the following code
+
+/*
+
+import (
+	"net/http"
+	"testing"
+
+	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/http/handler"
+	"github.com/adharshmk96/stk-template/{{ .AppName }}/mocks"
+	"github.com/adharshmk96/stk/gsk"
+	"github.com/stretchr/testify/assert"
+)
+
+func Test{{ .ExportedName }}Handler(t *testing.T) {
+	t.Run("{{ .ExportedName }} Handler returns 200", func(t *testing.T) {
+
+		// Arrange
+		s := gsk.New()
+		service := mocks.New{{ .ExportedName }}Service(t)
+		service.On("{{ .ExportedName }}Service").Return("pong", nil)
+
+		{{ .ModName }}Handler := handler.New{{ .ExportedName }}Handler(service)
+
+		s.Get("/{{ .ModName }}", {{ .ModName }}Handler.{{ .ExportedName }}Handler)
+
+		// Act
+		w, _ := s.Test("GET", "/{{ .ModName }}", nil)
+
+		// Assert
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+}
+
+*/
+`,
+}
+
+var INTERNALS_STORAGE_PINGSTORAGE_PINGGO_TPL = Template{
+	FilePath: "internals/storage/pingStorage/ping.go",
+	Content: `package {{ .ModName }}Storage
+
+import (
+	"fmt"
+
+	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/serr"
+	"github.com/adharshmk96/stk-template/{{ .AppName }}/server/infra"
+)
+
+// Repository Methods
+func (s *sqliteRepo) {{ .ExportedName }}() error {
+	res, err := s.conn.Exec("SELECT 1")
+	if err != nil {
+		return serr.Err{{ .ExportedName }}Failed
+	}
+	num, err := res.RowsAffected()
+	if err != nil {
+		return serr.Err{{ .ExportedName }}Failed
+	}
+
+	logger := infra.GetLogger()
+	logger.Info(fmt.Sprintf("{{ .ExportedName }} Success: %d", num))
+	return nil
+}
+`,
+}
+
+var INTERNALS_STORAGE_PINGSTORAGE_PINGCONNECTIONGO_TPL = Template{
+	FilePath: "internals/storage/pingStorage/pingConnection.go",
+	Content: `package {{ .ModName }}Storage
+
+import (
+	"database/sql"
+
+	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/entity"
+)
+
+type sqliteRepo struct {
+	conn *sql.DB
+}
+
+func NewSqliteRepo(conn *sql.DB) entity.{{ .ExportedName }}Storage {
+	return &sqliteRepo{
+		conn: conn,
+	}
+}
+`,
+}
+
+var INTERNALS_STORAGE_PINGSTORAGE_PINGQUERIESGO_TPL = Template{
+	FilePath: "internals/storage/pingStorage/pingQueries.go",
+	Content: `package {{ .ModName }}Storage
+
+const (
+	SELECT_ONE_TEST = "SELECT 1"
+)
 `,
 }
 
 var ProjectTemplates = []Template{
-	GITIGNORE_TPL,
-	MAINGO_TPL,
+	GORELEASERYAML_TPL,
+	VERSIONYAML_TPL,
 	MAKEFILE_TPL,
-	READMEMD_TPL,
+	GITIGNORE_TPL,
 	REQUESTHTTP_TPL,
-	VSCODE_LAUNCHJSON_TPL,
+	MAINGO_TPL,
+	READMEMD_TPL,
 	CMD_ROOTGO_TPL,
 	CMD_SERVEGO_TPL,
 	CMD_VERSIONGO_TPL,
-	INTERNALS_CORE_ENTITY_PINGGO_TPL,
-	INTERNALS_CORE_SERR_PINGGO_TPL,
-	INTERNALS_HTTP_HANDLER_PINGGO_TPL,
-	INTERNALS_HTTP_HANDLER_PING_TESTGO_TPL,
-	INTERNALS_HTTP_HELPERS_PINGGO_TPL,
-	INTERNALS_HTTP_TRANSPORT_PINGGO_TPL,
-	INTERNALS_SERVICE_PINGGO_TPL,
-	INTERNALS_SERVICE_PING_TESTGO_TPL,
-	INTERNALS_STORAGE_PINGSTORAGE_PINGGO_TPL,
-	INTERNALS_STORAGE_PINGSTORAGE_PINGCONNECTIONGO_TPL,
-	INTERNALS_STORAGE_PINGSTORAGE_PINGQUERIESGO_TPL,
+	VSCODE_LAUNCHJSON_TPL,
 	SERVER_SETUPGO_TPL,
+	SERVER_ROUTING_INITROUTESGO_TPL,
+	SERVER_ROUTING_PINGGO_TPL,
+	SERVER_MIDDLEWARE_MIDDLEWAREGO_TPL,
 	SERVER_INFRA_CONFIGGO_TPL,
 	SERVER_INFRA_CONSTANTSGO_TPL,
 	SERVER_INFRA_LOGGERGO_TPL,
-	SERVER_MIDDLEWARE_MIDDLEWAREGO_TPL,
-	SERVER_ROUTING_INITROUTESGO_TPL,
-	SERVER_ROUTING_PINGGO_TPL,
+	INTERNALS_SERVICE_PINGGO_TPL,
+	INTERNALS_SERVICE_TEST_PING_TESTGO_TPL,
+	INTERNALS_CORE_SERR_PINGGO_TPL,
+	INTERNALS_CORE_ENTITY_PINGGO_TPL,
+	INTERNALS_HTTP_HELPERS_PINGGO_TPL,
+	INTERNALS_HTTP_HANDLER_PINGGO_TPL,
+	INTERNALS_HTTP_TRANSPORT_PINGGO_TPL,
+	INTERNALS_HTTP_HANDLER_TEST_PING_TESTGO_TPL,
+	INTERNALS_STORAGE_PINGSTORAGE_PINGGO_TPL,
+	INTERNALS_STORAGE_PINGSTORAGE_PINGCONNECTIONGO_TPL,
+	INTERNALS_STORAGE_PINGSTORAGE_PINGQUERIESGO_TPL,
 }

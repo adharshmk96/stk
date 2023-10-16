@@ -3,8 +3,8 @@ package pingStorage
 import (
 	"fmt"
 
-	"github.com/adharshmk96/stk-template/multimod/server/infra"
 	"github.com/adharshmk96/stk-template/singlemod/internals/core/serr"
+	"github.com/adharshmk96/stk-template/singlemod/server/infra"
 )
 
 // Repository Methods
