@@ -26,7 +26,6 @@ builds:
 
 archives:
   - format: binary
-    # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
