@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/adharshmk96/stk/pkg/project/tpl"
 )
@@ -28,20 +27,4 @@ func initializePackageWithGit(config *Config) error {
 	file.Write([]byte(tpl.GITIGNORE_TPL.Content))
 
 	return nil
-}
-
-func getRepoName() (string, error) {
-	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
-	out, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-
-	repoUrl := string(out)
-	repoUrl = strings.TrimSuffix(repoUrl, ".git\n")
-	repoUrl = strings.ReplaceAll(repoUrl, "https://", "")
-	repoUrl = strings.ReplaceAll(repoUrl, "git@", "")
-	repoUrl = strings.ReplaceAll(repoUrl, ":", "/")
-
-	return repoUrl, nil
 }

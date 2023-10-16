@@ -1,8 +1,11 @@
-# Project Structure
+# singlemod
 
-[back to main](../../README.md)
+Run
 
-## Project Structure Documentation
+go run main.go serve -p 8080
+
+
+## Project Structure
 
 ---
 
@@ -52,4 +55,3 @@ The server directory encompasses various elements related to the server-side of 
 --- 
 
 For testing, [mockery](https://github.com/vektra/mockery) is reccomended.
-

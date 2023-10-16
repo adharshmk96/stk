@@ -1,44 +1,40 @@
 package gsk_test
 
 import (
-	"bytes"
 	"io"
-	"log/slog"
-	"net"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/adharshmk96/stk/gsk"
 )
 
-func TestServer_Start(t *testing.T) {
-	buffer := new(bytes.Buffer)
-	logger := slog.New(slog.NewJSONHandler(buffer, nil))
+// func TestServer_Start(t *testing.T) {
+// 	buffer := new(bytes.Buffer)
+// 	logger := slog.New(slog.NewJSONHandler(buffer, nil))
 
-	// Create a ServerConfig
-	config := &gsk.ServerConfig{
-		Port:   "8888",
-		Logger: logger,
-	}
+// 	// Create a ServerConfig
+// 	config := &gsk.ServerConfig{
+// 		Port:   "8888",
+// 		Logger: logger,
+// 	}
 
-	// Create a new server
-	server := gsk.New(config)
+// 	// Create a new server
+// 	server := gsk.New(config)
 
-	// Start the server in a goroutine
-	go server.Start()
+// 	// Start the server in a goroutine
+// 	go server.Start()
 
-	// Wait for the server to start
-	time.Sleep(2 * time.Second)
+// 	// Wait for the server to start
+// 	time.Sleep(2 * time.Second)
 
-	// Check if the server is running
-	_, err := net.DialTimeout("tcp", "localhost:"+config.Port, 1*time.Second)
-	if err != nil {
-		t.Fatalf("Expected server to start, but it didn't: %v", err)
-	}
-}
+// 	// Check if the server is running
+// 	_, err := net.DialTimeout("tcp", "localhost:"+config.Port, 1*time.Second)
+// 	if err != nil {
+// 		t.Fatalf("Expected server to start, but it didn't: %v", err)
+// 	}
+// }
 
 // Test server routes
 

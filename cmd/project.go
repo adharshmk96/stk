@@ -23,6 +23,7 @@ func init() {
 	viper.BindPFlag("project.package", projectCmd.PersistentFlags().Lookup("pkg"))
 
 	projectCmd.AddCommand(projectCmds.GenerateCmd)
+	projectCmd.AddCommand(projectCmds.ModuleCmd)
 
 	rootCmd.AddCommand(projectCmd)
 

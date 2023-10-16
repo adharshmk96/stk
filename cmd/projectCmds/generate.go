@@ -8,28 +8,7 @@ import (
 
 	"github.com/adharshmk96/stk/pkg/project"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
-
-func getPackageName(args []string) string {
-	repoName, err := getRepoName()
-	if err != nil && repoName != "" {
-		return repoName
-	}
-
-	argName := getPackageNameFromArg(args)
-	if argName != "" {
-		return argName
-	}
-
-	configName := viper.GetString("project.package")
-	if configName != "" {
-		return configName
-	}
-
-	randomName := project.RandomName()
-	return randomName
-}
 
 // init with git after cd
 // git init
@@ -55,12 +34,15 @@ var GenerateCmd = &cobra.Command{
 		}
 
 		config := &project.Config{
-			RootPath: workdir,
-			PkgName:  pkg,
-			AppName:  app,
+			RootPath:     workdir,
+			PkgName:      pkg,
+			AppName:      app,
+			ModName:      "ping",
+			ExportedName: "Ping",
 		}
 
-		err = project.GenerateProject(config)
+		generator := project.NewGenerator(config)
+		err = generator.GenerateProject()
 		if err != nil {
 			log.Fatal(err)
 			return

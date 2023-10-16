@@ -150,62 +150,95 @@ The command will generate a project with the following structure
 │   makefile
 │   README.md
 │   request.http
-│
+|
 ├───.github
 │   └───workflows
-│           go-build-test.yml
-│           go-release.yml
-│
+├───.vscode
 ├───cmd
-│       root.go
-│       serve.go
-│       version.go
-│
 ├───internals
 │   ├───core
-│   │   │   handler.go
-│   │   │   service.go
-│   │   │   storage.go
-│   │   │
-│   │   ├───ds
-│   │   │       ping.go
-│   │   │
+│   │   ├───entity
 │   │   └───serr
-│   │           pingerr.go
-│   │
 │   ├───http
-│   │   └───handler
-│   │           handler.go
-│   │           ping.go
-│   │
+│   │   ├───handler
+│   │   ├───helpers
+│   │   └───transport
 │   ├───service
-│   │       ping.go
-│   │       service.go
-│   │
 │   └───storage
-│       └───sqlite
-│               ping.go
-│               sqlite.go
-│
+│       └───pingStorage
+├───mocks
 └───server
-    │   setup.go
-    │
     ├───infra
-    │       config.go
-    │       constants.go
-    │       logger.go
-    │
     ├───middleware
-    │       middleware.go
-    │
     └───routing
-            routing.go
 
 ```
 
 find more about the project structure [here](docs/project.md)
 
+### Add Modules to project
 
+To add a module to the project run the following command
+
+
+```bash
+stk project module <module-name>
+```
+
+It will generate the module in the project structure
+
+```
+├───internals
+│   |
+│   ├───core
+│   │   ├───entity
+│   │   │       <module-name>.go
+│   │   │
+│   │   └───serr
+│   │           <module-name>.go
+│   │
+│   ├───http
+│   │   ├───handler
+│   │   │       <module-name>.go
+│   │   │       <module-name>_test.go
+│   │   │
+│   │   ├───helpers
+│   │   │       <module-name>.go
+│   │   │
+│   │   └───transport
+│   │           <module-name>.go
+│   │
+│   ├───service
+│   │       <module-name>.go
+│   │       <module-name>_test.go
+│   │
+│   └───storage
+│        └───<module-name>Storage
+│               <module-name>.go
+│               <module-name>Connection.go
+│               <module-name>Queries.go
+└───server
+    |
+    └───routing
+        <module-name>.go
+```
+
+you can use it by adding `setup<module-name>Routes` to the `routing/initRoutes.go` file
+
+example:
+
+```go
+package routing
+
+import (
+	"github.com/adharshmk96/stk/gsk"
+)
+
+func SetupRoutes(server *gsk.Server) {
+	setupPingRoutes(server)
+	setupModuleRoutes(server)
+}
+```
 
 ## Development
 

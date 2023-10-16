@@ -7,32 +7,44 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 
 	"github.com/adharshmk96/stk/pkg/project/tpl"
 )
 
-func GenerateProject(config *Config) error {
+func NewGenerator(config *Config) *Generator {
+	return &Generator{
+		Config: config,
+	}
+}
+
+func (g *Generator) GenerateProject() error {
 	// use existing repo name as package name
 	// or initialize git repo
-	err := initializePackageWithGit(config)
+	log.Println("Initializing git repository...")
+	err := initializePackageWithGit(g.Config)
 	if err != nil {
 		log.Fatal("error initializing go package with git: ", err)
 		return err
 	}
 
 	// run go mod init
-	err = exec.Command("go", "mod", "init", config.PkgName).Run()
+	log.Println("Running go mod init...")
+	err = exec.Command("go", "mod", "init", g.Config.PkgName).Run()
 	if err != nil {
 		log.Fatal("error initializing go module: ", err)
 		return err
 	}
 
 	// create boilerplate
-	generateBoilerplate(config)
+	log.Println("Generating boilerplate...")
+	templates := tpl.ProjectTemplates
+	generateBoilerplate(g.Config, templates)
 
 	// run go mod tidy
+	log.Println("Running go mod tidy...")
 	err = exec.Command("go", "mod", "tidy").Run()
 	if err != nil {
 		log.Fatal("error running go mod tidy: ", err)
@@ -42,18 +54,29 @@ func GenerateProject(config *Config) error {
 	return nil
 }
 
-func generateBoilerplate(config *Config) {
-	templates := tpl.SingleModTemplates
+func (g *Generator) GenerateModule() error {
+	log.Println("Adding boilerplate for module...")
+	templates := tpl.ModuleTemplates
+	generateBoilerplate(g.Config, templates)
 
+	return nil
+}
+
+func formatModuleFilePath(pathTemplate string, config *Config) string {
+	filePath := strings.ReplaceAll(pathTemplate, "ping", config.ModName)
+	return filePath
+}
+
+func generateBoilerplate(config *Config, templates []tpl.Template) {
 	for _, tf := range templates {
-		fullPath := tf.FilePath
-		dir := filepath.Dir(fullPath)
+		tf.FilePath = formatModuleFilePath(tf.FilePath, config)
+		dir := filepath.Dir(tf.FilePath)
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			log.Fatalf("Failed to create directory for file %s: %v\n", tf.FilePath, err)
 			continue
 		}
 
-		f, err := os.Create(fullPath)
+		f, err := os.Create(tf.FilePath)
 		if err != nil {
 			log.Fatalf("Failed to create file %s: %v\n", tf.FilePath, err)
 			continue
@@ -66,7 +89,6 @@ func generateBoilerplate(config *Config) {
 			log.Fatalf("Failed to execute template for file %s: %v\n", tf.FilePath, err)
 			continue
 		}
-
 	}
 }
 
