@@ -30,12 +30,14 @@ func (g *Generator) GenerateProject() error {
 		return err
 	}
 
-	// run go mod init
-	log.Println("Running go mod init...")
-	err = exec.Command("go", "mod", "init", g.Config.PkgName).Run()
-	if err != nil {
-		log.Fatal("error initializing go module: ", err)
-		return err
+	if !g.Config.IsGoModule {
+		// run go mod init
+		log.Println("Running go mod init...")
+		err = exec.Command("go", "mod", "init", g.Config.PkgName).Run()
+		if err != nil {
+			log.Fatal("error initializing go module: ", err)
+			return err
+		}
 	}
 
 	// create boilerplate

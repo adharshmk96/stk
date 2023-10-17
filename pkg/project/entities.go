@@ -10,4 +10,7 @@ type Config struct {
 	RootPath     string
 	ModName      string
 	ExportedName string
+
+	IsGoModule bool
+	IsGitRepo  bool
 }

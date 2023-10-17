@@ -26,6 +26,9 @@ var ModuleCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("Generating module files...")
 
+		isGoModule := project.IsGoModule()
+		isGitRepo := project.IsGitRepo()
+
 		pkg := getPackageName(args)
 		app := getAppNameFromPkgName(pkg)
 		module := getModuleNameFromArgs(args)
@@ -47,6 +50,8 @@ var ModuleCmd = &cobra.Command{
 			AppName:      app,
 			ModName:      module,
 			ExportedName: strcase.ToCamel(module),
+			IsGoModule:   isGoModule,
+			IsGitRepo:    isGitRepo,
 		}
 
 		generator := project.NewGenerator(modConfig)

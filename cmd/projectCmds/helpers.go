@@ -65,13 +65,8 @@ func getRepoName() (string, error) {
 	return repoUrl, nil
 }
 
-func isGoModule() bool {
-	_, err := os.Stat("go.mod")
-	return !os.IsNotExist(err)
-}
-
 func getPackageNameFromGoMod() (string, error) {
-	if !isGoModule() {
+	if !project.IsGoModule() {
 		return "", nil
 	}
 

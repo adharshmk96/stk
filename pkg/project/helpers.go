@@ -1,7 +1,6 @@
 package project
 
 import (
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -10,8 +9,7 @@ import (
 )
 
 func initializePackageWithGit(config *Config) error {
-	if _, err := os.Stat(filepath.Join(config.RootPath, ".git")); err == nil {
-		log.Println("Directory is already a Git repository.")
+	if IsGitRepo() {
 		return nil
 	}
 
@@ -27,4 +25,14 @@ func initializePackageWithGit(config *Config) error {
 	file.Write([]byte(tpl.GITIGNORE_TPL.Content))
 
 	return nil
+}
+
+func IsGitRepo() bool {
+	_, err := os.Stat(".git")
+	return !os.IsNotExist(err)
+}
+
+func IsGoModule() bool {
+	_, err := os.Stat("go.mod")
+	return !os.IsNotExist(err)
 }
