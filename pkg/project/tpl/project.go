@@ -55,7 +55,7 @@ var MAKEFILE_TPL = Template{
 ### Build Commands
 ##########################
 
-BINARY_NAME=app
+BINARY_NAME={{ .AppName }}
 
 build:
 	@go build -o ./out/$(BINARY_NAME) -v
