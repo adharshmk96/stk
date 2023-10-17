@@ -38,15 +38,23 @@ vet:
 clean-branch:
 	@git branch | egrep -v "(^\*|main|master)" | xargs git branch -D
 
-
 ##########################
-### configuration
+### Setup Commands
 ##########################
 
-init:
-	@git config core.hooksPath .githooks
+init: 
+	@go mod tidy
+# Install tools
 	@go install github.com/adharshmk96/semver
 	@go install github.com/vektra/mockery/v2@v2.35.4
+# Setup Git hooks
+	@git config core.hooksPath .githooks
+
+# mockgen:
+	@rm -rf ./mocks
+	@mockery --all	
+
+	@echo "Project initialized."
 
 
 ##########################
