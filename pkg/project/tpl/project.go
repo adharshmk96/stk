@@ -37,7 +37,7 @@ var MAINGO_TPL = Template{
 	FilePath: "main.go",
 	Content: `package main
 
-import "github.com/adharshmk96/stk-template/{{ .AppName }}/cmd"
+import "{{ .PkgName }}/cmd"
 
 func main() {
 	cmd.Execute()
@@ -93,29 +93,26 @@ vet:
 
 clean-branch:
 	@git branch | egrep -v "(^\*|main|master)" | xargs git branch -D
+	@git tag -d $(shell git tag -l)
 
 	
 ##########################
 ### Setup Commands
 ##########################
 
-init: deps keygen initgithooks mockgen
-	@echo "Project initialized."
-
-initci: deps keygen
-	@echo "Project initialized for CI."
-
-initgithooks:
+init: 
+	@go mod tidy
+# Install tools
+	@go install github.com/adharshmk96/semver
+	@go install github.com/vektra/mockery/v2@v2.35.4
+# Setup Git hooks
 	@git config core.hooksPath .githooks
 
-mockgen:
+# mockgen:
 	@rm -rf ./mocks
 	@mockery --all	
 
-install-tools:
-	@go install github.com/adharshmk96/semver
-	@go install github.com/vektra/mockery/v2@v2.35.4
-
+	@echo "Project initialized."
 `,
 }
 
@@ -269,7 +266,7 @@ var CMD_SERVEGO_TPL = Template{
 import (
 	"sync"
 
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/server"
+	"{{ .PkgName }}/server"
 	"github.com/spf13/cobra"
 )
 
@@ -393,7 +390,7 @@ var INTERNALS_HTTP_HANDLER_PINGGO_TPL = Template{
 import (
 	"net/http"
 
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/entity"
+	"{{ .PkgName }}/internals/core/entity"
 	"github.com/adharshmk96/stk/gsk"
 )
 
@@ -446,8 +443,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/http/handler"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/mocks"
+	"{{ .PkgName }}/internals/http/handler"
+	"{{ .PkgName }}/mocks"
 	"github.com/adharshmk96/stk/gsk"
 	"github.com/stretchr/testify/assert"
 )
@@ -492,7 +489,7 @@ var INTERNALS_SERVICE_PINGGO_TPL = Template{
 	FilePath: "internals/service/ping.go",
 	Content: `package service
 
-import "github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/entity"
+import "{{ .PkgName }}/internals/core/entity"
 
 type {{ .ModName }}Service struct {
 	storage entity.{{ .ExportedName }}Storage
@@ -529,8 +526,8 @@ var INTERNALS_SERVICE_TEST_PING_TESTGO_TPL = Template{
 import (
 	"testing"
 
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/service"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/mocks"
+	"{{ .PkgName }}/internals/service"
+	"{{ .PkgName }}/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -563,8 +560,8 @@ var INTERNALS_STORAGE_PINGSTORAGE_PINGGO_TPL = Template{
 import (
 	"fmt"
 
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/serr"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/server/infra"
+	"{{ .PkgName }}/internals/core/serr"
+	"{{ .PkgName }}/server/infra"
 )
 
 // Repository Methods
@@ -592,7 +589,7 @@ var INTERNALS_STORAGE_PINGSTORAGE_PINGCONNECTIONGO_TPL = Template{
 import (
 	"database/sql"
 
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/entity"
+	"{{ .PkgName }}/internals/core/entity"
 )
 
 type sqliteRepo struct {
@@ -626,9 +623,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/server/infra"
-	svrmw "github.com/adharshmk96/stk-template/{{ .AppName }}/server/middleware"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/server/routing"
+	"{{ .PkgName }}/server/infra"
+	svrmw "{{ .PkgName }}/server/middleware"
+	"{{ .PkgName }}/server/routing"
 	"github.com/adharshmk96/stk/gsk"
 	"github.com/adharshmk96/stk/pkg/middleware"
 )
@@ -769,10 +766,10 @@ var SERVER_ROUTING_PINGGO_TPL = Template{
 	Content: `package routing
 
 import (
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/http/handler"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/service"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/storage/{{ .ModName }}Storage"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/server/infra"
+	"{{ .PkgName }}/internals/http/handler"
+	"{{ .PkgName }}/internals/service"
+	"{{ .PkgName }}/internals/storage/{{ .ModName }}Storage"
+	"{{ .PkgName }}/server/infra"
 	"github.com/adharshmk96/stk/gsk"
 	"github.com/adharshmk96/stk/pkg/db"
 	"github.com/spf13/viper"

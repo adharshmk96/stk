@@ -47,7 +47,7 @@ var INTERNALS_HTTP_HANDLER_PINGGO_MOD_TPL = Template{
 import (
 	"net/http"
 
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/entity"
+	"{{ .PkgName }}/internals/core/entity"
 	"github.com/adharshmk96/stk/gsk"
 )
 
@@ -100,8 +100,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/http/handler"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/mocks"
+	"{{ .PkgName }}/internals/http/handler"
+	"{{ .PkgName }}/mocks"
 	"github.com/adharshmk96/stk/gsk"
 	"github.com/stretchr/testify/assert"
 )
@@ -146,7 +146,7 @@ var INTERNALS_SERVICE_PINGGO_MOD_TPL = Template{
 	FilePath: "internals/service/ping.go",
 	Content: `package service
 
-import "github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/entity"
+import "{{ .PkgName }}/internals/core/entity"
 
 type {{ .ModName }}Service struct {
 	storage entity.{{ .ExportedName }}Storage
@@ -183,8 +183,8 @@ var INTERNALS_SERVICE_TEST_PING_TESTGO_MOD_TPL = Template{
 import (
 	"testing"
 
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/service"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/mocks"
+	"{{ .PkgName }}/internals/service"
+	"{{ .PkgName }}/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -217,8 +217,8 @@ var INTERNALS_STORAGE_PINGSTORAGE_PINGGO_MOD_TPL = Template{
 import (
 	"fmt"
 
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/serr"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/server/infra"
+	"{{ .PkgName }}/internals/core/serr"
+	"{{ .PkgName }}/server/infra"
 )
 
 // Repository Methods
@@ -246,7 +246,7 @@ var INTERNALS_STORAGE_PINGSTORAGE_PINGCONNECTIONGO_MOD_TPL = Template{
 import (
 	"database/sql"
 
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/core/entity"
+	"{{ .PkgName }}/internals/core/entity"
 )
 
 type sqliteRepo struct {
@@ -276,10 +276,10 @@ var SERVER_ROUTING_PINGGO_MOD_TPL = Template{
 	Content: `package routing
 
 import (
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/http/handler"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/service"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/internals/storage/{{ .ModName }}Storage"
-	"github.com/adharshmk96/stk-template/{{ .AppName }}/server/infra"
+	"{{ .PkgName }}/internals/http/handler"
+	"{{ .PkgName }}/internals/service"
+	"{{ .PkgName }}/internals/storage/{{ .ModName }}Storage"
+	"{{ .PkgName }}/server/infra"
 	"github.com/adharshmk96/stk/gsk"
 	"github.com/adharshmk96/stk/pkg/db"
 	"github.com/spf13/viper"

@@ -123,8 +123,9 @@ if __name__ == '__main__':
 
     remove_files([OUT_PROJECT_PATH, OUT_MODULE_PATH])
     replacements = {
-         app_name: PLACEHOLDERS['app'],
-        pkg_name: PLACEHOLDERS['pkg'],
+        # order is important, pkg should be before app_name
+        pkg_name: PLACEHOLDERS['pkg'],        
+        app_name: PLACEHOLDERS['app'],
         mod_name: PLACEHOLDERS['mod'],
         exported_mod_name: PLACEHOLDERS['exported']
     }
