@@ -33,8 +33,14 @@ archives:
 
 changelog:
   sort: asc
-  use: github-native
   filters:
     exclude:
-      - "^docs:"
-      - "^test:"
+      - '^docs:'
+      - '^test:'
+    include:
+      - "^feat:"
+      - "^fix:"
+      - "^refactor:"
+      - "^chore:"
+      - "^perf:"
+
