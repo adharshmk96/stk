@@ -64,6 +64,20 @@ func (g *Generator) GenerateModule() error {
 	return nil
 }
 
+func (g *Generator) DeleteModule() error {
+	log.Println("Deleting boilerplate for module...")
+	templates := tpl.ModuleTemplates
+	for _, tf := range templates {
+		tf.FilePath = formatModuleFilePath(tf.FilePath, g.Config)
+		if err := os.Remove(tf.FilePath); err != nil {
+			log.Fatalf("Failed to delete file %s: %v\n", tf.FilePath, err)
+			continue
+		}
+	}
+
+	return nil
+}
+
 func formatModuleFilePath(pathTemplate string, config *Config) string {
 	filePath := strings.ReplaceAll(pathTemplate, "ping", config.ModName)
 	return filePath
