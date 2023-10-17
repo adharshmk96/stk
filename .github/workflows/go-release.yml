@@ -24,3 +24,5 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: GO list
+        run: GOPROXY=proxy.golang.org go list -m github.com/adharshmk96/stk@${{ github.ref_name }}
