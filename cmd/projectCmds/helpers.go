@@ -49,6 +49,14 @@ func getPackageNameFromArg(args []string) string {
 	return args[0]
 }
 
+func getModuleNameFromArgs(args []string) string {
+	if len(args) == 0 {
+		return ""
+	}
+
+	return args[0]
+}
+
 func getRepoName() (string, error) {
 	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
 	out, err := cmd.Output()

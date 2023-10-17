@@ -23,6 +23,8 @@ var GenerateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("Generating project files...")
 
+		isGoModule := project.IsGoModule()
+		isGitRepo := project.IsGitRepo()
 		pkg := getPackageName(args)
 		app := getAppNameFromPkgName(pkg)
 
@@ -39,6 +41,8 @@ var GenerateCmd = &cobra.Command{
 			AppName:      app,
 			ModName:      "ping",
 			ExportedName: "Ping",
+			IsGoModule:   isGoModule,
+			IsGitRepo:    isGitRepo,
 		}
 
 		generator := project.NewGenerator(config)

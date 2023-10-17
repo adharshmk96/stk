@@ -9,7 +9,7 @@ import (
 )
 
 func initializePackageWithGit(config *Config) error {
-	if IsGitRepo() {
+	if config.IsGitRepo {
 		return nil
 	}
 

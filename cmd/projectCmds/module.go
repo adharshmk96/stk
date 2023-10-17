@@ -11,14 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func getModuleNameFromArgs(args []string) string {
-	if len(args) == 0 {
-		return ""
-	}
-
-	return args[0]
-}
-
 var ModuleCmd = &cobra.Command{
 	Use:   "module",
 	Short: "Generate a module for project with gsk and clean architecture.",
@@ -28,7 +20,6 @@ var ModuleCmd = &cobra.Command{
 
 		isGoModule := project.IsGoModule()
 		isGitRepo := project.IsGitRepo()
-
 		pkg := getPackageName(args)
 		app := getAppNameFromPkgName(pkg)
 		module := getModuleNameFromArgs(args)
