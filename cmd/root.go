@@ -20,7 +20,7 @@ var rootCmd = &cobra.Command{
 	Short: "STK is a CLI tool and library for building and managing server applications",
 	Long: `STK provides various tools for building and managing server applications.
 You can use the gsk (go server kit) package for building rest api servers. 
-The STK CLI tool provides various commands for setting up and managing your project.
+stk CLI has tools to do project and module generation, sql migration management.
 Refer the documentation to see the usage.`,
 }
 
@@ -35,7 +35,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./stk.yaml", "config file.")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", ".stk.yaml", "config file.")
 }
 
 // initConfig reads in config file and ENV variables if set.

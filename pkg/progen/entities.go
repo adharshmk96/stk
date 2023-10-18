@@ -1,8 +1,4 @@
-package project
-
-type Generator struct {
-	Config *Config
-}
+package progen
 
 type Config struct {
 	PkgName      string

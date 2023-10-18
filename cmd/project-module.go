@@ -1,27 +1,34 @@
 /*
 Copyright © 2023 Adharsh M dev@adharsh.in
 */
-package projectCmds
+package cmd
 
 import (
 	"log"
 
-	"github.com/adharshmk96/stk/pkg/project"
+	"github.com/adharshmk96/stk/pkg/progen"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 )
 
 var deleteModule bool
 
-var ModuleCmd = &cobra.Command{
+func getModuleNameFromArgs(args []string) string {
+	if len(args) > 0 {
+		return args[0]
+	}
+	return ""
+}
+
+var moduleCmd = &cobra.Command{
 	Use:   "module",
 	Short: "Generate a module for project with gsk and clean architecture.",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		isGoModule := project.IsGoModule()
-		isGitRepo := project.IsGitRepo()
-		pkg := getPackageName(args)
-		app := getAppNameFromPkgName(pkg)
+		isGoModule := progen.IsGoModule()
+		isGitRepo := progen.IsGitRepo()
+		pkg := progen.GetPackageName(args)
+		app := progen.GetAppNameFromPkgName(pkg)
 		module := getModuleNameFromArgs(args)
 		if module == "" {
 			log.Fatal("Module name is required.")
@@ -29,13 +36,13 @@ var ModuleCmd = &cobra.Command{
 		}
 
 		workdir := "."
-		err := openDirectory(workdir)
+		err := progen.OpenDirectory(workdir)
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
 
-		modConfig := &project.Config{
+		modConfig := &progen.Config{
 			RootPath:     workdir,
 			PkgName:      pkg,
 			AppName:      app,
@@ -45,7 +52,7 @@ var ModuleCmd = &cobra.Command{
 			IsGitRepo:    isGitRepo,
 		}
 
-		generator := project.NewGenerator(modConfig)
+		generator := progen.NewGenerator(modConfig)
 		if deleteModule {
 			log.Println("Deleting module files...")
 			err = generator.DeleteModule()
@@ -70,5 +77,8 @@ var ModuleCmd = &cobra.Command{
 }
 
 func init() {
-	ModuleCmd.Flags().BoolVarP(&deleteModule, "delete", "d", false, "Delete module files.")
+	moduleCmd.Flags().BoolVarP(&deleteModule, "delete", "d", false, "Delete module files.")
+
+	projectCmd.AddCommand(moduleCmd)
+
 }
