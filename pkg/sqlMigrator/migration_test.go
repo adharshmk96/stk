@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sqlmigrator "github.com/adharshmk96/stk/pkg/sqlMigrator"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseRawMigration(t *testing.T) {
@@ -27,17 +28,39 @@ func TestParseRawMigration(t *testing.T) {
 
 		for _, c := range tc {
 			rawMigration, err := sqlmigrator.ParseRawMigration(c.rawMigrationString)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
+			assert.NoError(t, err)
 
-			if rawMigration.Number != c.expectedNumber {
-				t.Fatalf("expected number %d, got %d", c.expectedNumber, rawMigration.Number)
-			}
+			assert.Equal(t, c.expectedNumber, rawMigration.Number)
 
-			if rawMigration.Name != c.expectedName {
-				t.Fatalf("expected name %s, got %s", c.expectedName, rawMigration.Name)
-			}
+			assert.Equal(t, c.expectedName, rawMigration.Name)
+		}
+	})
+}
+
+func TestRawMigrationString(t *testing.T) {
+	t.Run("outputs correct migration string", func(t *testing.T) {
+		tc := []struct {
+			rawMigration sqlmigrator.Migration
+			expected     string
+		}{
+			{
+				rawMigration: sqlmigrator.Migration{
+					Number: 1,
+					Name:   "create_users_table",
+				},
+				expected: "1_create_users_table",
+			},
+			{
+				rawMigration: sqlmigrator.Migration{
+					Number: 2,
+					Name:   "",
+				},
+				expected: "2",
+			},
+		}
+
+		for _, c := range tc {
+			assert.Equal(t, c.expected, c.rawMigration.String())
 		}
 	})
 }

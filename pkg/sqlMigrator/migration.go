@@ -11,12 +11,14 @@ var (
 	ErrInvalidMigration = errors.New("invalid migration")
 )
 
-type RawMigration struct {
+type Migration struct {
 	Number int
 	Name   string
+	Up     string
+	Down   string
 }
 
-func ParseRawMigration(migration string) (*RawMigration, error) {
+func ParseRawMigration(migration string) (*Migration, error) {
 	parts := strings.Split(migration, "_")
 	if len(parts) == 0 {
 		return nil, ErrInvalidMigration
@@ -29,7 +31,7 @@ func ParseRawMigration(migration string) (*RawMigration, error) {
 		return nil, ErrInvalidMigration
 	}
 
-	rawMigration := &RawMigration{
+	rawMigration := &Migration{
 		Name:   name,
 		Number: number,
 	}
@@ -37,6 +39,9 @@ func ParseRawMigration(migration string) (*RawMigration, error) {
 	return rawMigration, nil
 }
 
-func (r *RawMigration) String() string {
+func (r *Migration) String() string {
+	if r.Name == "" {
+		return fmt.Sprintf("%d", r.Number)
+	}
 	return fmt.Sprintf("%d_%s", r.Number, r.Name)
 }
