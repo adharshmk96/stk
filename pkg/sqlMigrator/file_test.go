@@ -15,15 +15,11 @@ var TEST_FILE_CONTENT = `1_create_users_table_up
 6_create_messages_table_down
 `
 
-func TestReadLastLine(t *testing.T) {
-	t.Run("reads the last line of a file", func(t *testing.T) {
-		filePath, removeTempFile := testutils.CreateTempFile(t, TEST_FILE_CONTENT)
-		line, err := readLastLine(filePath)
+func TestReadFileContent(t *testing.T) {
+	t.Run("returns error if file doesn't exist", func(t *testing.T) {
+		_, err := readFileContent("non-existent-file.txt")
 
-		defer removeTempFile()
-
-		assert.NoError(t, err)
-		assert.Equal(t, "6_create_messages_table_down", line)
+		assert.Error(t, err)
 	})
 }
 
@@ -46,4 +42,14 @@ func TestReadLines(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, expected, lines)
 	})
+
+	t.Run("returns an error if file does not exist", func(t *testing.T) {
+		_, err := readLines("non-existent-file.txt")
+
+		assert.Error(t, err)
+	})
+}
+
+func TestReadContent(t *testing.T) {
+
 }
