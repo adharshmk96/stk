@@ -30,17 +30,17 @@ func InitializeMigrationsFolder(ctx *Context) error {
 	return nil
 }
 
-func loadLastMigrationFromLog(ctx *Context) (*Migration, error) {
+func loadLastMigrationFromLog(ctx *Context) (*MigrationEntry, error) {
 	filePath := path.Join(ctx.WorkDir, ctx.LogFile)
 	lastLine, err := readLastLine(filePath)
 	if err != nil {
 		return nil, err
 	}
 	if lastLine == "" {
-		return &Migration{}, nil
+		return &MigrationEntry{}, nil
 	}
 
-	lastMigration, err := ParseRawMigration(lastLine)
+	lastMigration, err := ParseMigrationEntry(lastLine)
 	if err != nil {
 		return nil, err
 	}

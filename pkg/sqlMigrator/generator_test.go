@@ -109,7 +109,7 @@ func TestGenerate(t *testing.T) {
 		expectedLogContent := func() string {
 			content := ""
 			for i := 1; i <= numToGenerate; i++ {
-				content += fmt.Sprintf("%d_user_table\n", i)
+				content += fmt.Sprintf("%d_user_table_down\n", i)
 			}
 			return content
 		}()
@@ -125,10 +125,10 @@ func TestGenerate(t *testing.T) {
 		expectedLogContent = func() string {
 			content := ""
 			for i := 1; i <= numToGenerate; i++ {
-				content += fmt.Sprintf("%d_user_table\n", i)
+				content += fmt.Sprintf("%d_user_table_down\n", i)
 			}
 			for i := numToGenerate + 1; i <= (2*numToGenerate)+1; i++ {
-				content += fmt.Sprintf("%d_auth_table\n", i)
+				content += fmt.Sprintf("%d_auth_table_down\n", i)
 			}
 			return content
 		}()
@@ -140,12 +140,12 @@ func TestGenerate(t *testing.T) {
 
 func TestGenerateNextMigrations(t *testing.T) {
 	t.Run("generates next migrations", func(t *testing.T) {
-		lastMigration := sqlmigrator.Migration{
+		lastMigration := sqlmigrator.MigrationEntry{
 			Number: 1,
 			Name:   "create_users_table",
 		}
 
-		migrations := []sqlmigrator.Migration{
+		migrations := []sqlmigrator.MigrationEntry{
 			{
 				Number: 2,
 			},

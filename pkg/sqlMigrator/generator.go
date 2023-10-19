@@ -35,20 +35,20 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 	}
 
 	for _, migration := range nextMigrations {
-		migrationName := migration.String()
+		migrationEntry := migration.String()
 		extention := SelectExtention(ctx.Database)
-		upFile := migrationName + "_up." + extention
-		downFile := migrationName + "_down." + extention
 
-		upFilePath := path.Join(ctx.WorkDir, upFile)
+		upFileName, downFileName := migration.FileNames(extention)
+
+		upFilePath := path.Join(ctx.WorkDir, upFileName)
 		upFileContent := ""
 		if g.Fill {
-			upFileContent = fmt.Sprintf("CREATE TABLE sample_%s_table;", migrationName)
+			upFileContent = fmt.Sprintf("CREATE TABLE sample_%s_table;", migrationEntry)
 		}
-		downFilePath := path.Join(ctx.WorkDir, downFile)
+		downFilePath := path.Join(ctx.WorkDir, downFileName)
 		downFileContent := ""
 		if g.Fill {
-			downFileContent = fmt.Sprintf("DROP TABLE sample_%s_table;", migrationName)
+			downFileContent = fmt.Sprintf("DROP TABLE sample_%s_table;", migrationEntry)
 		}
 		err := createFile(upFilePath, upFileContent)
 		if err != nil {
@@ -60,7 +60,7 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 			return generatedFiles, err
 		}
 
-		err = writeMigrationToLog(ctx, migrationName)
+		err = writeMigrationToLog(ctx, migrationEntry)
 		if err != nil {
 			return generatedFiles, err
 		}
@@ -71,7 +71,7 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 	return generatedFiles, nil
 }
 
-func dryRunGeneration(migrations []*Migration) {
+func dryRunGeneration(migrations []*MigrationEntry) {
 	for _, migration := range migrations {
 		fileName := migration.String()
 		fmt.Println("up\t:", fileName+"_up.sql")
@@ -79,14 +79,14 @@ func dryRunGeneration(migrations []*Migration) {
 	}
 }
 
-func GenerateNextMigrations(lastMigrationNumber int, name string, numToGenerate int) []*Migration {
-	var nextMigrations []*Migration
+func GenerateNextMigrations(lastMigrationNumber int, name string, numToGenerate int) []*MigrationEntry {
+	var nextMigrations []*MigrationEntry
 
 	startNumber := lastMigrationNumber + 1
 	endNumber := lastMigrationNumber + numToGenerate
 
 	for i := startNumber; i <= endNumber; i++ {
-		nextMigration := &Migration{
+		nextMigration := &MigrationEntry{
 			Number: i,
 			Name:   name,
 		}

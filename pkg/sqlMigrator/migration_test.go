@@ -13,26 +13,40 @@ func TestParseRawMigration(t *testing.T) {
 			rawMigrationString string
 			expectedNumber     int
 			expectedName       string
+			commitStatus       bool
 		}{
 			{
-				rawMigrationString: "1_create_users_table",
+				rawMigrationString: "1_create_users_table_up",
 				expectedNumber:     1,
 				expectedName:       "create_users_table",
+				commitStatus:       true,
 			},
 			{
-				rawMigrationString: "2",
+				rawMigrationString: "2_up",
 				expectedNumber:     2,
 				expectedName:       "",
+				commitStatus:       true,
+			},
+			{
+				rawMigrationString: "3_create_posts_table_down",
+				expectedNumber:     3,
+				expectedName:       "create_posts_table",
+				commitStatus:       false,
+			},
+			{
+				rawMigrationString: "4_down",
+				expectedNumber:     4,
+				expectedName:       "",
+				commitStatus:       false,
 			},
 		}
 
 		for _, c := range tc {
-			rawMigration, err := sqlmigrator.ParseRawMigration(c.rawMigrationString)
+			rawMigration, err := sqlmigrator.ParseMigrationEntry(c.rawMigrationString)
 			assert.NoError(t, err)
-
 			assert.Equal(t, c.expectedNumber, rawMigration.Number)
-
 			assert.Equal(t, c.expectedName, rawMigration.Name)
+			assert.Equal(t, c.commitStatus, rawMigration.CommitStatus)
 		}
 	})
 
@@ -40,6 +54,15 @@ func TestParseRawMigration(t *testing.T) {
 		tc := []struct {
 			rawMigrationString string
 		}{
+			{
+				rawMigrationString: "create_users_table_up",
+			},
+			{
+				rawMigrationString: "1_create_users_table",
+			},
+			{
+				rawMigrationString: "1",
+			},
 			{
 				rawMigrationString: "1create_users_table",
 			},
@@ -58,7 +81,7 @@ func TestParseRawMigration(t *testing.T) {
 		}
 
 		for _, c := range tc {
-			_, err := sqlmigrator.ParseRawMigration(c.rawMigrationString)
+			_, err := sqlmigrator.ParseMigrationEntry(c.rawMigrationString)
 			assert.Error(t, err)
 		}
 	})
@@ -67,22 +90,40 @@ func TestParseRawMigration(t *testing.T) {
 func TestRawMigrationString(t *testing.T) {
 	t.Run("outputs correct migration string", func(t *testing.T) {
 		tc := []struct {
-			rawMigration sqlmigrator.Migration
+			rawMigration sqlmigrator.MigrationEntry
 			expected     string
 		}{
 			{
-				rawMigration: sqlmigrator.Migration{
-					Number: 1,
-					Name:   "create_users_table",
+				rawMigration: sqlmigrator.MigrationEntry{
+					Number:       1,
+					Name:         "create_users_table",
+					CommitStatus: true,
 				},
-				expected: "1_create_users_table",
+				expected: "1_create_users_table_up",
 			},
 			{
-				rawMigration: sqlmigrator.Migration{
-					Number: 2,
-					Name:   "",
+				rawMigration: sqlmigrator.MigrationEntry{
+					Number:       2,
+					Name:         "",
+					CommitStatus: false,
 				},
-				expected: "2",
+				expected: "2_down",
+			},
+			{
+				rawMigration: sqlmigrator.MigrationEntry{
+					Number:       3,
+					Name:         "create_posts_table",
+					CommitStatus: true,
+				},
+				expected: "3_create_posts_table_up",
+			},
+			{
+				rawMigration: sqlmigrator.MigrationEntry{
+					Number:       4,
+					Name:         "",
+					CommitStatus: true,
+				},
+				expected: "4_up",
 			},
 		}
 
