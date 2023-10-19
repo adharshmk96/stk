@@ -36,7 +36,8 @@ var GenerateCmd = &cobra.Command{
 
 		numToGenerate := getNumberFromArgs(args, 1)
 
-		ctx := sqlmigrator.NewMigratorContext(dryRun)
+		workDir, dbType, logFile := sqlmigrator.DefaultContextConfig()
+		ctx := sqlmigrator.NewMigratorContext(workDir, dbType, logFile, dryRun)
 		displayContext(ctx)
 		generator := sqlmigrator.NewGenerator(migrationName, numToGenerate, dryRun, fill)
 		displayGenerator(generator)

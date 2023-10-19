@@ -5,7 +5,7 @@ import (
 	"path"
 )
 
-func InitializeMigrationsLog(ctx *Context) error {
+func InitializeMigrationsFolder(ctx *Context) error {
 	err := os.MkdirAll(ctx.WorkDir, os.ModePerm)
 	if err != nil {
 		return err
@@ -16,10 +16,11 @@ func InitializeMigrationsLog(ctx *Context) error {
 		if os.IsNotExist(err) {
 			// file does not exist
 			// create file
-			_, err := os.Create(filePath)
+			file, err := os.Create(filePath)
 			if err != nil {
 				return err
 			}
+			defer file.Close()
 		} else {
 			// other error
 			return err

@@ -16,19 +16,19 @@ func NewGenerator(name string, numToGenerate int, dryRun bool, fill bool) *Gener
 	return &Generator{
 		Name:          name,
 		NumToGenerate: numToGenerate,
-		DryRun:        dryRun,
 		Fill:          fill,
 	}
 }
 
 func (g *Generator) Generate(ctx *Context) error {
+	// Assumes that the log file exists, It is generated when context is initialized
 	lastMigration, err := loadLastMigrationFromLog(ctx)
 	if err != nil {
 		return err
 	}
 
 	nextMigrations := GenerateNextMigrations(lastMigration.Number, g.Name, g.NumToGenerate)
-	if g.DryRun {
+	if ctx.DryRun {
 		dryRunGeneration(nextMigrations)
 		return nil
 	}

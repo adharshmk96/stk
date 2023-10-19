@@ -32,7 +32,7 @@ type Context struct {
 	DryRun   bool
 }
 
-func NewMigratorContext(dry bool) *Context {
+func DefaultContextConfig() (string, Database, string) {
 	rootDirectory := viper.GetString("migrator.workdir")
 	dbChoice := viper.GetString("migrator.database")
 	logFile := getFirst(viper.GetString("migrator.logfile"), DEFAULE_LOG_FILE)
@@ -42,6 +42,11 @@ func NewMigratorContext(dry bool) *Context {
 
 	workDir := path.Join(rootDirectory, subDir)
 
+	return workDir, dbType, logFile
+}
+
+func NewMigratorContext(workDir string, dbType Database, logFile string, dry bool) *Context {
+
 	ctx := &Context{
 		WorkDir:  workDir,
 		Database: dbType,
@@ -50,7 +55,7 @@ func NewMigratorContext(dry bool) *Context {
 	}
 
 	if !dry {
-		err := InitializeMigrationsLog(ctx)
+		err := InitializeMigrationsFolder(ctx)
 		if err != nil {
 			return nil
 		}
