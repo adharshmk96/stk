@@ -30,59 +30,15 @@ func InitializeMigrationsFolder(ctx *Context) error {
 	return nil
 }
 
-func loadLastMigrationFromLog(ctx *Context) (*MigrationEntry, error) {
-	filePath := path.Join(ctx.WorkDir, ctx.LogFile)
-	lastLine, err := readLastLine(filePath)
-	if err != nil {
-		return nil, err
-	}
-	if lastLine == "" {
-		return &MigrationEntry{}, nil
-	}
-
-	lastMigration, err := ParseMigrationEntry(lastLine)
-	if err != nil {
-		return nil, err
-	}
-
-	return lastMigration, nil
-}
-
-func writeMigrationToLog(ctx *Context, migration string) error {
-	filePath := path.Join(ctx.WorkDir, ctx.LogFile)
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = file.WriteString(migration + "\n")
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // TODO: optimize to read from last, and break when commit status is true
-func LoadUncommitedMigrationsFromLog(ctx *Context) ([]*MigrationEntry, error) {
-	readLines, err := readLines(path.Join(ctx.WorkDir, ctx.LogFile))
-	if err != nil {
-		return nil, err
-	}
-
+func LoadUncommitedMigrations(ctx *Context) ([]*MigrationEntry, error) {
 	migrations := []*MigrationEntry{}
-	for _, line := range readLines {
-		migration, err := ParseMigrationEntry(line)
-		if err != nil {
-			return nil, err
-		}
 
+	for _, migration := range ctx.Migrations {
 		if !migration.Committed {
 			migrations = append(migrations, migration)
 		}
 	}
 
 	return migrations, nil
-
 }

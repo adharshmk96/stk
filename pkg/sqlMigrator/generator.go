@@ -67,7 +67,7 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 func (g *Generator) Clean(ctx *Context) ([]string, error) {
 	removedFiles := []string{}
 
-	uncommitedMigrations, err := LoadUncommitedMigrationsFromLog(ctx)
+	uncommitedMigrations, err := LoadUncommitedMigrations(ctx)
 	if err != nil {
 		return nil, err
 	}

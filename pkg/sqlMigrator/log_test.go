@@ -47,7 +47,7 @@ func TestInitializeMigrationsFolder(t *testing.T) {
 func TestLoadUncommitedMigrationFromLog(t *testing.T) {
 	t.Run("returns an empty migration entry if the log file is empty", func(t *testing.T) {
 		ctx := sqlmigrator.NewMigratorContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
-		migration, err := sqlmigrator.LoadUncommitedMigrationsFromLog(ctx)
+		migration, err := sqlmigrator.LoadUncommitedMigrations(ctx)
 		assert.NoError(t, err)
 		assert.Empty(t, migration)
 		assert.Equal(t, 0, len(migration))
@@ -70,7 +70,7 @@ func TestLoadUncommitedMigrationFromLog(t *testing.T) {
 		err := os.WriteFile(logPath, []byte(logFile_content), 0644)
 		assert.NoError(t, err)
 
-		migrations, err := sqlmigrator.LoadUncommitedMigrationsFromLog(ctx)
+		migrations, err := sqlmigrator.LoadUncommitedMigrations(ctx)
 		assert.NoError(t, err)
 
 		expected := func() []*sqlmigrator.MigrationEntry {
