@@ -118,4 +118,155 @@ func TestMigrateUp(t *testing.T) {
 		checkUnappliedMigrations(t, ctx, 3)
 
 	})
+
+	t.Run("migrate up runs fine with outof bound values", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+
+		defer removeDir()
+
+		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+
+		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
+		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
+		assert.NoError(t, err)
+
+		err = ctx.LoadMigrationEntries()
+		assert.NoError(t, err)
+
+		checkUnappliedMigrations(t, ctx, 3)
+
+		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, 100)
+		assert.NoError(t, err)
+
+		assert.Equal(t, 3, len(appliedMigrations))
+
+		checkUnappliedMigrations(t, ctx, 0)
+	})
+}
+
+func TestMigrateDown(t *testing.T) {
+
+	var LOG_FILE_CONTENT = `1_create_users_table_up
+2_create_posts_table_up
+3_create_comments_table_up
+4_create_likes_table_down
+5_create_followers_table_down
+6_create_messages_table_down
+`
+
+	t.Run("migrate down default all unapplied migrations", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+
+		defer removeDir()
+
+		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+
+		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
+		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
+		assert.NoError(t, err)
+
+		err = ctx.LoadMigrationEntries()
+		assert.NoError(t, err)
+
+		checkUnappliedMigrations(t, ctx, 3)
+
+		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, 0)
+		assert.NoError(t, err)
+		assert.Equal(t, 3, len(appliedMigrations))
+
+		expected := []string{
+			"3_create_comments_table_down",
+			"2_create_posts_table_down",
+			"1_create_users_table_down",
+		}
+
+		for i, migration := range appliedMigrations {
+			assert.False(t, migration.Committed)
+			assert.Equal(t, expected[i], migration.EntryString())
+		}
+
+		checkUnappliedMigrations(t, ctx, 6)
+	})
+
+	t.Run("migrate down given number of unapplied migration", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+
+		defer removeDir()
+
+		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+
+		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
+		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
+		assert.NoError(t, err)
+
+		err = ctx.LoadMigrationEntries()
+		assert.NoError(t, err)
+
+		checkUnappliedMigrations(t, ctx, 3)
+
+		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, 1)
+		assert.NoError(t, err)
+
+		assert.Equal(t, 1, len(appliedMigrations))
+
+		expected := []string{
+			"3_create_comments_table_down",
+		}
+
+		for i, migration := range appliedMigrations {
+			assert.False(t, migration.Committed)
+			assert.Equal(t, expected[i], migration.EntryString())
+		}
+
+		// Check unapplied migrations
+		checkUnappliedMigrations(t, ctx, 4)
+	})
+
+	t.Run("migrate down won't update commit for dry run", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+
+		defer removeDir()
+
+		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", true)
+
+		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
+		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
+		assert.NoError(t, err)
+
+		err = ctx.LoadMigrationEntries()
+		assert.NoError(t, err)
+
+		checkUnappliedMigrations(t, ctx, 3)
+
+		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, 0)
+		assert.NoError(t, err)
+
+		assert.Equal(t, 0, len(appliedMigrations))
+
+		checkUnappliedMigrations(t, ctx, 3)
+	})
+
+	t.Run("migrate down runs fine with outof bound values", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+
+		defer removeDir()
+
+		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+
+		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
+		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
+		assert.NoError(t, err)
+
+		err = ctx.LoadMigrationEntries()
+		assert.NoError(t, err)
+
+		checkUnappliedMigrations(t, ctx, 3)
+
+		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, 100)
+		assert.NoError(t, err)
+
+		assert.Equal(t, 3, len(appliedMigrations))
+
+		checkUnappliedMigrations(t, ctx, 6)
+	})
 }
