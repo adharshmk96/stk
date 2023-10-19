@@ -4,14 +4,20 @@ Copyright © 2023 Adharsh M dev@adharsh.in
 package migrator
 
 import (
+	"fmt"
 	"log"
-	"path/filepath"
 
-	"github.com/adharshmk96/stk/pkg/migrator"
-	"github.com/adharshmk96/stk/pkg/migrator/fsrepo"
+	sqlmigrator "github.com/adharshmk96/stk/pkg/sqlMigrator"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
+
+func displayCleanedFiles(files []string) {
+	fmt.Println("\nCleaned Files:")
+	for _, file := range files {
+		fmt.Println(file)
+	}
+	fmt.Println("")
+}
 
 // CleanCmd represents the mkconfig command
 var CleanCmd = &cobra.Command{
@@ -19,36 +25,25 @@ var CleanCmd = &cobra.Command{
 	Short: "Remove all unapplied migration files.",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		rootDirectory := viper.GetString("migrator.workdir")
-		dbChoice := viper.GetString("migrator.database")
 
-		dryRun := cmd.Flag("dry-run").Value.String() == "true"
+		dryRun := cmd.Flag("dry").Value.String() == "true"
 
-		// Select based on the database
-		dbType := migrator.SelectDatabase(dbChoice)
-		log.Println("selected database: ", dbType)
-
-		extention := migrator.SelectExtention(dbType)
-		subDirectory := migrator.SelectSubDirectory(dbType)
-		fsRepo := fsrepo.NewFSRepo(filepath.Join(rootDirectory, subDirectory), extention)
-
-		dbRepo := selectDbRepo(dbType)
+		workDir, dbType, logFile := sqlmigrator.DefaultContextConfig()
+		ctx := sqlmigrator.NewMigratorContext(workDir, dbType, logFile, dryRun)
 
 		log.Println("Cleaning unapplied migrations...")
 
-		config := &migrator.MigratorConfig{
+		generator := &sqlmigrator.Generator{
 			DryRun: dryRun,
-
-			FSRepo: fsRepo,
-			DBRepo: dbRepo,
 		}
 
-		_, err := migrator.Clean(config)
+		removedFiles, err := generator.Clean(ctx)
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
 
+		displayCleanedFiles(removedFiles)
 		log.Println("Cleaned migrations successfully.")
 
 	},

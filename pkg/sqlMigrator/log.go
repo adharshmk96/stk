@@ -63,3 +63,26 @@ func writeMigrationToLog(ctx *Context, migration string) error {
 
 	return nil
 }
+
+// TODO: optimize to read from last, and break when commit status is true
+func LoadUncommitedMigrationsFromLog(ctx *Context) ([]*MigrationEntry, error) {
+	readLines, err := readLines(path.Join(ctx.WorkDir, ctx.LogFile))
+	if err != nil {
+		return nil, err
+	}
+
+	migrations := []*MigrationEntry{}
+	for _, line := range readLines {
+		migration, err := ParseMigrationEntry(line)
+		if err != nil {
+			return nil, err
+		}
+
+		if !migration.Committed {
+			migrations = append(migrations, migration)
+		}
+	}
+
+	return migrations, nil
+
+}

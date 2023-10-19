@@ -71,6 +71,36 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 	return generatedFiles, nil
 }
 
+func (g *Generator) Clean(ctx *Context) ([]string, error) {
+	removedFiles := []string{}
+
+	uncommitedMigrations, err := LoadUncommitedMigrationsFromLog(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, migration := range uncommitedMigrations {
+		upFileName, downFileName := migration.FileNames(SelectExtention(ctx.Database))
+
+		upFilePath := path.Join(ctx.WorkDir, upFileName)
+		downFilePath := path.Join(ctx.WorkDir, downFileName)
+
+		err := removeFile(upFilePath)
+		if err != nil {
+			return removedFiles, err
+		}
+
+		err = removeFile(downFilePath)
+		if err != nil {
+			return removedFiles, err
+		}
+
+		removedFiles = append(removedFiles, upFilePath, downFilePath)
+	}
+
+	return removedFiles, nil
+}
+
 func dryRunGeneration(migrations []*MigrationEntry) {
 	for _, migration := range migrations {
 		fileName := migration.String()

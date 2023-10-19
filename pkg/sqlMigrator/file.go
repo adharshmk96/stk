@@ -43,3 +43,32 @@ func createFile(filePath, content string) error {
 
 	return nil
 }
+
+func removeFile(filePath string) error {
+	err := os.Remove(filePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func readLines(filePath string) ([]string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return []string{}, err
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		return []string{}, err
+	}
+
+	return lines, nil
+}
