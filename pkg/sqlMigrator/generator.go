@@ -23,9 +23,9 @@ func NewGenerator(name string, numToGenerate int, fill bool) *Generator {
 func (g *Generator) Generate(ctx *Context) ([]string, error) {
 	generatedFiles := []string{}
 	// Assumes that the log file exists, It is generated when context is initialized
-	lastMigration, err := loadLastMigrationFromLog(ctx)
-	if err != nil {
-		return nil, err
+	lastMigration := ctx.Migrations.Last()
+	if lastMigration == nil {
+		lastMigration = &MigrationEntry{}
 	}
 
 	nextMigrations := GenerateNextMigrations(lastMigration.Number, g.Name, g.NumToGenerate)
@@ -35,7 +35,7 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 	}
 
 	for _, migration := range nextMigrations {
-		migrationEntry := migration.String()
+		migString := migration.String()
 		extention := SelectExtention(ctx.Database)
 
 		upFileName, downFileName := migration.FileNames(extention)
@@ -43,12 +43,12 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 		upFilePath := path.Join(ctx.WorkDir, upFileName)
 		upFileContent := ""
 		if g.Fill {
-			upFileContent = fmt.Sprintf("CREATE TABLE sample_%s_table;", migrationEntry)
+			upFileContent = fmt.Sprintf("CREATE TABLE sample_%s_table;", migString)
 		}
 		downFilePath := path.Join(ctx.WorkDir, downFileName)
 		downFileContent := ""
 		if g.Fill {
-			downFileContent = fmt.Sprintf("DROP TABLE sample_%s_table;", migrationEntry)
+			downFileContent = fmt.Sprintf("DROP TABLE sample_%s_table;", migString)
 		}
 		err := createFile(upFilePath, upFileContent)
 		if err != nil {
@@ -60,11 +60,7 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 			return generatedFiles, err
 		}
 
-		err = writeMigrationToLog(ctx, migrationEntry)
-		if err != nil {
-			return generatedFiles, err
-		}
-
+		ctx.Migrations = append(ctx.Migrations, migration)
 		generatedFiles = append(generatedFiles, upFilePath, downFilePath)
 	}
 
@@ -103,7 +99,7 @@ func (g *Generator) Clean(ctx *Context) ([]string, error) {
 
 func dryRunGeneration(migrations []*MigrationEntry) {
 	for _, migration := range migrations {
-		fileName := migration.String()
+		fileName := migration.EntryString()
 		fmt.Println("up\t:", fileName+"_up.sql")
 		fmt.Println("down:\t:", fileName+"_down.sql")
 	}

@@ -31,12 +31,19 @@ const (
 
 type Migrations []*MigrationEntry
 
+func (m Migrations) Last() *MigrationEntry {
+	if len(m) == 0 {
+		return nil
+	}
+	return m[len(m)-1]
+}
+
 type MigrationEntry struct {
-	Number    int
-	Name      string
-	Committed bool
-	Up        string
-	Down      string
+	Number       int
+	Name         string
+	Committed    bool
+	UpFilePath   string
+	DownFilePath string
 }
 
 func ParseMigrationEntry(migrationEntry string) (*MigrationEntry, error) {
@@ -69,6 +76,14 @@ func ParseMigrationEntry(migrationEntry string) (*MigrationEntry, error) {
 }
 
 func (r *MigrationEntry) String() string {
+	m_String := fmt.Sprintf("%d", r.Number)
+	if r.Name != "" {
+		m_String += r.Name
+	}
+	return m_String
+}
+
+func (r *MigrationEntry) EntryString() string {
 	entryString := fmt.Sprintf("%d", r.Number)
 	if r.Name != "" {
 		entryString += "_" + r.Name
@@ -91,50 +106,26 @@ func (r *MigrationEntry) FileNames(extention string) (string, string) {
 	return upFileName, downFileName
 }
 
+func (r *MigrationEntry) LoadFileContent(extention string) (string, string) {
+	upFileName, downFileName := r.FileNames(extention)
+	upFileContent, err := readFileContent(upFileName)
+	if err != nil {
+		return "", ""
+	}
+	downFileContent, err := readFileContent(downFileName)
+	if err != nil {
+		return "", ""
+	}
+
+	return upFileContent, downFileContent
+}
+
 type Context struct {
 	WorkDir    string
 	LogFile    string
 	Database   Database
 	DryRun     bool
-	Migrations []*MigrationEntry
-}
-
-func (ctx *Context) LoadMigrationEntries() error {
-	migrations := []*MigrationEntry{}
-	entires, err := readLines(path.Join(ctx.WorkDir, ctx.LogFile))
-	if err != nil {
-		return err
-	}
-
-	for _, entry := range entires {
-		migration, err := ParseMigrationEntry(entry)
-		if err != nil {
-			return err
-		}
-
-		migrations = append(migrations, migration)
-	}
-
-	ctx.Migrations = migrations
-	return nil
-}
-
-func (ctx *Context) WriteMigrationEntries() error {
-	filePath := path.Join(ctx.WorkDir, ctx.LogFile)
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-	for _, migration := range ctx.Migrations {
-		_, err := file.WriteString(migration.String() + "\n")
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	Migrations Migrations
 }
 
 func DefaultContextConfig() (string, Database, string) {
@@ -165,4 +156,46 @@ func NewMigratorContext(workDir string, dbType Database, logFile string, dry boo
 	}
 
 	return ctx
+}
+
+func (ctx *Context) LoadMigrationEntries() error {
+	migrations := []*MigrationEntry{}
+	entires, err := readLines(path.Join(ctx.WorkDir, ctx.LogFile))
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entires {
+		migration, err := ParseMigrationEntry(entry)
+		if err != nil {
+			return err
+		}
+
+		upFileName, downFileNamme := migration.FileNames(SelectExtention(ctx.Database))
+		migration.UpFilePath = path.Join(ctx.WorkDir, upFileName)
+		migration.DownFilePath = path.Join(ctx.WorkDir, downFileNamme)
+
+		migrations = append(migrations, migration)
+	}
+
+	ctx.Migrations = migrations
+	return nil
+}
+
+func (ctx *Context) WriteMigrationEntries() error {
+	filePath := path.Join(ctx.WorkDir, ctx.LogFile)
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+	for _, migration := range ctx.Migrations {
+		_, err := file.WriteString(migration.EntryString() + "\n")
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

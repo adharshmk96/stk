@@ -64,6 +64,11 @@ var GenerateCmd = &cobra.Command{
 		}
 		displayGeneratedFiles(generatedFiles)
 
+		err = ctx.WriteMigrationEntries()
+		if err != nil {
+			fmt.Println("Error writing migration entries:", err)
+			return
+		}
 		fmt.Println("Generated migrations successfully.")
 
 	},

@@ -140,7 +140,7 @@ func TestRawMigrationString(t *testing.T) {
 		}
 
 		for _, c := range tc {
-			assert.Equal(t, c.expected, c.rawMigration.String())
+			assert.Equal(t, c.expected, c.rawMigration.EntryString())
 		}
 	})
 }
@@ -175,7 +175,7 @@ func TestContextLoding(t *testing.T) {
 		}()
 
 		for i, migration := range ctx.Migrations {
-			assert.Equal(t, expected[i].String(), migration.String())
+			assert.Equal(t, expected[i].EntryString(), migration.EntryString())
 			assert.Equal(t, expected[i].Number, migration.Number)
 			assert.Equal(t, expected[i].Name, migration.Name)
 			assert.Equal(t, expected[i].Committed, migration.Committed)

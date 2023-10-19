@@ -1,9 +1,7 @@
 package sqlmigrator_test
 
 import (
-	"fmt"
 	"os"
-	"path"
 	"testing"
 
 	sqlmigrator "github.com/adharshmk96/stk/pkg/sqlMigrator"
@@ -79,7 +77,7 @@ func TestGenerate(t *testing.T) {
 		assert.Equal(t, 1, getNumberOfFilesInFolder(t, tempDir))
 	})
 
-	t.Run("generator writes to log file", func(t *testing.T) {
+	t.Run("generator updates ctx migrations", func(t *testing.T) {
 		numToGenerate := 3
 
 		tempDir, removeDir := testutils.CreateTempDirectory(t)
@@ -87,45 +85,16 @@ func TestGenerate(t *testing.T) {
 		_, db, logfile := sqlmigrator.DefaultContextConfig()
 		ctx := sqlmigrator.NewMigratorContext(tempDir, db, logfile, false)
 
-		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
-
 		defer removeDir()
+
+		existingMigrations := len(ctx.Migrations)
 
 		generator := sqlmigrator.NewGenerator("user_table", numToGenerate, true)
 		_, err := generator.Generate(ctx)
 		assert.NoError(t, err)
 
-		logContent := testutils.GetFileContent(t, logFilePath)
-		assert.NotEmpty(t, logContent)
+		assert.Equal(t, existingMigrations+numToGenerate, len(ctx.Migrations))
 
-		expectedLogContent := func() string {
-			content := ""
-			for i := 1; i <= numToGenerate; i++ {
-				content += fmt.Sprintf("%d_user_table_down\n", i)
-			}
-			return content
-		}()
-		assert.Equal(t, expectedLogContent, logContent)
-
-		generator = sqlmigrator.NewGenerator("auth_table", numToGenerate+1, true)
-		_, err = generator.Generate(ctx)
-		assert.NoError(t, err)
-
-		logContent = testutils.GetFileContent(t, logFilePath)
-		assert.NotEmpty(t, logContent)
-
-		expectedLogContent = func() string {
-			content := ""
-			for i := 1; i <= numToGenerate; i++ {
-				content += fmt.Sprintf("%d_user_table_down\n", i)
-			}
-			for i := numToGenerate + 1; i <= (2*numToGenerate)+1; i++ {
-				content += fmt.Sprintf("%d_auth_table_down\n", i)
-			}
-			return content
-		}()
-
-		assert.Equal(t, expectedLogContent, logContent)
 	})
 }
 
