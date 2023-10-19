@@ -2,7 +2,9 @@
 
 Server toolkit - minimal and simple framework for developing server in golang
 
+[![Build and Test](https://github.com/adharshmk96/stk/actions/workflows/go-build-test.yml/badge.svg)](https://github.com/adharshmk96/stk/actions/workflows/go-build-test.yml)
 [![codecov](https://codecov.io/gh/adharshmk96/stk/graph/badge.svg?token=HMGG55CCLT)](https://codecov.io/gh/adharshmk96/stk)
+[![Go Release Workflow](https://github.com/adharshmk96/stk/actions/workflows/go-release.yml/badge.svg)](https://github.com/adharshmk96/stk/actions/workflows/go-release.yml)
 
 ## Library
 
