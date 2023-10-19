@@ -2,7 +2,7 @@
 
 Server toolkit - minimal and simple framework for developing server in golang
 
-[![codecov](https://codecov.io/gh/adharshmk96/stk/branch/master/graph/badge.svg?token=uuid-repo-token)](https://codecov.io/gh/adharshmk96/stk)
+[![codecov](https://codecov.io/gh/adharshmk96/stk/graph/badge.svg?token=HMGG55CCLT)](https://codecov.io/gh/adharshmk96/stk)
 
 ## Library
 
