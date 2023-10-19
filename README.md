@@ -1,6 +1,7 @@
 # STK
 
 Server toolkit - minimal and simple framework for developing server in golang
+[![codecov](https://codecov.io/gh/adharshmk96/stk/branch/master/graph/badge.svg?token=uuid-repo-token)](https://codecov.io/gh/adharshmk96/stk)
 
 ## Library
 
