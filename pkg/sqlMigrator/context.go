@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	DEFAULE_LOG_FILE = "migrations.log"
+	DEFAULT_LOG_FILE = ".commit-status"
 )
 
 type MigrationType string
@@ -35,7 +35,7 @@ type Context struct {
 func DefaultContextConfig() (string, Database, string) {
 	rootDirectory := viper.GetString("migrator.workdir")
 	dbChoice := viper.GetString("migrator.database")
-	logFile := getFirst(viper.GetString("migrator.logfile"), DEFAULE_LOG_FILE)
+	logFile := getFirst(viper.GetString("migrator.logfile"), DEFAULT_LOG_FILE)
 
 	dbType := SelectDatabase(dbChoice)
 	subDir := SelectSubDirectory(dbType)

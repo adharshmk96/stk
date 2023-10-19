@@ -12,24 +12,32 @@ import (
 
 var migrationName string
 
-func displayContext(ctx *sqlmigrator.Context) {
-	fmt.Println("Work Directory\t:", ctx.WorkDir)
-	fmt.Println("Log File\t:", ctx.LogFile)
-	fmt.Println("Database:\t:", ctx.Database)
-}
+func displayContextAndConfig(ctx *sqlmigrator.Context, generator *sqlmigrator.Generator) {
+	labels := []string{"Work Directory", "Log File", "Database", "Name", "Files", "Dry Run", "Fill"}
 
-func displayGenerator(generator *sqlmigrator.Generator) {
-	fmt.Println("Name\t:", generator.Name)
-	fmt.Println("Files\t:", generator.NumToGenerate)
-	fmt.Println("Dry Run\t:", generator.DryRun)
-	fmt.Println("Fill\t:", generator.Fill)
+	maxLen := 0
+	for _, label := range labels {
+		if len(label) > maxLen {
+			maxLen = len(label)
+		}
+	}
+
+	fmt.Printf("%-*s :%v\n", maxLen, labels[0], ctx.WorkDir)
+	fmt.Printf("%-*s :%v\n", maxLen, labels[1], ctx.LogFile)
+	fmt.Printf("%-*s :%v\n", maxLen, labels[2], ctx.Database)
+	fmt.Printf("%-*s :%v\n", maxLen, labels[3], generator.Name)
+	fmt.Printf("%-*s :%v\n", maxLen, labels[4], generator.NumToGenerate)
+	fmt.Printf("%-*s :%v\n", maxLen, labels[5], generator.DryRun)
+	fmt.Printf("%-*s :%v\n", maxLen, labels[6], generator.Fill)
+
 }
 
 func displayGeneratedFiles(files []string) {
-	fmt.Println("Generated Files:")
+	fmt.Println("\nGenerated Files:")
 	for _, file := range files {
 		fmt.Println(file)
 	}
+	fmt.Println("")
 }
 
 var GenerateCmd = &cobra.Command{
@@ -45,9 +53,8 @@ var GenerateCmd = &cobra.Command{
 
 		workDir, dbType, logFile := sqlmigrator.DefaultContextConfig()
 		ctx := sqlmigrator.NewMigratorContext(workDir, dbType, logFile, dryRun)
-		displayContext(ctx)
 		generator := sqlmigrator.NewGenerator(migrationName, numToGenerate, fill)
-		displayGenerator(generator)
+		displayContextAndConfig(ctx, generator)
 
 		fmt.Println("Generating migrations...")
 		generatedFiles, err := generator.Generate(ctx)
