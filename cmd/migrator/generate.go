@@ -25,6 +25,13 @@ func displayGenerator(generator *sqlmigrator.Generator) {
 	fmt.Println("Fill\t:", generator.Fill)
 }
 
+func displayGeneratedFiles(files []string) {
+	fmt.Println("Generated Files:")
+	for _, file := range files {
+		fmt.Println(file)
+	}
+}
+
 var GenerateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate migration files.",
@@ -39,15 +46,16 @@ var GenerateCmd = &cobra.Command{
 		workDir, dbType, logFile := sqlmigrator.DefaultContextConfig()
 		ctx := sqlmigrator.NewMigratorContext(workDir, dbType, logFile, dryRun)
 		displayContext(ctx)
-		generator := sqlmigrator.NewGenerator(migrationName, numToGenerate, dryRun, fill)
+		generator := sqlmigrator.NewGenerator(migrationName, numToGenerate, fill)
 		displayGenerator(generator)
 
 		fmt.Println("Generating migrations...")
-		err := generator.Generate(ctx)
+		generatedFiles, err := generator.Generate(ctx)
 		if err != nil {
 			fmt.Println("Error generating migrations:", err)
 			return
 		}
+		displayGeneratedFiles(generatedFiles)
 
 		fmt.Println("Generated migrations successfully.")
 

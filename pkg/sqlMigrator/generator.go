@@ -12,7 +12,7 @@ type Generator struct {
 	Fill          bool
 }
 
-func NewGenerator(name string, numToGenerate int, dryRun bool, fill bool) *Generator {
+func NewGenerator(name string, numToGenerate int, fill bool) *Generator {
 	return &Generator{
 		Name:          name,
 		NumToGenerate: numToGenerate,
@@ -20,17 +20,18 @@ func NewGenerator(name string, numToGenerate int, dryRun bool, fill bool) *Gener
 	}
 }
 
-func (g *Generator) Generate(ctx *Context) error {
+func (g *Generator) Generate(ctx *Context) ([]string, error) {
+	generatedFiles := []string{}
 	// Assumes that the log file exists, It is generated when context is initialized
 	lastMigration, err := loadLastMigrationFromLog(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	nextMigrations := GenerateNextMigrations(lastMigration.Number, g.Name, g.NumToGenerate)
 	if ctx.DryRun {
 		dryRunGeneration(nextMigrations)
-		return nil
+		return generatedFiles, nil
 	}
 
 	for _, migration := range nextMigrations {
@@ -51,21 +52,23 @@ func (g *Generator) Generate(ctx *Context) error {
 		}
 		err := createFile(upFilePath, upFileContent)
 		if err != nil {
-			return err
+			return generatedFiles, err
 		}
 
 		err = createFile(downFilePath, downFileContent)
 		if err != nil {
-			return err
+			return generatedFiles, err
 		}
 
 		err = writeMigrationToLog(ctx, migrationName)
 		if err != nil {
-			return err
+			return generatedFiles, err
 		}
+
+		generatedFiles = append(generatedFiles, upFilePath, downFilePath)
 	}
 
-	return nil
+	return generatedFiles, nil
 }
 
 func dryRunGeneration(migrations []*Migration) {

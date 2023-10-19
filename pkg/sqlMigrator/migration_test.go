@@ -35,6 +35,33 @@ func TestParseRawMigration(t *testing.T) {
 			assert.Equal(t, c.expectedName, rawMigration.Name)
 		}
 	})
+
+	t.Run("returns an error if raw migration is invalid", func(t *testing.T) {
+		tc := []struct {
+			rawMigrationString string
+		}{
+			{
+				rawMigrationString: "1create_users_table",
+			},
+			{
+				rawMigrationString: "create_users_table",
+			},
+			{
+				rawMigrationString: "create_users_table1",
+			},
+			{
+				rawMigrationString: "",
+			},
+			{
+				rawMigrationString: "nameonly",
+			},
+		}
+
+		for _, c := range tc {
+			_, err := sqlmigrator.ParseRawMigration(c.rawMigrationString)
+			assert.Error(t, err)
+		}
+	})
 }
 
 func TestRawMigrationString(t *testing.T) {

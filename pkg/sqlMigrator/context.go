@@ -54,11 +54,9 @@ func NewMigratorContext(workDir string, dbType Database, logFile string, dry boo
 		DryRun:   dry,
 	}
 
-	if !dry {
-		err := InitializeMigrationsFolder(ctx)
-		if err != nil {
-			return nil
-		}
+	err := InitializeMigrationsFolder(ctx)
+	if err != nil {
+		return nil
 	}
 
 	return ctx
