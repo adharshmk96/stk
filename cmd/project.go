@@ -4,6 +4,7 @@ Copyright © 2023 Adharsh M dev@adharsh.in
 package cmd
 
 import (
+	"github.com/adharshmk96/stk/cmd/project"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,6 +21,9 @@ func init() {
 	projectCmd.PersistentFlags().StringVar(&projectPackageName, "pkg", "", "project package name or repository name")
 
 	viper.BindPFlag("project.package", projectCmd.PersistentFlags().Lookup("pkg"))
+
+	projectCmd.AddCommand(project.ModuleCmd)
+	projectCmd.AddCommand(project.GenerateCmd)
 
 	rootCmd.AddCommand(projectCmd)
 

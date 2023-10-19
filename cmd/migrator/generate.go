@@ -1,7 +1,7 @@
 /*
 Copyright © 2023 Adharsh M dev@adharsh.in
 */
-package migratorCmds
+package migrator
 
 import (
 	"fmt"
@@ -13,16 +13,16 @@ import (
 var migrationName string
 
 func displayContext(ctx *sqlmigrator.Context) {
-	fmt.Println("Work Directory: ", ctx.WorkDir)
-	fmt.Println("Log File: ", ctx.LogFile)
-	fmt.Println("Database: ", ctx.Database)
+	fmt.Println("Work Directory\t:", ctx.WorkDir)
+	fmt.Println("Log File\t:", ctx.LogFile)
+	fmt.Println("Database:\t:", ctx.Database)
 }
 
 func displayGenerator(generator *sqlmigrator.Generator) {
-	fmt.Println("Migration Name: ", generator.Name)
-	fmt.Println("Number of Migrations: ", generator.NumToGenerate)
-	fmt.Println("Dry Run: ", generator.DryRun)
-	fmt.Println("Fill: ", generator.Fill)
+	fmt.Println("Name\t:", generator.Name)
+	fmt.Println("Files\t:", generator.NumToGenerate)
+	fmt.Println("Dry Run\t:", generator.DryRun)
+	fmt.Println("Fill\t:", generator.Fill)
 }
 
 var GenerateCmd = &cobra.Command{
@@ -41,8 +41,10 @@ var GenerateCmd = &cobra.Command{
 		generator := sqlmigrator.NewGenerator(migrationName, numToGenerate, dryRun, fill)
 		displayGenerator(generator)
 
+		fmt.Println("Generating migrations...")
 		err := generator.Generate(ctx)
 		if err != nil {
+			fmt.Println("Error generating migrations:", err)
 			return
 		}
 

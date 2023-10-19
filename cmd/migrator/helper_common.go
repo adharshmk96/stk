@@ -1,4 +1,4 @@
-package migratorCmds
+package migrator
 
 import (
 	"context"

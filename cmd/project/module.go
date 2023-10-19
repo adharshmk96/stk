@@ -1,7 +1,7 @@
 /*
 Copyright © 2023 Adharsh M dev@adharsh.in
 */
-package cmd
+package project
 
 import (
 	"log"
@@ -20,7 +20,7 @@ func getModuleNameFromArgs(args []string) string {
 	return ""
 }
 
-var moduleCmd = &cobra.Command{
+var ModuleCmd = &cobra.Command{
 	Use:   "module",
 	Short: "Generate a module for project with gsk and clean architecture.",
 	Args:  cobra.MinimumNArgs(1),
@@ -77,8 +77,5 @@ var moduleCmd = &cobra.Command{
 }
 
 func init() {
-	moduleCmd.Flags().BoolVarP(&deleteModule, "delete", "d", false, "Delete module files.")
-
-	projectCmd.AddCommand(moduleCmd)
-
+	ModuleCmd.Flags().BoolVarP(&deleteModule, "delete", "d", false, "Delete module files.")
 }

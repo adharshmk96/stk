@@ -4,7 +4,7 @@ Copyright © 2023 Adharsh M dev@adharsh.in
 package cmd
 
 import (
-	"github.com/adharshmk96/stk/cmd/migratorCmds"
+	"github.com/adharshmk96/stk/cmd/migrator"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,11 +25,11 @@ func init() {
 	viper.BindPFlag("migrator.workdir", migratorCmd.PersistentFlags().Lookup("workdir"))
 	viper.BindPFlag("migrator.database", migratorCmd.PersistentFlags().Lookup("database"))
 
-	migratorCmd.AddCommand(migratorCmds.GenerateCmd)
-	migratorCmd.AddCommand(migratorCmds.UpCmd)
-	migratorCmd.AddCommand(migratorCmds.DownCmd)
-	migratorCmd.AddCommand(migratorCmds.CleanCmd)
-	migratorCmd.AddCommand(migratorCmds.HistoryCmd)
+	migratorCmd.AddCommand(migrator.GenerateCmd)
+	migratorCmd.AddCommand(migrator.UpCmd)
+	migratorCmd.AddCommand(migrator.DownCmd)
+	migratorCmd.AddCommand(migrator.CleanCmd)
+	migratorCmd.AddCommand(migrator.HistoryCmd)
 
 	rootCmd.AddCommand(migratorCmd)
 

@@ -1,7 +1,7 @@
 /*
 Copyright © 2023 Adharsh M dev@adharsh.in
 */
-package migratorCmds
+package migrator
 
 import (
 	"log"

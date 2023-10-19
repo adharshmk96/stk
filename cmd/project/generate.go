@@ -1,7 +1,7 @@
 /*
 Copyright © 2023 Adharsh M dev@adharsh.in
 */
-package cmd
+package project
 
 import (
 	"log"
@@ -16,7 +16,7 @@ import (
 // git fetch
 // git checkout -t origin/<your_branch_name>
 
-var generateCmd = &cobra.Command{
+var GenerateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate a project with gsk and clean architecture.",
 	Args:  cobra.MaximumNArgs(1),
@@ -54,8 +54,4 @@ var generateCmd = &cobra.Command{
 
 		log.Println("Project generated successfully.")
 	},
-}
-
-func init() {
-	projectCmd.AddCommand(generateCmd)
 }

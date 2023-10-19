@@ -29,7 +29,6 @@ func (g *Generator) Generate(ctx *Context) error {
 
 	nextMigrations := GenerateNextMigrations(lastMigration.Number, g.Name, g.NumToGenerate)
 	if g.DryRun {
-		fmt.Println("dry run")
 		dryRunGeneration(nextMigrations)
 		return nil
 	}
