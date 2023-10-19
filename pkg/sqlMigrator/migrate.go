@@ -5,7 +5,12 @@ import (
 	"slices"
 )
 
-func MigrateUp(ctx *Context, numToApply int) ([]*MigrationEntry, error) {
+type MigrationConfig struct {
+	NumToApply int
+	DBRepo     MigrateDatabase
+}
+
+func MigrateUp(ctx *Context, config *MigrationConfig) ([]*MigrationEntry, error) {
 	appliedMigrations := []*MigrationEntry{}
 	migrationToApply, err := LoadUncommitedMigrations(ctx)
 	if err != nil {
@@ -17,7 +22,7 @@ func MigrateUp(ctx *Context, numToApply int) ([]*MigrationEntry, error) {
 		return appliedMigrations, nil
 	}
 
-	num := min(numToApply, len(migrationToApply))
+	num := min(config.NumToApply, len(migrationToApply))
 	if num > 0 {
 		migrationToApply = migrationToApply[:num]
 	}
@@ -31,7 +36,7 @@ func MigrateUp(ctx *Context, numToApply int) ([]*MigrationEntry, error) {
 		upFileContent, _ := migration.LoadFileContent()
 
 		// TODO: replace with db stuff
-		err := dummyExec(upFileContent)
+		err := config.DBRepo.Exec(upFileContent)
 		if err != nil {
 			return appliedMigrations, err
 		}
@@ -43,7 +48,7 @@ func MigrateUp(ctx *Context, numToApply int) ([]*MigrationEntry, error) {
 	return appliedMigrations, nil
 }
 
-func MigrateDown(ctx *Context, numToApply int) ([]*MigrationEntry, error) {
+func MigrateDown(ctx *Context, config *MigrationConfig) ([]*MigrationEntry, error) {
 	rolledBackMigrations := []*MigrationEntry{}
 	migrationToApply, err := LoadCommittedMigrations(ctx)
 	if err != nil {
@@ -57,7 +62,7 @@ func MigrateDown(ctx *Context, numToApply int) ([]*MigrationEntry, error) {
 
 	slices.Reverse(migrationToApply)
 
-	num := min(numToApply, len(migrationToApply))
+	num := min(config.NumToApply, len(migrationToApply))
 	if num > 0 {
 		migrationToApply = migrationToApply[:num]
 	}
@@ -70,7 +75,7 @@ func MigrateDown(ctx *Context, numToApply int) ([]*MigrationEntry, error) {
 
 		_, downFileContent := migration.LoadFileContent()
 
-		err := dummyExec(downFileContent)
+		err := config.DBRepo.Exec(downFileContent)
 		if err != nil {
 			return rolledBackMigrations, err
 		}

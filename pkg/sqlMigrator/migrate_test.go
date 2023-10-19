@@ -5,9 +5,11 @@ import (
 	"path"
 	"testing"
 
+	"github.com/adharshmk96/stk/mocks"
 	sqlmigrator "github.com/adharshmk96/stk/pkg/sqlMigrator"
 	"github.com/adharshmk96/stk/testutils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func checkUnappliedMigrations(t *testing.T, ctx *sqlmigrator.Context, expected int) {
@@ -36,13 +38,19 @@ func TestMigrateUp(t *testing.T) {
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
 		assert.NoError(t, err)
-
 		err = ctx.LoadMigrationEntries()
 		assert.NoError(t, err)
-
 		checkUnappliedMigrations(t, ctx, 3)
 
-		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, 0)
+		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
+
+		migConfig := &sqlmigrator.MigrationConfig{
+			DBRepo:     dbMock,
+			NumToApply: 0,
+		}
+
+		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, migConfig)
 		assert.NoError(t, err)
 		assert.Equal(t, 3, len(appliedMigrations))
 
@@ -70,13 +78,19 @@ func TestMigrateUp(t *testing.T) {
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
 		assert.NoError(t, err)
-
 		err = ctx.LoadMigrationEntries()
 		assert.NoError(t, err)
-
 		checkUnappliedMigrations(t, ctx, 3)
 
-		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, 1)
+		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
+
+		migConfig := &sqlmigrator.MigrationConfig{
+			DBRepo:     dbMock,
+			NumToApply: 1,
+		}
+
+		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, migConfig)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 1, len(appliedMigrations))
@@ -104,13 +118,18 @@ func TestMigrateUp(t *testing.T) {
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
 		assert.NoError(t, err)
-
 		err = ctx.LoadMigrationEntries()
 		assert.NoError(t, err)
-
 		checkUnappliedMigrations(t, ctx, 3)
 
-		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, 0)
+		dbMock := mocks.NewMigrateDatabase(t)
+
+		migConfig := &sqlmigrator.MigrationConfig{
+			DBRepo:     dbMock,
+			NumToApply: 0,
+		}
+
+		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, migConfig)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 0, len(appliedMigrations))
@@ -129,16 +148,46 @@ func TestMigrateUp(t *testing.T) {
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
 		assert.NoError(t, err)
-
 		err = ctx.LoadMigrationEntries()
 		assert.NoError(t, err)
-
 		checkUnappliedMigrations(t, ctx, 3)
 
-		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, 100)
+		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
+
+		migConfig := &sqlmigrator.MigrationConfig{
+			DBRepo:     dbMock,
+			NumToApply: 100,
+		}
+
+		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, migConfig)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 3, len(appliedMigrations))
+
+		checkUnappliedMigrations(t, ctx, 0)
+	})
+
+	t.Run("migrate up runs fine with no unapplied migrations", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+
+		defer removeDir()
+
+		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+
+		checkUnappliedMigrations(t, ctx, 0)
+
+		dbMock := mocks.NewMigrateDatabase(t)
+
+		migConfig := &sqlmigrator.MigrationConfig{
+			DBRepo:     dbMock,
+			NumToApply: 0,
+		}
+
+		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, migConfig)
+		assert.NoError(t, err)
+
+		assert.Equal(t, 0, len(appliedMigrations))
 
 		checkUnappliedMigrations(t, ctx, 0)
 	})
@@ -170,7 +219,15 @@ func TestMigrateDown(t *testing.T) {
 
 		checkUnappliedMigrations(t, ctx, 3)
 
-		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, 0)
+		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
+
+		migConfig := &sqlmigrator.MigrationConfig{
+			DBRepo:     dbMock,
+			NumToApply: 0,
+		}
+
+		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, migConfig)
 		assert.NoError(t, err)
 		assert.Equal(t, 3, len(appliedMigrations))
 
@@ -204,7 +261,15 @@ func TestMigrateDown(t *testing.T) {
 
 		checkUnappliedMigrations(t, ctx, 3)
 
-		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, 1)
+		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
+
+		migConfig := &sqlmigrator.MigrationConfig{
+			DBRepo:     dbMock,
+			NumToApply: 1,
+		}
+
+		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, migConfig)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 1, len(appliedMigrations))
@@ -238,7 +303,14 @@ func TestMigrateDown(t *testing.T) {
 
 		checkUnappliedMigrations(t, ctx, 3)
 
-		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, 0)
+		dbMock := mocks.NewMigrateDatabase(t)
+
+		migConfig := &sqlmigrator.MigrationConfig{
+			DBRepo:     dbMock,
+			NumToApply: 0,
+		}
+
+		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, migConfig)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 0, len(appliedMigrations))
@@ -262,11 +334,43 @@ func TestMigrateDown(t *testing.T) {
 
 		checkUnappliedMigrations(t, ctx, 3)
 
-		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, 100)
+		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
+
+		migConfig := &sqlmigrator.MigrationConfig{
+			DBRepo:     dbMock,
+			NumToApply: 100,
+		}
+
+		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, migConfig)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 3, len(appliedMigrations))
 
 		checkUnappliedMigrations(t, ctx, 6)
+	})
+
+	t.Run("migrate down runs fine with no unapplied migrations", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+
+		defer removeDir()
+
+		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+
+		checkUnappliedMigrations(t, ctx, 0)
+
+		dbMock := mocks.NewMigrateDatabase(t)
+
+		migConfig := &sqlmigrator.MigrationConfig{
+			DBRepo:     dbMock,
+			NumToApply: 0,
+		}
+
+		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, migConfig)
+		assert.NoError(t, err)
+
+		assert.Equal(t, 0, len(appliedMigrations))
+
+		checkUnappliedMigrations(t, ctx, 0)
 	})
 }
