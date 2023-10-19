@@ -128,6 +128,7 @@ func TestRouteGroup(t *testing.T) {
 		rg.Put("/users", handler)
 		rg.Patch("/users", handler)
 		rg.Delete("/users", handler)
+		rg.Handle("OPTIONS", "/users", handler)
 
 		r1, err := server.Test("GET", "/api/users", nil)
 		assert.NoError(t, err)
@@ -154,6 +155,10 @@ func TestRouteGroup(t *testing.T) {
 		assert.Equal(t, http.StatusTeapot, r5.Code)
 		assert.Equal(t, "/api/users", r5.Body.String())
 
+		r6, err := server.Test("OPTIONS", "/api/users", nil)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusTeapot, r6.Code)
+		assert.Equal(t, "/api/users", r6.Body.String())
 	})
 
 }
