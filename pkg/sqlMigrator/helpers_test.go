@@ -44,7 +44,7 @@ func TestInitializeMigrationsFolder(t *testing.T) {
 	})
 }
 
-func TestLoadUncommitedMigrationFromLog(t *testing.T) {
+func TestLoadUncommitedMigration(t *testing.T) {
 	t.Run("returns an empty migration entry if the log file is empty", func(t *testing.T) {
 		ctx := sqlmigrator.NewMigratorContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
 		migration, err := sqlmigrator.LoadUncommitedMigrations(ctx)
@@ -60,7 +60,7 @@ func TestLoadUncommitedMigrationFromLog(t *testing.T) {
 				fileContent += fmt.Sprintf("%d_create_users_table_up\n", i)
 			}
 			for i := 4; i <= 6; i++ {
-				fileContent += fmt.Sprintf("%d_create_users_table_down\n", i)
+				fileContent += fmt.Sprintf("%d_create_other_table_down\n", i)
 			}
 			return fileContent
 		}()
@@ -78,8 +78,59 @@ func TestLoadUncommitedMigrationFromLog(t *testing.T) {
 			for i := 4; i <= 6; i++ {
 				migrationEntry = append(migrationEntry, &sqlmigrator.MigrationEntry{
 					Number:    i,
-					Name:      "create_users_table",
+					Name:      "create_other_table",
 					Committed: false,
+				})
+			}
+
+			return migrationEntry
+		}()
+
+		for i, migration := range migrations {
+			assert.Equal(t, expected[i].Name, migration.Name)
+			assert.Equal(t, expected[i].Number, migration.Number)
+			assert.Equal(t, expected[i].Committed, migration.Committed)
+		}
+
+	})
+}
+
+func TestLoadCommittedMigration(t *testing.T) {
+	t.Run("returns an empty migration entry if the log file is empty", func(t *testing.T) {
+		ctx := sqlmigrator.NewMigratorContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
+		migration, err := sqlmigrator.LoadCommittedMigrations(ctx)
+		assert.NoError(t, err)
+		assert.Empty(t, migration)
+		assert.Equal(t, 0, len(migration))
+	})
+
+	t.Run("returns committed migration entries from the log file", func(t *testing.T) {
+		logFile_content := func() string {
+			fileContent := ""
+			for i := 1; i <= 3; i++ {
+				fileContent += fmt.Sprintf("%d_create_users_table_up\n", i)
+			}
+			for i := 4; i <= 6; i++ {
+				fileContent += fmt.Sprintf("%d_create_users_table_down\n", i)
+			}
+			return fileContent
+		}()
+
+		ctx := sqlmigrator.NewMigratorContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
+		logPath := path.Join(ctx.WorkDir, ctx.LogFile)
+		err := os.WriteFile(logPath, []byte(logFile_content), 0644)
+		assert.NoError(t, err)
+
+		migrations, err := sqlmigrator.LoadCommittedMigrations(ctx)
+		assert.NoError(t, err)
+
+		expected := func() []*sqlmigrator.MigrationEntry {
+			migrationEntry := []*sqlmigrator.MigrationEntry{}
+			for i := 1; i <= 3; i++ {
+				migrationEntry = append(migrationEntry, &sqlmigrator.MigrationEntry{
+					Number:    i,
+					Name:      "create_users_table",
+					Committed: true,
 				})
 			}
 

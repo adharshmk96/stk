@@ -23,7 +23,7 @@ func NewGenerator(name string, numToGenerate int, fill bool) *Generator {
 func (g *Generator) Generate(ctx *Context) ([]string, error) {
 	generatedFiles := []string{}
 	// Assumes that the log file exists, It is generated when context is initialized
-	lastMigration := ctx.LastMigration()
+	lastMigration := LastMigration(ctx)
 
 	nextMigrations := GenerateNextMigrations(lastMigration.Number, g.Name, g.NumToGenerate)
 	if ctx.DryRun {

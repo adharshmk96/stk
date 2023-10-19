@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/adharshmk96/stk/pkg/utils"
 	"github.com/spf13/viper"
 )
 
@@ -99,12 +100,14 @@ func (r *MigrationEntry) FileNames(extention string) (string, string) {
 	return upFileName, downFileName
 }
 
-func (r *MigrationEntry) LoadFileContent() (string, string) {
-	upFileContent, err := readFileContent(r.UpFilePath)
+func (r *MigrationEntry) LoadFileContent() (upFileContent string, downFileContent string) {
+	var err error
+
+	upFileContent, err = readFileContent(r.UpFilePath)
 	if err != nil {
 		return "", ""
 	}
-	downFileContent, err := readFileContent(r.DownFilePath)
+	downFileContent, err = readFileContent(r.DownFilePath)
 	if err != nil {
 		return "", ""
 	}
@@ -123,7 +126,7 @@ type Context struct {
 func DefaultContextConfig() (string, Database, string) {
 	rootDirectory := viper.GetString("migrator.workdir")
 	dbChoice := viper.GetString("migrator.database")
-	logFile := getFirst(viper.GetString("migrator.logfile"), DEFAULT_LOG_FILE)
+	logFile := utils.GetFirst(viper.GetString("migrator.logfile"), DEFAULT_LOG_FILE)
 
 	dbType := SelectDatabase(dbChoice)
 	subDir := SelectSubDirectory(dbType)
@@ -190,13 +193,4 @@ func (ctx *Context) WriteMigrationEntries() error {
 	}
 
 	return nil
-}
-
-func (ctx *Context) LastMigration() *MigrationEntry {
-	lastMigration := &MigrationEntry{}
-	if len(ctx.Migrations) > 0 {
-		lastMigration = ctx.Migrations[len(ctx.Migrations)-1]
-	}
-
-	return lastMigration
 }
