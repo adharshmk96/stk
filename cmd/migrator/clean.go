@@ -30,6 +30,7 @@ var CleanCmd = &cobra.Command{
 
 		workDir, dbType, logFile := sqlmigrator.DefaultContextConfig()
 		ctx := sqlmigrator.NewMigratorContext(workDir, dbType, logFile, dryRun)
+		ctx.LoadMigrationEntries()
 
 		log.Println("Cleaning unapplied migrations...")
 
@@ -44,11 +45,16 @@ var CleanCmd = &cobra.Command{
 		}
 
 		displayCleanedFiles(removedFiles)
+		err = ctx.WriteMigrationEntries()
+		if err != nil {
+			log.Println("Error writing migration entries:", err)
+			return
+		}
 		log.Println("Cleaned migrations successfully.")
 
 	},
 }
 
 func init() {
-	CleanCmd.Flags().Bool("dry-run", false, "dry run, do not generate files")
+	CleanCmd.Flags().Bool("dry", false, "dry run, do not generate files")
 }

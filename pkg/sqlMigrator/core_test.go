@@ -219,5 +219,12 @@ func TestContextLoding(t *testing.T) {
 
 		assert.FileExists(t, logFilePath)
 		assert.Equal(t, LOG_FILE_CONTENT, testutils.GetFileContent(t, logFilePath))
+
+		err = ctx.WriteMigrationEntries()
+		assert.NoError(t, err)
+
+		assert.FileExists(t, logFilePath)
+		assert.Equal(t, LOG_FILE_CONTENT, testutils.GetFileContent(t, logFilePath))
+
 	})
 }

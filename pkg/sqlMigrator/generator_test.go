@@ -122,3 +122,112 @@ func TestGenerateNextMigrations(t *testing.T) {
 
 	})
 }
+
+func TestClean(t *testing.T) {
+	t.Run("clean removes files and updates ctx", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+
+		_, db, logfile := sqlmigrator.DefaultContextConfig()
+		ctx := sqlmigrator.NewMigratorContext(tempDir, db, logfile, false)
+		defer removeDir()
+
+		generator := sqlmigrator.NewGenerator("user_table", 3, true)
+		generatedFiles, err := generator.Generate(ctx)
+		assert.NoError(t, err)
+
+		for _, migration := range ctx.Migrations {
+			migration.Committed = true
+		}
+
+		expectedNumFiles := 1 + len(generatedFiles)
+		exptctedNumMigrations := (expectedNumFiles - 1) / 2
+
+		assert.Equal(t, expectedNumFiles, getNumberOfFilesInFolder(t, tempDir))
+		assert.Equal(t, exptctedNumMigrations, len(ctx.Migrations))
+
+		generator = sqlmigrator.NewGenerator("groups_table", 4, true)
+		uncommitedFiles, err := generator.Generate(ctx)
+		assert.NoError(t, err)
+
+		expectedNumFiles = 1 + len(generatedFiles) + len(uncommitedFiles)
+		exptctedNumMigrations = (expectedNumFiles - 1) / 2
+
+		assert.Equal(t, expectedNumFiles, getNumberOfFilesInFolder(t, tempDir))
+		assert.Equal(t, exptctedNumMigrations, len(ctx.Migrations))
+
+		for _, migration := range ctx.Migrations {
+			assert.FileExists(t, migration.UpFilePath)
+			assert.FileExists(t, migration.DownFilePath)
+		}
+
+		err = ctx.WriteMigrationEntries()
+		assert.NoError(t, err)
+
+		removedFiles, err := generator.Clean(ctx)
+		assert.NoError(t, err)
+
+		assert.Equal(t, len(uncommitedFiles), len(removedFiles))
+
+		expectedNumFiles = 1 + len(generatedFiles)
+		exptctedNumMigrations = (expectedNumFiles - 1) / 2
+
+		assert.Equal(t, expectedNumFiles, getNumberOfFilesInFolder(t, tempDir))
+		assert.Equal(t, exptctedNumMigrations, len(ctx.Migrations))
+
+		for _, migration := range ctx.Migrations {
+			assert.FileExists(t, migration.UpFilePath)
+			assert.FileExists(t, migration.DownFilePath)
+		}
+
+	})
+
+	t.Run("clean doesn't remove files on dry run", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+
+		_, db, logfile := sqlmigrator.DefaultContextConfig()
+		ctx := sqlmigrator.NewMigratorContext(tempDir, db, logfile, false)
+		defer removeDir()
+
+		generator := sqlmigrator.NewGenerator("user_table", 3, true)
+		generatedFiles, err := generator.Generate(ctx)
+		assert.NoError(t, err)
+
+		for _, migration := range ctx.Migrations {
+			assert.FileExists(t, migration.UpFilePath)
+			assert.FileExists(t, migration.DownFilePath)
+			migration.Committed = true
+		}
+
+		generator = sqlmigrator.NewGenerator("groups_table", 4, true)
+		uncommitedFiles, err := generator.Generate(ctx)
+		assert.NoError(t, err)
+
+		ctx.DryRun = true
+
+		removedFiles, err := generator.Clean(ctx)
+		assert.NoError(t, err)
+
+		expectedFiles := len(uncommitedFiles) + len(generatedFiles) + 1
+		expectedMigrations := (len(uncommitedFiles) + len(generatedFiles)) / 2
+
+		assert.Empty(t, removedFiles)
+		assert.Equal(t, expectedFiles, getNumberOfFilesInFolder(t, tempDir))
+		assert.Equal(t, expectedMigrations, len(ctx.Migrations))
+	})
+
+	t.Run("clean works in empty directory", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+
+		_, db, logfile := sqlmigrator.DefaultContextConfig()
+		ctx := sqlmigrator.NewMigratorContext(tempDir, db, logfile, false)
+		defer removeDir()
+
+		generator := sqlmigrator.NewGenerator("user_table", 3, true)
+		removedFiles, err := generator.Clean(ctx)
+		assert.NoError(t, err)
+
+		assert.Empty(t, removedFiles)
+		assert.Equal(t, 1, getNumberOfFilesInFolder(t, tempDir))
+		assert.Equal(t, 0, len(ctx.Migrations))
+	})
+}

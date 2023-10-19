@@ -37,28 +37,28 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 
 		upFileName, downFileName := migration.FileNames(extention)
 
-		upFilePath := path.Join(ctx.WorkDir, upFileName)
+		migration.UpFilePath = path.Join(ctx.WorkDir, upFileName)
 		upFileContent := ""
 		if g.Fill {
 			upFileContent = fmt.Sprintf("CREATE TABLE sample_%s_table;", migString)
 		}
-		downFilePath := path.Join(ctx.WorkDir, downFileName)
+		migration.DownFilePath = path.Join(ctx.WorkDir, downFileName)
 		downFileContent := ""
 		if g.Fill {
 			downFileContent = fmt.Sprintf("DROP TABLE sample_%s_table;", migString)
 		}
-		err := createFile(upFilePath, upFileContent)
+		err := createFile(migration.UpFilePath, upFileContent)
 		if err != nil {
 			return generatedFiles, err
 		}
 
-		err = createFile(downFilePath, downFileContent)
+		err = createFile(migration.DownFilePath, downFileContent)
 		if err != nil {
 			return generatedFiles, err
 		}
 
 		ctx.Migrations = append(ctx.Migrations, migration)
-		generatedFiles = append(generatedFiles, upFilePath, downFilePath)
+		generatedFiles = append(generatedFiles, migration.UpFilePath, migration.DownFilePath)
 	}
 
 	return generatedFiles, nil
@@ -70,6 +70,10 @@ func (g *Generator) Clean(ctx *Context) ([]string, error) {
 	uncommitedMigrations, err := LoadUncommitedMigrationsFromLog(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if ctx.DryRun {
+		dryRunGeneration(uncommitedMigrations)
+		return removedFiles, nil
 	}
 
 	for _, migration := range uncommitedMigrations {
@@ -91,6 +95,7 @@ func (g *Generator) Clean(ctx *Context) ([]string, error) {
 		removedFiles = append(removedFiles, upFilePath, downFilePath)
 	}
 
+	ctx.Migrations = ctx.Migrations[:len(ctx.Migrations)-len(uncommitedMigrations)]
 	return removedFiles, nil
 }
 

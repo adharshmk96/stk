@@ -5,6 +5,7 @@ package migrator
 
 import (
 	"fmt"
+	"log"
 
 	sqlmigrator "github.com/adharshmk96/stk/pkg/sqlMigrator"
 	"github.com/spf13/cobra"
@@ -57,20 +58,20 @@ var GenerateCmd = &cobra.Command{
 		generator := sqlmigrator.NewGenerator(migrationName, numToGenerate, fill)
 		displayContextAndConfig(ctx, generator)
 
-		fmt.Println("Generating migrations...")
+		log.Println("Generating migrations...")
 		generatedFiles, err := generator.Generate(ctx)
 		if err != nil {
-			fmt.Println("Error generating migrations:", err)
+			log.Println("Error generating migrations:", err)
 			return
 		}
 		displayGeneratedFiles(generatedFiles)
 
 		err = ctx.WriteMigrationEntries()
 		if err != nil {
-			fmt.Println("Error writing migration entries:", err)
+			log.Println("Error writing migration entries:", err)
 			return
 		}
-		fmt.Println("Generated migrations successfully.")
+		log.Println("Generated migrations successfully.")
 
 	},
 }
