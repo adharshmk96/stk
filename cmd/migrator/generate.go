@@ -53,6 +53,7 @@ var GenerateCmd = &cobra.Command{
 
 		workDir, dbType, logFile := sqlmigrator.DefaultContextConfig()
 		ctx := sqlmigrator.NewMigratorContext(workDir, dbType, logFile, dryRun)
+		ctx.LoadMigrationEntries()
 		generator := sqlmigrator.NewGenerator(migrationName, numToGenerate, fill)
 		displayContextAndConfig(ctx, generator)
 

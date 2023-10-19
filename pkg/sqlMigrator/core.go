@@ -31,13 +31,6 @@ const (
 
 type Migrations []*MigrationEntry
 
-func (m Migrations) Last() *MigrationEntry {
-	if len(m) == 0 {
-		return nil
-	}
-	return m[len(m)-1]
-}
-
 type MigrationEntry struct {
 	Number       int
 	Name         string
@@ -198,4 +191,13 @@ func (ctx *Context) WriteMigrationEntries() error {
 	}
 
 	return nil
+}
+
+func (ctx *Context) LastMigration() *MigrationEntry {
+	lastMigration := &MigrationEntry{}
+	if len(ctx.Migrations) > 0 {
+		lastMigration = ctx.Migrations[len(ctx.Migrations)-1]
+	}
+
+	return lastMigration
 }
