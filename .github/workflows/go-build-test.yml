@@ -23,7 +23,7 @@ jobs:
       run: "make build"
 
     - name: Test
-      run: "make coverage"
+      run: "make coverageci"
       
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
