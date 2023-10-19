@@ -99,13 +99,12 @@ func (r *MigrationEntry) FileNames(extention string) (string, string) {
 	return upFileName, downFileName
 }
 
-func (r *MigrationEntry) LoadFileContent(extention string) (string, string) {
-	upFileName, downFileName := r.FileNames(extention)
-	upFileContent, err := readFileContent(upFileName)
+func (r *MigrationEntry) LoadFileContent() (string, string) {
+	upFileContent, err := readFileContent(r.UpFilePath)
 	if err != nil {
 		return "", ""
 	}
-	downFileContent, err := readFileContent(downFileName)
+	downFileContent, err := readFileContent(r.DownFilePath)
 	if err != nil {
 		return "", ""
 	}
@@ -164,9 +163,9 @@ func (ctx *Context) LoadMigrationEntries() error {
 			return err
 		}
 
-		upFileName, downFileNamme := migration.FileNames(SelectExtention(ctx.Database))
+		upFileName, downFileName := migration.FileNames(SelectExtention(ctx.Database))
 		migration.UpFilePath = path.Join(ctx.WorkDir, upFileName)
-		migration.DownFilePath = path.Join(ctx.WorkDir, downFileNamme)
+		migration.DownFilePath = path.Join(ctx.WorkDir, downFileName)
 
 		migrations = append(migrations, migration)
 	}

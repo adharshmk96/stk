@@ -227,4 +227,32 @@ func TestContextLoding(t *testing.T) {
 		assert.Equal(t, LOG_FILE_CONTENT, testutils.GetFileContent(t, logFilePath))
 
 	})
+
+	t.Run("loads migration content from files", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+		defer removeDir()
+
+		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		err := ctx.LoadMigrationEntries()
+		assert.NoError(t, err)
+
+		assert.Equal(t, 0, len(ctx.Migrations))
+
+		generator := sqlmigrator.NewGenerator("user_table", 3, true)
+		generatedFiles, err := generator.Generate(ctx)
+		assert.NoError(t, err)
+
+		assert.Equal(t, 6, len(generatedFiles))
+		assert.Equal(t, 3, len(ctx.Migrations))
+
+		for _, migration := range ctx.Migrations {
+			assert.FileExists(t, migration.UpFilePath)
+			assert.FileExists(t, migration.DownFilePath)
+
+			upFileContent, downFileContent := migration.LoadFileContent()
+			assert.Equal(t, testutils.GetFileContent(t, migration.UpFilePath), upFileContent)
+			assert.Equal(t, testutils.GetFileContent(t, migration.DownFilePath), downFileContent)
+
+		}
+	})
 }
