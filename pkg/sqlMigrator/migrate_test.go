@@ -42,7 +42,7 @@ func TestMigrateUp(t *testing.T) {
 		assert.NoError(t, err)
 		checkUnappliedMigrations(t, ctx, 3)
 
-		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock := mocks.NewDBRepo(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
@@ -78,7 +78,7 @@ func TestMigrateUp(t *testing.T) {
 		assert.NoError(t, err)
 		checkUnappliedMigrations(t, ctx, 3)
 
-		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock := mocks.NewDBRepo(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
@@ -114,7 +114,7 @@ func TestMigrateUp(t *testing.T) {
 		assert.NoError(t, err)
 		checkUnappliedMigrations(t, ctx, 3)
 
-		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock := mocks.NewDBRepo(t)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
 		appliedMigrations, err := migrator.MigrateUp(ctx, 0)
@@ -140,7 +140,7 @@ func TestMigrateUp(t *testing.T) {
 		assert.NoError(t, err)
 		checkUnappliedMigrations(t, ctx, 3)
 
-		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock := mocks.NewDBRepo(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
@@ -161,7 +161,7 @@ func TestMigrateUp(t *testing.T) {
 
 		checkUnappliedMigrations(t, ctx, 0)
 
-		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock := mocks.NewDBRepo(t)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
 		appliedMigrations, err := migrator.MigrateUp(ctx, 0)
@@ -199,7 +199,7 @@ func TestMigrateDown(t *testing.T) {
 
 		checkUnappliedMigrations(t, ctx, 3)
 
-		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock := mocks.NewDBRepo(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
@@ -237,7 +237,7 @@ func TestMigrateDown(t *testing.T) {
 
 		checkUnappliedMigrations(t, ctx, 3)
 
-		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock := mocks.NewDBRepo(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
@@ -275,7 +275,7 @@ func TestMigrateDown(t *testing.T) {
 
 		checkUnappliedMigrations(t, ctx, 3)
 
-		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock := mocks.NewDBRepo(t)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
 		appliedMigrations, err := migrator.MigrateDown(ctx, 0)
@@ -302,7 +302,7 @@ func TestMigrateDown(t *testing.T) {
 
 		checkUnappliedMigrations(t, ctx, 3)
 
-		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock := mocks.NewDBRepo(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
@@ -323,7 +323,7 @@ func TestMigrateDown(t *testing.T) {
 
 		checkUnappliedMigrations(t, ctx, 0)
 
-		dbMock := mocks.NewMigrateDatabase(t)
+		dbMock := mocks.NewDBRepo(t)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
 		appliedMigrations, err := migrator.MigrateDown(ctx, 0)
