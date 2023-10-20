@@ -88,11 +88,11 @@ func formatModuleFilePath(pathTemplate string, config *Config) string {
 	return strings.ReplaceAll(pathTemplate, MODULE_PLACEHOLDER, config.ModName)
 }
 
-func createDirectoryForFile(filePath string) error {
-	dir := filepath.Dir(filePath)
+func createDirectoryForFile(path string) error {
+	dir := filepath.Dir(path)
 	err := os.MkdirAll(dir, 0755)
 	if err != nil {
-		log.Fatalf("Failed to create directory for file %s: %v\n", filePath, err)
+		log.Fatalf("failed to create directory for file %s: %v\n", path, err)
 	}
 	return err
 }
