@@ -41,6 +41,6 @@ changelog:
       - "^feat:"
       - "^fix:"
       - "^refactor:"
-      - "^chore:"
+      - "^platform:"
       - "^perf:"
 
