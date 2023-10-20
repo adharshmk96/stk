@@ -180,7 +180,7 @@ func (ctx *Context) LoadMigrationEntries() error {
 
 func (ctx *Context) WriteMigrationEntries() error {
 	filePath := path.Join(ctx.WorkDir, ctx.LogFile)
-	file, err := os.OpenFile(filePath, os.O_WRONLY, 0644)
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}

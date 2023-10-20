@@ -226,6 +226,14 @@ func TestContextLoding(t *testing.T) {
 		assert.FileExists(t, logFilePath)
 		assert.Equal(t, LOG_FILE_CONTENT, testutils.GetFileContent(t, logFilePath))
 
+		// updates the migration entries
+		ctx.Migrations = ctx.Migrations[:3]
+		err = ctx.WriteMigrationEntries()
+		assert.NoError(t, err)
+
+		assert.FileExists(t, logFilePath)
+		assert.Equal(t, "1_create_users_table_up\n2_create_posts_table_up\n3_create_comments_table_up\n", testutils.GetFileContent(t, logFilePath))
+
 	})
 
 	t.Run("loads migration content from files", func(t *testing.T) {
