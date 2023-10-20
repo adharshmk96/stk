@@ -1,4 +1,4 @@
-# sample regex patterns
 ignore:
-  - "pkg/db"  # ignore folders and all its contents
-  - "pkg/middleware"  # ignore folders and all its contents
+  - "pkg/db"  
+  - "pkg/middleware"  
+  - "pkg/sqlMigrator/selector.go"  
