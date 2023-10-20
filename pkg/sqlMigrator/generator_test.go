@@ -1,20 +1,12 @@
 package sqlmigrator_test
 
 import (
-	"os"
 	"testing"
 
 	sqlmigrator "github.com/adharshmk96/stk/pkg/sqlMigrator"
 	"github.com/adharshmk96/stk/testutils"
 	"github.com/stretchr/testify/assert"
 )
-
-func getNumberOfFilesInFolder(t *testing.T, folder string) int {
-	t.Helper()
-	files, err := os.ReadDir(folder)
-	assert.NoError(t, err)
-	return len(files)
-}
 
 func TestGenerate(t *testing.T) {
 	t.Run("generator generates correct number of migrations", func(t *testing.T) {
@@ -32,7 +24,7 @@ func TestGenerate(t *testing.T) {
 		generatedFiles, err := generator.Generate(ctx)
 
 		assert.NoError(t, err)
-		assert.Equal(t, expectedNumFiles, getNumberOfFilesInFolder(t, tempDir))
+		assert.Equal(t, expectedNumFiles, testutils.GetNumberOfFilesInFolder(t, tempDir))
 		assert.Equal(t, expectedNumFiles-1, len(generatedFiles))
 
 	})
@@ -74,7 +66,7 @@ func TestGenerate(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Empty(t, generatedFiles)
-		assert.Equal(t, 1, getNumberOfFilesInFolder(t, tempDir))
+		assert.Equal(t, 1, testutils.GetNumberOfFilesInFolder(t, tempDir))
 	})
 
 	t.Run("generator updates ctx migrations", func(t *testing.T) {
@@ -100,12 +92,12 @@ func TestGenerate(t *testing.T) {
 
 func TestGenerateNextMigrations(t *testing.T) {
 	t.Run("generates next migrations", func(t *testing.T) {
-		lastMigration := sqlmigrator.MigrationEntry{
+		lastMigration := sqlmigrator.MigrationFileEntry{
 			Number: 1,
 			Name:   "create_users_table",
 		}
 
-		migrations := []sqlmigrator.MigrationEntry{
+		migrations := []sqlmigrator.MigrationFileEntry{
 			{
 				Number: 2,
 			},
@@ -142,7 +134,7 @@ func TestClean(t *testing.T) {
 		expectedNumFiles := 1 + len(generatedFiles)
 		exptctedNumMigrations := (expectedNumFiles - 1) / 2
 
-		assert.Equal(t, expectedNumFiles, getNumberOfFilesInFolder(t, tempDir))
+		assert.Equal(t, expectedNumFiles, testutils.GetNumberOfFilesInFolder(t, tempDir))
 		assert.Equal(t, exptctedNumMigrations, len(ctx.Migrations))
 
 		generator = sqlmigrator.NewGenerator("groups_table", 4, true)
@@ -152,7 +144,7 @@ func TestClean(t *testing.T) {
 		expectedNumFiles = 1 + len(generatedFiles) + len(uncommitedFiles)
 		exptctedNumMigrations = (expectedNumFiles - 1) / 2
 
-		assert.Equal(t, expectedNumFiles, getNumberOfFilesInFolder(t, tempDir))
+		assert.Equal(t, expectedNumFiles, testutils.GetNumberOfFilesInFolder(t, tempDir))
 		assert.Equal(t, exptctedNumMigrations, len(ctx.Migrations))
 
 		for _, migration := range ctx.Migrations {
@@ -171,7 +163,7 @@ func TestClean(t *testing.T) {
 		expectedNumFiles = 1 + len(generatedFiles)
 		exptctedNumMigrations = (expectedNumFiles - 1) / 2
 
-		assert.Equal(t, expectedNumFiles, getNumberOfFilesInFolder(t, tempDir))
+		assert.Equal(t, expectedNumFiles, testutils.GetNumberOfFilesInFolder(t, tempDir))
 		assert.Equal(t, exptctedNumMigrations, len(ctx.Migrations))
 
 		for _, migration := range ctx.Migrations {
@@ -211,7 +203,7 @@ func TestClean(t *testing.T) {
 		expectedMigrations := (len(uncommitedFiles) + len(generatedFiles)) / 2
 
 		assert.Empty(t, removedFiles)
-		assert.Equal(t, expectedFiles, getNumberOfFilesInFolder(t, tempDir))
+		assert.Equal(t, expectedFiles, testutils.GetNumberOfFilesInFolder(t, tempDir))
 		assert.Equal(t, expectedMigrations, len(ctx.Migrations))
 	})
 
@@ -227,7 +219,7 @@ func TestClean(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.Empty(t, removedFiles)
-		assert.Equal(t, 1, getNumberOfFilesInFolder(t, tempDir))
+		assert.Equal(t, 1, testutils.GetNumberOfFilesInFolder(t, tempDir))
 		assert.Equal(t, 0, len(ctx.Migrations))
 	})
 }

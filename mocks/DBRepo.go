@@ -12,6 +12,20 @@ type DBRepo struct {
 	mock.Mock
 }
 
+// DeleteMigrationTable provides a mock function with given fields:
+func (_m *DBRepo) DeleteMigrationTable() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // Exec provides a mock function with given fields: query
 func (_m *DBRepo) Exec(query string) error {
 	ret := _m.Called(query)
@@ -26,20 +40,34 @@ func (_m *DBRepo) Exec(query string) error {
 	return r0
 }
 
-// LoadHistory provides a mock function with given fields:
-func (_m *DBRepo) LoadHistory() ([]*sqlmigrator.MigrationEntry, error) {
+// InitMigrationTable provides a mock function with given fields:
+func (_m *DBRepo) InitMigrationTable() error {
 	ret := _m.Called()
 
-	var r0 []*sqlmigrator.MigrationEntry
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// LoadHistory provides a mock function with given fields:
+func (_m *DBRepo) LoadHistory() ([]*sqlmigrator.MigrationDBEntry, error) {
+	ret := _m.Called()
+
+	var r0 []*sqlmigrator.MigrationDBEntry
 	var r1 error
-	if rf, ok := ret.Get(0).(func() ([]*sqlmigrator.MigrationEntry, error)); ok {
+	if rf, ok := ret.Get(0).(func() ([]*sqlmigrator.MigrationDBEntry, error)); ok {
 		return rf()
 	}
-	if rf, ok := ret.Get(0).(func() []*sqlmigrator.MigrationEntry); ok {
+	if rf, ok := ret.Get(0).(func() []*sqlmigrator.MigrationDBEntry); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*sqlmigrator.MigrationEntry)
+			r0 = ret.Get(0).([]*sqlmigrator.MigrationDBEntry)
 		}
 	}
 
@@ -50,6 +78,20 @@ func (_m *DBRepo) LoadHistory() ([]*sqlmigrator.MigrationEntry, error) {
 	}
 
 	return r0, r1
+}
+
+// PushHistory provides a mock function with given fields: migration
+func (_m *DBRepo) PushHistory(migration *sqlmigrator.MigrationDBEntry) error {
+	ret := _m.Called(migration)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*sqlmigrator.MigrationDBEntry) error); ok {
+		r0 = rf(migration)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // NewDBRepo creates a new instance of DBRepo. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

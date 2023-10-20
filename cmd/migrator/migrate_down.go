@@ -7,6 +7,7 @@ import (
 	"log"
 
 	sqlmigrator "github.com/adharshmk96/stk/pkg/sqlMigrator"
+	"github.com/adharshmk96/stk/pkg/sqlMigrator/dbrepo"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +24,7 @@ var DownCmd = &cobra.Command{
 		ctx := sqlmigrator.NewContext(workDir, dbType, logFile, dryRun)
 		ctx.LoadMigrationEntries()
 
-		dbRepo := sqlmigrator.SelectDBRepo(dbType, "path")
+		dbRepo := dbrepo.SelectDBRepo(dbType)
 		migrator := sqlmigrator.NewMigrator(dbRepo)
 
 		_, err := migrator.MigrateDown(ctx, numToGenerate)

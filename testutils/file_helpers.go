@@ -46,3 +46,10 @@ func GetFileContent(t *testing.T, filePath string) string {
 	assert.NoError(t, err)
 	return string(file)
 }
+
+func GetNumberOfFilesInFolder(t *testing.T, folder string) int {
+	t.Helper()
+	files, err := os.ReadDir(folder)
+	assert.NoError(t, err)
+	return len(files)
+}

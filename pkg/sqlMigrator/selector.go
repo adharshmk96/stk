@@ -44,15 +44,3 @@ func SelectSubDirectory(database Database) string {
 
 	return subDir
 }
-
-func SelectDBRepo(database Database, path string) DBRepo {
-	var repo DBRepo
-	switch database {
-	case SQLiteDB:
-		repo = NewSQLiteRepo(path)
-	default:
-		repo = NewSQLiteRepo(path)
-	}
-
-	return repo
-}

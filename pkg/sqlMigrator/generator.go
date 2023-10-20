@@ -2,6 +2,7 @@ package sqlmigrator
 
 import (
 	"fmt"
+	"os"
 	"path"
 )
 
@@ -47,12 +48,12 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 		if g.Fill {
 			downFileContent = fmt.Sprintf("DROP TABLE sample_%s_table;", migString)
 		}
-		err := createFile(migration.UpFilePath, upFileContent)
+		err := CreateFile(migration.UpFilePath, upFileContent)
 		if err != nil {
 			return generatedFiles, err
 		}
 
-		err = createFile(migration.DownFilePath, downFileContent)
+		err = CreateFile(migration.DownFilePath, downFileContent)
 		if err != nil {
 			return generatedFiles, err
 		}
@@ -82,12 +83,12 @@ func (g *Generator) Clean(ctx *Context) ([]string, error) {
 		upFilePath := path.Join(ctx.WorkDir, upFileName)
 		downFilePath := path.Join(ctx.WorkDir, downFileName)
 
-		err := removeFile(upFilePath)
+		err := os.Remove(upFilePath)
 		if err != nil {
 			return removedFiles, err
 		}
 
-		err = removeFile(downFilePath)
+		err = os.Remove(downFilePath)
 		if err != nil {
 			return removedFiles, err
 		}
@@ -99,7 +100,7 @@ func (g *Generator) Clean(ctx *Context) ([]string, error) {
 	return removedFiles, nil
 }
 
-func dryRunGeneration(migrations []*MigrationEntry) {
+func dryRunGeneration(migrations []*MigrationFileEntry) {
 	for _, migration := range migrations {
 		fileName := migration.EntryString()
 		fmt.Println("up\t:", fileName+"_up.sql")
@@ -107,14 +108,14 @@ func dryRunGeneration(migrations []*MigrationEntry) {
 	}
 }
 
-func GenerateNextMigrations(lastMigrationNumber int, name string, numToGenerate int) []*MigrationEntry {
-	var nextMigrations []*MigrationEntry
+func GenerateNextMigrations(lastMigrationNumber int, name string, numToGenerate int) []*MigrationFileEntry {
+	var nextMigrations []*MigrationFileEntry
 
 	startNumber := lastMigrationNumber + 1
 	endNumber := lastMigrationNumber + numToGenerate
 
 	for i := startNumber; i <= endNumber; i++ {
-		nextMigration := &MigrationEntry{
+		nextMigration := &MigrationFileEntry{
 			Number: i,
 			Name:   name,
 		}

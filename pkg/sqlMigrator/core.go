@@ -6,6 +6,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/adharshmk96/stk/pkg/utils"
 	"github.com/spf13/viper"
@@ -30,9 +31,9 @@ const (
 	SQLiteDB   Database = "sqlite"
 )
 
-type Migrations []*MigrationEntry
+type Migrations []*MigrationFileEntry
 
-type MigrationEntry struct {
+type MigrationFileEntry struct {
 	Number       int
 	Name         string
 	Committed    bool
@@ -40,7 +41,7 @@ type MigrationEntry struct {
 	DownFilePath string
 }
 
-func ParseMigrationEntry(migrationEntry string) (*MigrationEntry, error) {
+func ParseMigrationEntry(migrationEntry string) (*MigrationFileEntry, error) {
 	parts := strings.Split(migrationEntry, "_")
 	partLength := len(parts)
 
@@ -60,7 +61,7 @@ func ParseMigrationEntry(migrationEntry string) (*MigrationEntry, error) {
 		return nil, ErrInvalidMigration
 	}
 
-	rawMigration := &MigrationEntry{
+	rawMigration := &MigrationFileEntry{
 		Name:      name,
 		Number:    number,
 		Committed: commit_status == "up",
@@ -69,15 +70,15 @@ func ParseMigrationEntry(migrationEntry string) (*MigrationEntry, error) {
 	return rawMigration, nil
 }
 
-func (r *MigrationEntry) String() string {
+func (r *MigrationFileEntry) String() string {
 	m_String := fmt.Sprintf("%d", r.Number)
 	if r.Name != "" {
-		m_String += r.Name
+		m_String = m_String + "_" + r.Name
 	}
 	return m_String
 }
 
-func (r *MigrationEntry) EntryString() string {
+func (r *MigrationFileEntry) EntryString() string {
 	entryString := fmt.Sprintf("%d", r.Number)
 	if r.Name != "" {
 		entryString += "_" + r.Name
@@ -90,7 +91,7 @@ func (r *MigrationEntry) EntryString() string {
 	return entryString
 }
 
-func (r *MigrationEntry) FileNames(extention string) (string, string) {
+func (r *MigrationFileEntry) FileNames(extention string) (string, string) {
 	fileName := fmt.Sprintf("%d", r.Number)
 	if r.Name != "" {
 		fileName += "_" + r.Name
@@ -100,19 +101,19 @@ func (r *MigrationEntry) FileNames(extention string) (string, string) {
 	return upFileName, downFileName
 }
 
-func (r *MigrationEntry) LoadFileContent() (upFileContent string, downFileContent string) {
-	var err error
+func (r *MigrationFileEntry) LoadFileContent() (string, string) {
 
-	upFileContent, err = readFileContent(r.UpFilePath)
-	if err != nil {
-		return "", ""
-	}
-	downFileContent, err = readFileContent(r.DownFilePath)
+	upContent, err := os.ReadFile(r.UpFilePath)
 	if err != nil {
 		return "", ""
 	}
 
-	return upFileContent, downFileContent
+	downContent, err := os.ReadFile(r.DownFilePath)
+	if err != nil {
+		return "", ""
+	}
+
+	return string(upContent), string(downContent)
 }
 
 type Context struct {
@@ -154,8 +155,8 @@ func NewContext(workDir string, dbType Database, logFile string, dry bool) *Cont
 }
 
 func (ctx *Context) LoadMigrationEntries() error {
-	migrations := []*MigrationEntry{}
-	entires, err := readLines(path.Join(ctx.WorkDir, ctx.LogFile))
+	migrations := []*MigrationFileEntry{}
+	entires, err := ReadLines(path.Join(ctx.WorkDir, ctx.LogFile))
 	if err != nil {
 		return err
 	}
@@ -193,4 +194,10 @@ func (ctx *Context) WriteMigrationEntries() error {
 	}
 
 	return nil
+}
+
+type MigrationDBEntry struct {
+	Name      string
+	Direction string
+	Created   time.Time
 }

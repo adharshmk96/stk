@@ -44,6 +44,7 @@ func TestMigrateUp(t *testing.T) {
 
 		dbMock := mocks.NewDBRepo(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
+		dbMock.On("PushHistory", mock.Anything).Return(nil)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
 		appliedMigrations, err := migrator.MigrateUp(ctx, 0)
@@ -80,6 +81,7 @@ func TestMigrateUp(t *testing.T) {
 
 		dbMock := mocks.NewDBRepo(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
+		dbMock.On("PushHistory", mock.Anything).Return(nil)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
 		appliedMigrations, err := migrator.MigrateUp(ctx, 1)
@@ -142,6 +144,7 @@ func TestMigrateUp(t *testing.T) {
 
 		dbMock := mocks.NewDBRepo(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
+		dbMock.On("PushHistory", mock.Anything).Return(nil)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
 		appliedMigrations, err := migrator.MigrateUp(ctx, 0)
@@ -201,6 +204,7 @@ func TestMigrateDown(t *testing.T) {
 
 		dbMock := mocks.NewDBRepo(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
+		dbMock.On("PushHistory", mock.Anything).Return(nil)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
 		appliedMigrations, err := migrator.MigrateDown(ctx, 0)
@@ -239,6 +243,7 @@ func TestMigrateDown(t *testing.T) {
 
 		dbMock := mocks.NewDBRepo(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
+		dbMock.On("PushHistory", mock.Anything).Return(nil)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
 		appliedMigrations, err := migrator.MigrateDown(ctx, 1)
@@ -304,6 +309,7 @@ func TestMigrateDown(t *testing.T) {
 
 		dbMock := mocks.NewDBRepo(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
+		dbMock.On("PushHistory", mock.Anything).Return(nil)
 
 		migrator := sqlmigrator.NewMigrator(dbMock)
 		appliedMigrations, err := migrator.MigrateDown(ctx, 0)

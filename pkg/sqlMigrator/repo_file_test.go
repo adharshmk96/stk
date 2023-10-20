@@ -26,7 +26,7 @@ func TestReadFileContent(t *testing.T) {
 func TestReadLines(t *testing.T) {
 	t.Run("reads a file and returns all lines", func(t *testing.T) {
 		filePath, removeTempFile := testutils.CreateTempFile(t, TEST_FILE_CONTENT)
-		lines, err := readLines(filePath)
+		lines, err := ReadLines(filePath)
 
 		defer removeTempFile()
 
@@ -44,7 +44,7 @@ func TestReadLines(t *testing.T) {
 	})
 
 	t.Run("returns an error if file does not exist", func(t *testing.T) {
-		_, err := readLines("non-existent-file.txt")
+		_, err := ReadLines("non-existent-file.txt")
 
 		assert.Error(t, err)
 	})

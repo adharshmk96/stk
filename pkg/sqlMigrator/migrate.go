@@ -15,8 +15,8 @@ func NewMigrator(dbRepo DBRepo) *migrator {
 	}
 }
 
-func (m *migrator) MigrateUp(ctx *Context, num int) ([]*MigrationEntry, error) {
-	appliedMigrations := []*MigrationEntry{}
+func (m *migrator) MigrateUp(ctx *Context, num int) ([]*MigrationFileEntry, error) {
+	appliedMigrations := []*MigrationFileEntry{}
 	migrationToApply, err := LoadUncommitedMigrations(ctx)
 	if err != nil {
 		return appliedMigrations, err
@@ -40,7 +40,6 @@ func (m *migrator) MigrateUp(ctx *Context, num int) ([]*MigrationEntry, error) {
 
 		upFileContent, _ := migration.LoadFileContent()
 
-		// TODO: replace with db stuff
 		err := m.DBRepo.Exec(upFileContent)
 		if err != nil {
 			return appliedMigrations, err
@@ -48,13 +47,24 @@ func (m *migrator) MigrateUp(ctx *Context, num int) ([]*MigrationEntry, error) {
 
 		migration.Committed = true
 		appliedMigrations = append(appliedMigrations, migration)
+
+		// commit to db migration table
+		dbEntry := &MigrationDBEntry{
+			Name:      migration.String(),
+			Direction: "up",
+		}
+
+		err = m.DBRepo.PushHistory(dbEntry)
+		if err != nil {
+			return appliedMigrations, err
+		}
 	}
 
 	return appliedMigrations, nil
 }
 
-func (m *migrator) MigrateDown(ctx *Context, num int) ([]*MigrationEntry, error) {
-	rolledBackMigrations := []*MigrationEntry{}
+func (m *migrator) MigrateDown(ctx *Context, num int) ([]*MigrationFileEntry, error) {
+	rolledBackMigrations := []*MigrationFileEntry{}
 	migrationToApply, err := LoadCommittedMigrations(ctx)
 	if err != nil {
 		return rolledBackMigrations, err
@@ -87,16 +97,27 @@ func (m *migrator) MigrateDown(ctx *Context, num int) ([]*MigrationEntry, error)
 
 		migration.Committed = false
 		rolledBackMigrations = append(rolledBackMigrations, migration)
+
+		// commit to db migration table
+		dbEntry := &MigrationDBEntry{
+			Name:      migration.String(),
+			Direction: "down",
+		}
+
+		err = m.DBRepo.PushHistory(dbEntry)
+		if err != nil {
+			return rolledBackMigrations, err
+		}
 	}
 
 	return rolledBackMigrations, nil
 }
 
-func (m *migrator) MigrationHistory(ctx *Context) ([]*MigrationEntry, error) {
+func (m *migrator) MigrationHistory(ctx *Context) ([]*MigrationDBEntry, error) {
 	return m.DBRepo.LoadHistory()
 }
 
-func displayMigration(migration *MigrationEntry) {
+func displayMigration(migration *MigrationFileEntry) {
 	fileName := migration.EntryString()
 	fmt.Println("up\t:", fileName)
 }

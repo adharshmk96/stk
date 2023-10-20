@@ -32,13 +32,13 @@ func TestInitializeMigrationsFolder(t *testing.T) {
 		err := sqlmigrator.InitializeMigrationsFolder(ctx)
 		assert.NoError(t, err)
 
-		numFiles := getNumberOfFilesInFolder(t, tempDir)
+		numFiles := testutils.GetNumberOfFilesInFolder(t, tempDir)
 		assert.Equal(t, 1, numFiles)
 
 		err = sqlmigrator.InitializeMigrationsFolder(ctx)
 		assert.NoError(t, err)
 
-		numFiles = getNumberOfFilesInFolder(t, tempDir)
+		numFiles = testutils.GetNumberOfFilesInFolder(t, tempDir)
 		assert.Equal(t, 1, numFiles)
 
 	})
@@ -73,10 +73,10 @@ func TestLoadUncommitedMigration(t *testing.T) {
 		migrations, err := sqlmigrator.LoadUncommitedMigrations(ctx)
 		assert.NoError(t, err)
 
-		expected := func() []*sqlmigrator.MigrationEntry {
-			migrationEntry := []*sqlmigrator.MigrationEntry{}
+		expected := func() []*sqlmigrator.MigrationFileEntry {
+			migrationEntry := []*sqlmigrator.MigrationFileEntry{}
 			for i := 4; i <= 6; i++ {
-				migrationEntry = append(migrationEntry, &sqlmigrator.MigrationEntry{
+				migrationEntry = append(migrationEntry, &sqlmigrator.MigrationFileEntry{
 					Number:    i,
 					Name:      "create_other_table",
 					Committed: false,
@@ -124,10 +124,10 @@ func TestLoadCommittedMigration(t *testing.T) {
 		migrations, err := sqlmigrator.LoadCommittedMigrations(ctx)
 		assert.NoError(t, err)
 
-		expected := func() []*sqlmigrator.MigrationEntry {
-			migrationEntry := []*sqlmigrator.MigrationEntry{}
+		expected := func() []*sqlmigrator.MigrationFileEntry {
+			migrationEntry := []*sqlmigrator.MigrationFileEntry{}
 			for i := 1; i <= 3; i++ {
-				migrationEntry = append(migrationEntry, &sqlmigrator.MigrationEntry{
+				migrationEntry = append(migrationEntry, &sqlmigrator.MigrationFileEntry{
 					Number:    i,
 					Name:      "create_users_table",
 					Committed: true,

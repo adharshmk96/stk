@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func createFile(filePath, content string) error {
+func CreateFile(filePath, content string) error {
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
@@ -24,16 +24,7 @@ func createFile(filePath, content string) error {
 	return nil
 }
 
-func removeFile(filePath string) error {
-	err := os.Remove(filePath)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func readLines(filePath string) ([]string, error) {
+func ReadLines(filePath string) ([]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return []string{}, err

@@ -102,11 +102,11 @@ func TestParseRawMigration(t *testing.T) {
 func TestRawMigrationString(t *testing.T) {
 	t.Run("outputs correct migration string", func(t *testing.T) {
 		tc := []struct {
-			rawMigration sqlmigrator.MigrationEntry
+			rawMigration sqlmigrator.MigrationFileEntry
 			expected     string
 		}{
 			{
-				rawMigration: sqlmigrator.MigrationEntry{
+				rawMigration: sqlmigrator.MigrationFileEntry{
 					Number:    1,
 					Name:      "create_users_table",
 					Committed: true,
@@ -114,7 +114,7 @@ func TestRawMigrationString(t *testing.T) {
 				expected: "1_create_users_table_up",
 			},
 			{
-				rawMigration: sqlmigrator.MigrationEntry{
+				rawMigration: sqlmigrator.MigrationFileEntry{
 					Number:    2,
 					Name:      "",
 					Committed: false,
@@ -122,7 +122,7 @@ func TestRawMigrationString(t *testing.T) {
 				expected: "2_down",
 			},
 			{
-				rawMigration: sqlmigrator.MigrationEntry{
+				rawMigration: sqlmigrator.MigrationFileEntry{
 					Number:    3,
 					Name:      "create_posts_table",
 					Committed: true,
@@ -130,7 +130,7 @@ func TestRawMigrationString(t *testing.T) {
 				expected: "3_create_posts_table_up",
 			},
 			{
-				rawMigration: sqlmigrator.MigrationEntry{
+				rawMigration: sqlmigrator.MigrationFileEntry{
 					Number:    4,
 					Name:      "",
 					Committed: true,
@@ -161,8 +161,8 @@ func TestContextLoding(t *testing.T) {
 
 		assert.Equal(t, 6, len(ctx.Migrations))
 
-		expected := func() []*sqlmigrator.MigrationEntry {
-			migrationEntry := []*sqlmigrator.MigrationEntry{}
+		expected := func() []*sqlmigrator.MigrationFileEntry {
+			migrationEntry := []*sqlmigrator.MigrationFileEntry{}
 
 			lines := strings.Split(LOG_FILE_CONTENT, "\n")[0:6]
 			for _, line := range lines {
@@ -203,7 +203,7 @@ func TestContextLoding(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 0, len(ctx.Migrations))
 
-		migrationEntry := []*sqlmigrator.MigrationEntry{}
+		migrationEntry := []*sqlmigrator.MigrationFileEntry{}
 
 		lines := strings.Split(LOG_FILE_CONTENT, "\n")[0:6]
 		for _, line := range lines {

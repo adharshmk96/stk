@@ -1,4 +1,6 @@
 ignore:
-  - "pkg/db"  
-  - "pkg/middleware"  
-  - "pkg/sqlMigrator/selector.go"  
+  - "testutils"
+  - "pkg/db"
+  - "pkg/middleware"
+  - "pkg/sqlMigrator/dbrepo"
+  - "pkg/sqlMigrator/selector.go"
