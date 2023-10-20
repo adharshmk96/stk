@@ -5,10 +5,8 @@ package migrator
 
 import (
 	"log"
-	"path/filepath"
+	"os"
 
-	"github.com/adharshmk96/stk/pkg/migrator"
-	"github.com/adharshmk96/stk/pkg/migrator/fsrepo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,38 +18,15 @@ var PurgeCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootDirectory := viper.GetString("migrator.workdir")
-		dbChoice := viper.GetString("migrator.database")
-
-		// Select based on the database
-		dbType := migrator.SelectDatabase(dbChoice)
-		log.Println("selected database: ", dbType)
-
-		extention := migrator.SelectExtention(dbType)
-		subDirectory := migrator.SelectSubDirectory(dbType)
-		fsRepo := fsrepo.NewFSRepo(filepath.Join(rootDirectory, subDirectory), extention)
-
-		dbRepo := selectDbRepo(dbType)
-
-		log.Println("Removing migration table...")
-
-		err := dbRepo.DeleteMigrationTable()
+		err := os.RemoveAll(rootDirectory)
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
 
-		log.Println("Removed migration table successfully.")
+		// TODO: Remove the migration table from the database
 
-		log.Println("Removing migration files")
-
-		err = fsRepo.DeleteMigrationDirectory()
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-
-		log.Println("Removed migration files successfully.")
-
+		log.Println("Purged migrations successfully.")
 	},
 }
 

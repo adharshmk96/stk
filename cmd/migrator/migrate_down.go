@@ -38,5 +38,5 @@ var DownCmd = &cobra.Command{
 }
 
 func init() {
-	DownCmd.Flags().Bool("dry-run", false, "dry run, do not generate files")
+	DownCmd.Flags().Bool("dry", false, "dry run, do not generate files")
 }
