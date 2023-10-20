@@ -197,6 +197,7 @@ func (ctx *Context) WriteMigrationEntries() error {
 }
 
 type MigrationDBEntry struct {
+	Number    int
 	Name      string
 	Direction string
 	Created   time.Time

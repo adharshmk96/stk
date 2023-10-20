@@ -50,7 +50,8 @@ func (m *migrator) MigrateUp(ctx *Context, num int) ([]*MigrationFileEntry, erro
 
 		// commit to db migration table
 		dbEntry := &MigrationDBEntry{
-			Name:      migration.String(),
+			Number:    migration.Number,
+			Name:      migration.Name,
 			Direction: "up",
 		}
 
@@ -100,7 +101,8 @@ func (m *migrator) MigrateDown(ctx *Context, num int) ([]*MigrationFileEntry, er
 
 		// commit to db migration table
 		dbEntry := &MigrationDBEntry{
-			Name:      migration.String(),
+			Number:    migration.Number,
+			Name:      migration.Name,
 			Direction: "down",
 		}
 

@@ -40,7 +40,7 @@ func (db *sqliteDb) Exec(query string) error {
 }
 
 func (db *sqliteDb) PushHistory(migration *sqlmigrator.MigrationDBEntry) error {
-	_, err := db.conn.Exec(`INSERT INTO `+MIGRATION_TABLE_NAME+` (name, direction) VALUES (?, ?)`, migration.Name, migration.Direction)
+	_, err := db.conn.Exec(`INSERT INTO `+MIGRATION_TABLE_NAME+` (number, name, direction) VALUES (?, ?, ?)`, migration.Number, migration.Name, migration.Direction)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func (db *sqliteDb) PushHistory(migration *sqlmigrator.MigrationDBEntry) error {
 func (db *sqliteDb) LoadHistory() ([]*sqlmigrator.MigrationDBEntry, error) {
 
 	rows, err := db.conn.Query(`SELECT * FROM (
-		SELECT id, name, direction, created FROM ` + MIGRATION_TABLE_NAME + ` ORDER BY id DESC LIMIT 20
+		SELECT id, number, name, direction, created FROM ` + MIGRATION_TABLE_NAME + ` ORDER BY id DESC LIMIT 20
 	) ORDER BY id ASC`)
 	if err != nil {
 		return nil, err
@@ -63,16 +63,18 @@ func (db *sqliteDb) LoadHistory() ([]*sqlmigrator.MigrationDBEntry, error) {
 
 	for rows.Next() {
 		var id int
+		var number int
 		var name string
 		var direction string
 		var created time.Time
 
-		err = rows.Scan(&id, &name, &direction, &created)
+		err = rows.Scan(&id, &number, &name, &direction, &created)
 		if err != nil {
 			return nil, err
 		}
 
 		migrations = append(migrations, &sqlmigrator.MigrationDBEntry{
+			Number:    number,
 			Name:      name,
 			Direction: direction,
 			Created:   created,
@@ -86,6 +88,7 @@ func (db *sqliteDb) InitMigrationTable() error {
 	// create migration table if not exists
 	_, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS ` + MIGRATION_TABLE_NAME + ` (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		number INTEGER NOT NULL,
 		name VARCHAR(255) NOT NULL,
 		direction VARCHAR(4) NOT NULL,
 		created DATETIME DEFAULT CURRENT_TIMESTAMP

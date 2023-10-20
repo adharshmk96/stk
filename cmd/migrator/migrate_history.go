@@ -15,6 +15,7 @@ import (
 
 func displayMigrationHistory(history []*sqlmigrator.MigrationDBEntry) {
 	// Define max column widths
+	numberWidth := len("number")
 	nameWidth := len("name")
 	directionWidth := len("direction")
 	createdWidth := len("created")
@@ -35,12 +36,12 @@ func displayMigrationHistory(history []*sqlmigrator.MigrationDBEntry) {
 	// Print header
 	fmt.Println("Migration History")
 	fmt.Println("-----------------")
-	fmt.Printf("| %-"+fmt.Sprintf("%d", nameWidth)+"s | %-"+fmt.Sprintf("%d", directionWidth)+"s | %-"+fmt.Sprintf("%d", createdWidth)+"s |\n", "name", "direction", "created")
-	fmt.Printf("|-%s-|-%s-|-%s-|\n", strings.Repeat("-", nameWidth), strings.Repeat("-", directionWidth), strings.Repeat("-", createdWidth))
+	fmt.Printf("| %-"+fmt.Sprintf("%d", numberWidth)+"s | %-"+fmt.Sprintf("%d", nameWidth)+"s | %-"+fmt.Sprintf("%d", directionWidth)+"s | %-"+fmt.Sprintf("%d", createdWidth)+"s |\n", "number", "name", "direction", "created")
+	fmt.Printf("| %-"+fmt.Sprintf("%d", numberWidth)+"s | %-"+fmt.Sprintf("%d", nameWidth)+"s | %-"+fmt.Sprintf("%d", directionWidth)+"s | %-"+fmt.Sprintf("%d", createdWidth)+"s |\n", strings.Repeat("-", numberWidth), strings.Repeat("-", nameWidth), strings.Repeat("-", directionWidth), strings.Repeat("-", createdWidth))
 
 	// Print entries
 	for _, entry := range history {
-		fmt.Printf("| %-"+fmt.Sprintf("%d", nameWidth)+"s | %-"+fmt.Sprintf("%d", directionWidth)+"s | %-"+fmt.Sprintf("%d", createdWidth)+"s |\n", entry.Name, entry.Direction, entry.Created)
+		fmt.Printf("| %-"+fmt.Sprintf("%d", numberWidth)+"d | %-"+fmt.Sprintf("%d", nameWidth)+"s | %-"+fmt.Sprintf("%d", directionWidth)+"s | %-"+fmt.Sprintf("%d", createdWidth)+"s |\n", entry.Number, entry.Name, entry.Direction, entry.Created.String())
 	}
 }
 
