@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Tuple, Callable
 
 BASE_PATH = Path('./')
-WORKING_DIR = '../pkg/progen/tpl'
+WORKING_DIR = '../pkg/project/tpl'
 OUT_PROJECT_PATH = Path(WORKING_DIR+'/project.go')
 OUT_MODULE_PATH = Path(WORKING_DIR+'/modules.go')
 
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     create_template(
         BASE_PATH, 
         OUT_PROJECT_PATH, 
-        filename_condition=lambda f: True, 
+        filename_condition=lambda f: "ping" not in f,
         replacements=replacements,
         var_name="ProjectTemplates",
         template_var_suffix="_TPL"
