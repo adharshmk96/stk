@@ -54,8 +54,7 @@
             "env": {},
             "args": [
                 "migrator",
-                "clean",
-                "--dry-run",
+                "clean"
             ]
         },
     ]

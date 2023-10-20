@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Tuple, Callable
 
 BASE_PATH = Path('./')
-WORKING_DIR = '../pkg/project/tpl'
+WORKING_DIR = '../pkg/progen/tpl'
 OUT_PROJECT_PATH = Path(WORKING_DIR+'/project.go')
 OUT_MODULE_PATH = Path(WORKING_DIR+'/modules.go')
 

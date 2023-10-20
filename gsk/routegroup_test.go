@@ -115,4 +115,50 @@ func TestRouteGroup(t *testing.T) {
 
 	})
 
+	t.Run("route group register correct method", func(t *testing.T) {
+		server := gsk.New()
+
+		handler := func(c *gsk.Context) {
+			c.Status(http.StatusTeapot).StringResponse(c.Path())
+		}
+
+		rg := server.RouteGroup("/api")
+		rg.Get("/users", handler)
+		rg.Post("/users", handler)
+		rg.Put("/users", handler)
+		rg.Patch("/users", handler)
+		rg.Delete("/users", handler)
+		rg.Handle("OPTIONS", "/users", handler)
+
+		r1, err := server.Test("GET", "/api/users", nil)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusTeapot, r1.Code)
+		assert.Equal(t, "/api/users", r1.Body.String())
+
+		r2, err := server.Test("POST", "/api/users", nil)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusTeapot, r2.Code)
+		assert.Equal(t, "/api/users", r2.Body.String())
+
+		r3, err := server.Test("PUT", "/api/users", nil)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusTeapot, r3.Code)
+		assert.Equal(t, "/api/users", r3.Body.String())
+
+		r4, err := server.Test("PATCH", "/api/users", nil)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusTeapot, r4.Code)
+		assert.Equal(t, "/api/users", r4.Body.String())
+
+		r5, err := server.Test("DELETE", "/api/users", nil)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusTeapot, r5.Code)
+		assert.Equal(t, "/api/users", r5.Body.String())
+
+		r6, err := server.Test("OPTIONS", "/api/users", nil)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusTeapot, r6.Code)
+		assert.Equal(t, "/api/users", r6.Body.String())
+	})
+
 }
