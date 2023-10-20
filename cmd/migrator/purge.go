@@ -19,6 +19,7 @@ var PurgeCmd = &cobra.Command{
 	Short: "Remove all migration files and the migration table from the database",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Println("Purging migrations...")
 		rootDirectory := viper.GetString("migrator.workdir")
 		err := os.RemoveAll(rootDirectory)
 		if err != nil {
@@ -36,8 +37,4 @@ var PurgeCmd = &cobra.Command{
 
 		log.Println("Purged migrations successfully.")
 	},
-}
-
-func init() {
-	PurgeCmd.Flags().Bool("dry-run", false, "dry run, do not generate files")
 }

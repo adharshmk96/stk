@@ -30,6 +30,7 @@ func init() {
 	migratorCmd.AddCommand(migrator.DownCmd)
 	migratorCmd.AddCommand(migrator.CleanCmd)
 	migratorCmd.AddCommand(migrator.HistoryCmd)
+	migratorCmd.AddCommand(migrator.PurgeCmd)
 
 	rootCmd.AddCommand(migratorCmd)
 

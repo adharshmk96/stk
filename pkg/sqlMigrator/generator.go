@@ -41,7 +41,7 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 		migration.UpFilePath = path.Join(ctx.WorkDir, upFileName)
 		upFileContent := ""
 		if g.Fill {
-			upFileContent = fmt.Sprintf("CREATE TABLE sample_%s_table;", migString)
+			upFileContent = fmt.Sprintf("CREATE TABLE sample_%s_table (id INTEGER PRIMARY KEY AUTOINCREMENT, created DATETIME DEFAULT CURRENT_TIMESTAMP);", migString)
 		}
 		migration.DownFilePath = path.Join(ctx.WorkDir, downFileName)
 		downFileContent := ""

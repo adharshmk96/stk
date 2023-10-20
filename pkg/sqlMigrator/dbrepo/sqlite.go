@@ -2,10 +2,12 @@ package dbrepo
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
 	sqlmigrator "github.com/adharshmk96/stk/pkg/sqlMigrator"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // sqlite implementation
@@ -19,9 +21,13 @@ func NewSQLiteRepo(filePath string) sqlmigrator.DBRepo {
 		log.Fatal(err)
 		panic(err)
 	}
-	return &sqliteDb{
+	repo := &sqliteDb{
 		conn: conn,
 	}
+
+	repo.InitMigrationTable()
+
+	return repo
 }
 
 func (db *sqliteDb) Exec(query string) error {
@@ -44,7 +50,9 @@ func (db *sqliteDb) PushHistory(migration *sqlmigrator.MigrationDBEntry) error {
 
 func (db *sqliteDb) LoadHistory() ([]*sqlmigrator.MigrationDBEntry, error) {
 
-	rows, err := db.conn.Query(`SELECT id, name, direction, created FROM ` + MIGRATION_TABLE_NAME + ` ORDER BY id ASC`)
+	rows, err := db.conn.Query(`SELECT * FROM (
+		SELECT id, name, direction, created FROM ` + MIGRATION_TABLE_NAME + ` ORDER BY id DESC LIMIT 20
+	) ORDER BY id ASC`)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +79,7 @@ func (db *sqliteDb) LoadHistory() ([]*sqlmigrator.MigrationDBEntry, error) {
 		})
 	}
 
-	return []*sqlmigrator.MigrationDBEntry{}, nil
+	return migrations, nil
 }
 
 func (db *sqliteDb) InitMigrationTable() error {
@@ -83,6 +91,7 @@ func (db *sqliteDb) InitMigrationTable() error {
 		created DATETIME DEFAULT CURRENT_TIMESTAMP
 	)`)
 	if err != nil {
+		fmt.Println("Error creating migration table")
 		return err
 	}
 
