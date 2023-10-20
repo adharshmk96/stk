@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 
+	sqlmigrator "github.com/adharshmk96/stk/pkg/sqlMigrator"
+	"github.com/adharshmk96/stk/pkg/sqlMigrator/dbrepo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -24,7 +26,13 @@ var PurgeCmd = &cobra.Command{
 			return
 		}
 
-		// TODO: Remove the migration table from the database
+		dbType := sqlmigrator.SelectDatabase(viper.GetString("migrator.dbtype"))
+		dbrepo := dbrepo.SelectDBRepo(dbType)
+		err = dbrepo.DeleteMigrationTable()
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
 
 		log.Println("Purged migrations successfully.")
 	},
