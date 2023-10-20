@@ -6,9 +6,8 @@ package migrator
 import (
 	"log"
 
-	"github.com/adharshmk96/stk/pkg/migrator"
+	sqlmigrator "github.com/adharshmk96/stk/pkg/sqlMigrator"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // historyCmd represents the mkconfig command
@@ -17,18 +16,19 @@ var HistoryCmd = &cobra.Command{
 	Short: "View the migration history of the database.",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		dbChoice := viper.GetString("migrator.database")
 
-		// Select based on the database
-		dbType := migrator.SelectDatabase(dbChoice)
+		workDir, dbType, logFile := sqlmigrator.DefaultContextConfig()
+		ctx := sqlmigrator.NewContext(workDir, dbType, logFile, false)
+		dbRepo := sqlmigrator.SelectDBRepo(dbType, "path")
+		migrator := sqlmigrator.NewMigrator(dbRepo)
 
-		dbRepo := selectDbRepo(dbType)
-
-		err := migrator.MigrationHistory(dbRepo)
+		_, err := migrator.MigrationHistory(ctx)
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
+
+		log.Println("Migrated to database successfully.")
 
 	},
 }

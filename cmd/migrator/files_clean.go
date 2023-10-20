@@ -29,7 +29,7 @@ var CleanCmd = &cobra.Command{
 		dryRun := cmd.Flag("dry").Value.String() == "true"
 
 		workDir, dbType, logFile := sqlmigrator.DefaultContextConfig()
-		ctx := sqlmigrator.NewMigratorContext(workDir, dbType, logFile, dryRun)
+		ctx := sqlmigrator.NewContext(workDir, dbType, logFile, dryRun)
 		ctx.LoadMigrationEntries()
 
 		log.Println("Cleaning unapplied migrations...")

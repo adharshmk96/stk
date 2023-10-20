@@ -13,7 +13,7 @@ import (
 
 func TestInitializeMigrationsFolder(t *testing.T) {
 	t.Run("creates a migrations folder", func(t *testing.T) {
-		ctx := sqlmigrator.NewMigratorContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
 		err := sqlmigrator.InitializeMigrationsFolder(ctx)
 		assert.NoError(t, err)
 
@@ -27,7 +27,7 @@ func TestInitializeMigrationsFolder(t *testing.T) {
 
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 
 		err := sqlmigrator.InitializeMigrationsFolder(ctx)
 		assert.NoError(t, err)
@@ -46,7 +46,7 @@ func TestInitializeMigrationsFolder(t *testing.T) {
 
 func TestLoadUncommitedMigration(t *testing.T) {
 	t.Run("returns an empty migration entry if the log file is empty", func(t *testing.T) {
-		ctx := sqlmigrator.NewMigratorContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
 		migration, err := sqlmigrator.LoadUncommitedMigrations(ctx)
 		assert.NoError(t, err)
 		assert.Empty(t, migration)
@@ -65,7 +65,7 @@ func TestLoadUncommitedMigration(t *testing.T) {
 			return fileContent
 		}()
 
-		ctx := sqlmigrator.NewMigratorContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
 		logPath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logPath, []byte(logFile_content), 0644)
 		assert.NoError(t, err)
@@ -97,7 +97,7 @@ func TestLoadUncommitedMigration(t *testing.T) {
 
 func TestLoadCommittedMigration(t *testing.T) {
 	t.Run("returns an empty migration entry if the log file is empty", func(t *testing.T) {
-		ctx := sqlmigrator.NewMigratorContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
 		migration, err := sqlmigrator.LoadCommittedMigrations(ctx)
 		assert.NoError(t, err)
 		assert.Empty(t, migration)
@@ -116,7 +116,7 @@ func TestLoadCommittedMigration(t *testing.T) {
 			return fileContent
 		}()
 
-		ctx := sqlmigrator.NewMigratorContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
 		logPath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logPath, []byte(logFile_content), 0644)
 		assert.NoError(t, err)

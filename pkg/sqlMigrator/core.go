@@ -136,7 +136,7 @@ func DefaultContextConfig() (string, Database, string) {
 	return workDir, dbType, logFile
 }
 
-func NewMigratorContext(workDir string, dbType Database, logFile string, dry bool) *Context {
+func NewContext(workDir string, dbType Database, logFile string, dry bool) *Context {
 
 	ctx := &Context{
 		WorkDir:  workDir,

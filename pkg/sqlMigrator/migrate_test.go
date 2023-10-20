@@ -33,7 +33,7 @@ func TestMigrateUp(t *testing.T) {
 
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
@@ -45,12 +45,8 @@ func TestMigrateUp(t *testing.T) {
 		dbMock := mocks.NewMigrateDatabase(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
 
-		migConfig := &sqlmigrator.MigrationConfig{
-			DBRepo:     dbMock,
-			NumToApply: 0,
-		}
-
-		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, migConfig)
+		migrator := sqlmigrator.NewMigrator(dbMock)
+		appliedMigrations, err := migrator.MigrateUp(ctx, 0)
 		assert.NoError(t, err)
 		assert.Equal(t, 3, len(appliedMigrations))
 
@@ -73,7 +69,7 @@ func TestMigrateUp(t *testing.T) {
 
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
@@ -85,12 +81,8 @@ func TestMigrateUp(t *testing.T) {
 		dbMock := mocks.NewMigrateDatabase(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
 
-		migConfig := &sqlmigrator.MigrationConfig{
-			DBRepo:     dbMock,
-			NumToApply: 1,
-		}
-
-		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, migConfig)
+		migrator := sqlmigrator.NewMigrator(dbMock)
+		appliedMigrations, err := migrator.MigrateUp(ctx, 1)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 1, len(appliedMigrations))
@@ -113,7 +105,7 @@ func TestMigrateUp(t *testing.T) {
 
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", true)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", true)
 
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
@@ -124,12 +116,8 @@ func TestMigrateUp(t *testing.T) {
 
 		dbMock := mocks.NewMigrateDatabase(t)
 
-		migConfig := &sqlmigrator.MigrationConfig{
-			DBRepo:     dbMock,
-			NumToApply: 0,
-		}
-
-		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, migConfig)
+		migrator := sqlmigrator.NewMigrator(dbMock)
+		appliedMigrations, err := migrator.MigrateUp(ctx, 0)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 0, len(appliedMigrations))
@@ -143,7 +131,7 @@ func TestMigrateUp(t *testing.T) {
 
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
@@ -155,12 +143,8 @@ func TestMigrateUp(t *testing.T) {
 		dbMock := mocks.NewMigrateDatabase(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
 
-		migConfig := &sqlmigrator.MigrationConfig{
-			DBRepo:     dbMock,
-			NumToApply: 100,
-		}
-
-		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, migConfig)
+		migrator := sqlmigrator.NewMigrator(dbMock)
+		appliedMigrations, err := migrator.MigrateUp(ctx, 0)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 3, len(appliedMigrations))
@@ -173,18 +157,14 @@ func TestMigrateUp(t *testing.T) {
 
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 
 		checkUnappliedMigrations(t, ctx, 0)
 
 		dbMock := mocks.NewMigrateDatabase(t)
 
-		migConfig := &sqlmigrator.MigrationConfig{
-			DBRepo:     dbMock,
-			NumToApply: 0,
-		}
-
-		appliedMigrations, err := sqlmigrator.MigrateUp(ctx, migConfig)
+		migrator := sqlmigrator.NewMigrator(dbMock)
+		appliedMigrations, err := migrator.MigrateUp(ctx, 0)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 0, len(appliedMigrations))
@@ -208,7 +188,7 @@ func TestMigrateDown(t *testing.T) {
 
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
@@ -222,12 +202,8 @@ func TestMigrateDown(t *testing.T) {
 		dbMock := mocks.NewMigrateDatabase(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
 
-		migConfig := &sqlmigrator.MigrationConfig{
-			DBRepo:     dbMock,
-			NumToApply: 0,
-		}
-
-		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, migConfig)
+		migrator := sqlmigrator.NewMigrator(dbMock)
+		appliedMigrations, err := migrator.MigrateDown(ctx, 0)
 		assert.NoError(t, err)
 		assert.Equal(t, 3, len(appliedMigrations))
 
@@ -250,7 +226,7 @@ func TestMigrateDown(t *testing.T) {
 
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
@@ -264,12 +240,8 @@ func TestMigrateDown(t *testing.T) {
 		dbMock := mocks.NewMigrateDatabase(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
 
-		migConfig := &sqlmigrator.MigrationConfig{
-			DBRepo:     dbMock,
-			NumToApply: 1,
-		}
-
-		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, migConfig)
+		migrator := sqlmigrator.NewMigrator(dbMock)
+		appliedMigrations, err := migrator.MigrateDown(ctx, 1)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 1, len(appliedMigrations))
@@ -292,7 +264,7 @@ func TestMigrateDown(t *testing.T) {
 
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", true)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", true)
 
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
@@ -305,12 +277,8 @@ func TestMigrateDown(t *testing.T) {
 
 		dbMock := mocks.NewMigrateDatabase(t)
 
-		migConfig := &sqlmigrator.MigrationConfig{
-			DBRepo:     dbMock,
-			NumToApply: 0,
-		}
-
-		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, migConfig)
+		migrator := sqlmigrator.NewMigrator(dbMock)
+		appliedMigrations, err := migrator.MigrateDown(ctx, 0)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 0, len(appliedMigrations))
@@ -323,7 +291,7 @@ func TestMigrateDown(t *testing.T) {
 
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
@@ -337,12 +305,8 @@ func TestMigrateDown(t *testing.T) {
 		dbMock := mocks.NewMigrateDatabase(t)
 		dbMock.On("Exec", mock.AnythingOfType("string")).Return(nil)
 
-		migConfig := &sqlmigrator.MigrationConfig{
-			DBRepo:     dbMock,
-			NumToApply: 100,
-		}
-
-		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, migConfig)
+		migrator := sqlmigrator.NewMigrator(dbMock)
+		appliedMigrations, err := migrator.MigrateDown(ctx, 0)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 3, len(appliedMigrations))
@@ -355,18 +319,14 @@ func TestMigrateDown(t *testing.T) {
 
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 
 		checkUnappliedMigrations(t, ctx, 0)
 
 		dbMock := mocks.NewMigrateDatabase(t)
 
-		migConfig := &sqlmigrator.MigrationConfig{
-			DBRepo:     dbMock,
-			NumToApply: 0,
-		}
-
-		appliedMigrations, err := sqlmigrator.MigrateDown(ctx, migConfig)
+		migrator := sqlmigrator.NewMigrator(dbMock)
+		appliedMigrations, err := migrator.MigrateDown(ctx, 0)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 0, len(appliedMigrations))

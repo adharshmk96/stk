@@ -150,7 +150,7 @@ func TestContextLoding(t *testing.T) {
 		tempDir, removeDir := testutils.CreateTempDirectory(t)
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 
 		err := os.WriteFile(logFilePath, []byte(LOG_FILE_CONTENT), 0644)
@@ -186,7 +186,7 @@ func TestContextLoding(t *testing.T) {
 		tempDir, removeDir := testutils.CreateTempDirectory(t)
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 		err := ctx.LoadMigrationEntries()
 		assert.NoError(t, err)
 		assert.Equal(t, 0, len(ctx.Migrations))
@@ -196,7 +196,7 @@ func TestContextLoding(t *testing.T) {
 		tempDir, removeDir := testutils.CreateTempDirectory(t)
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 		logFilePath := path.Join(ctx.WorkDir, ctx.LogFile)
 
 		err := ctx.LoadMigrationEntries()
@@ -232,7 +232,7 @@ func TestContextLoding(t *testing.T) {
 		tempDir, removeDir := testutils.CreateTempDirectory(t)
 		defer removeDir()
 
-		ctx := sqlmigrator.NewMigratorContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
+		ctx := sqlmigrator.NewContext(tempDir, sqlmigrator.SQLiteDB, "migrator.log", false)
 		err := ctx.LoadMigrationEntries()
 		assert.NoError(t, err)
 

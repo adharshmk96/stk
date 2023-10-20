@@ -24,7 +24,7 @@ func TestGenerate(t *testing.T) {
 		tempDir, removeDir := testutils.CreateTempDirectory(t)
 
 		_, db, logfile := sqlmigrator.DefaultContextConfig()
-		ctx := sqlmigrator.NewMigratorContext(tempDir, db, logfile, false)
+		ctx := sqlmigrator.NewContext(tempDir, db, logfile, false)
 		defer removeDir()
 
 		generator := sqlmigrator.NewGenerator("user_table", numToGenerate, false)
@@ -43,7 +43,7 @@ func TestGenerate(t *testing.T) {
 		tempDir, removeDir := testutils.CreateTempDirectory(t)
 
 		_, db, logfile := sqlmigrator.DefaultContextConfig()
-		ctx := sqlmigrator.NewMigratorContext(tempDir, db, logfile, false)
+		ctx := sqlmigrator.NewContext(tempDir, db, logfile, false)
 		defer removeDir()
 
 		generator := sqlmigrator.NewGenerator("user_table", numToGenerate, true)
@@ -65,7 +65,7 @@ func TestGenerate(t *testing.T) {
 		tempDir, removeDir := testutils.CreateTempDirectory(t)
 
 		_, db, logfile := sqlmigrator.DefaultContextConfig()
-		ctx := sqlmigrator.NewMigratorContext(tempDir, db, logfile, true)
+		ctx := sqlmigrator.NewContext(tempDir, db, logfile, true)
 		defer removeDir()
 
 		generator := sqlmigrator.NewGenerator("user_table", numToGenerate, true)
@@ -83,7 +83,7 @@ func TestGenerate(t *testing.T) {
 		tempDir, removeDir := testutils.CreateTempDirectory(t)
 
 		_, db, logfile := sqlmigrator.DefaultContextConfig()
-		ctx := sqlmigrator.NewMigratorContext(tempDir, db, logfile, false)
+		ctx := sqlmigrator.NewContext(tempDir, db, logfile, false)
 
 		defer removeDir()
 
@@ -128,7 +128,7 @@ func TestClean(t *testing.T) {
 		tempDir, removeDir := testutils.CreateTempDirectory(t)
 
 		_, db, logfile := sqlmigrator.DefaultContextConfig()
-		ctx := sqlmigrator.NewMigratorContext(tempDir, db, logfile, false)
+		ctx := sqlmigrator.NewContext(tempDir, db, logfile, false)
 		defer removeDir()
 
 		generator := sqlmigrator.NewGenerator("user_table", 3, true)
@@ -185,7 +185,7 @@ func TestClean(t *testing.T) {
 		tempDir, removeDir := testutils.CreateTempDirectory(t)
 
 		_, db, logfile := sqlmigrator.DefaultContextConfig()
-		ctx := sqlmigrator.NewMigratorContext(tempDir, db, logfile, false)
+		ctx := sqlmigrator.NewContext(tempDir, db, logfile, false)
 		defer removeDir()
 
 		generator := sqlmigrator.NewGenerator("user_table", 3, true)
@@ -219,7 +219,7 @@ func TestClean(t *testing.T) {
 		tempDir, removeDir := testutils.CreateTempDirectory(t)
 
 		_, db, logfile := sqlmigrator.DefaultContextConfig()
-		ctx := sqlmigrator.NewMigratorContext(tempDir, db, logfile, false)
+		ctx := sqlmigrator.NewContext(tempDir, db, logfile, false)
 		defer removeDir()
 
 		generator := sqlmigrator.NewGenerator("user_table", 3, true)

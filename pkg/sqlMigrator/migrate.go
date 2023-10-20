@@ -5,12 +5,17 @@ import (
 	"slices"
 )
 
-type MigrationConfig struct {
-	NumToApply int
-	DBRepo     MigrateDatabase
+type migrator struct {
+	DBRepo DBRepo
 }
 
-func MigrateUp(ctx *Context, config *MigrationConfig) ([]*MigrationEntry, error) {
+func NewMigrator(dbRepo DBRepo) *migrator {
+	return &migrator{
+		DBRepo: dbRepo,
+	}
+}
+
+func (m *migrator) MigrateUp(ctx *Context, num int) ([]*MigrationEntry, error) {
 	appliedMigrations := []*MigrationEntry{}
 	migrationToApply, err := LoadUncommitedMigrations(ctx)
 	if err != nil {
@@ -22,7 +27,7 @@ func MigrateUp(ctx *Context, config *MigrationConfig) ([]*MigrationEntry, error)
 		return appliedMigrations, nil
 	}
 
-	num := min(config.NumToApply, len(migrationToApply))
+	num = min(num, len(migrationToApply))
 	if num > 0 {
 		migrationToApply = migrationToApply[:num]
 	}
@@ -36,7 +41,7 @@ func MigrateUp(ctx *Context, config *MigrationConfig) ([]*MigrationEntry, error)
 		upFileContent, _ := migration.LoadFileContent()
 
 		// TODO: replace with db stuff
-		err := config.DBRepo.Exec(upFileContent)
+		err := m.DBRepo.Exec(upFileContent)
 		if err != nil {
 			return appliedMigrations, err
 		}
@@ -48,7 +53,7 @@ func MigrateUp(ctx *Context, config *MigrationConfig) ([]*MigrationEntry, error)
 	return appliedMigrations, nil
 }
 
-func MigrateDown(ctx *Context, config *MigrationConfig) ([]*MigrationEntry, error) {
+func (m *migrator) MigrateDown(ctx *Context, num int) ([]*MigrationEntry, error) {
 	rolledBackMigrations := []*MigrationEntry{}
 	migrationToApply, err := LoadCommittedMigrations(ctx)
 	if err != nil {
@@ -62,7 +67,7 @@ func MigrateDown(ctx *Context, config *MigrationConfig) ([]*MigrationEntry, erro
 
 	slices.Reverse(migrationToApply)
 
-	num := min(config.NumToApply, len(migrationToApply))
+	num = min(num, len(migrationToApply))
 	if num > 0 {
 		migrationToApply = migrationToApply[:num]
 	}
@@ -75,7 +80,7 @@ func MigrateDown(ctx *Context, config *MigrationConfig) ([]*MigrationEntry, erro
 
 		_, downFileContent := migration.LoadFileContent()
 
-		err := config.DBRepo.Exec(downFileContent)
+		err := m.DBRepo.Exec(downFileContent)
 		if err != nil {
 			return rolledBackMigrations, err
 		}
@@ -87,11 +92,11 @@ func MigrateDown(ctx *Context, config *MigrationConfig) ([]*MigrationEntry, erro
 	return rolledBackMigrations, nil
 }
 
+func (m *migrator) MigrationHistory(ctx *Context) ([]*MigrationEntry, error) {
+	return m.DBRepo.LoadHistory()
+}
+
 func displayMigration(migration *MigrationEntry) {
 	fileName := migration.EntryString()
 	fmt.Println("up\t:", fileName)
-}
-
-func dummyExec(query string) error {
-	return nil
 }
