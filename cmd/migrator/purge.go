@@ -16,10 +16,10 @@ import (
 // PurgeCmd represents the mkconfig command
 var PurgeCmd = &cobra.Command{
 	Use:   "purge",
-	Short: "Remove all migration files and the migration table from the database",
+	Short: "remove all migration files and the migration table from the database",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("Purging migrations...")
+		log.Println("purging migrations...")
 		rootDirectory := viper.GetString("migrator.workdir")
 		err := os.RemoveAll(rootDirectory)
 		if err != nil {
@@ -35,6 +35,6 @@ var PurgeCmd = &cobra.Command{
 			return
 		}
 
-		log.Println("Purged migrations successfully.")
+		log.Println("purged migrations successfully.")
 	},
 }

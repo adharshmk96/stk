@@ -13,7 +13,7 @@ import (
 )
 
 func displayRolledBack(rolledBack []*sqlmigrator.MigrationFileEntry) {
-	fmt.Printf("\nRolled Back Migrations:\n\n")
+	fmt.Printf("\nrolled back migrations:\n\n")
 	for _, entry := range rolledBack {
 		fmt.Println(entry.String())
 	}
@@ -23,7 +23,7 @@ func displayRolledBack(rolledBack []*sqlmigrator.MigrationFileEntry) {
 // DownCmd represents the mkconfig command
 var DownCmd = &cobra.Command{
 	Use:   "down",
-	Short: "Perform backward migration from the files in the migrations folder",
+	Short: "perform backward migration from the files in the migrations folder",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		dryRun := cmd.Flag("dry").Value.String() == "true"
@@ -44,12 +44,12 @@ var DownCmd = &cobra.Command{
 
 		err = ctx.WriteMigrationEntries()
 		if err != nil {
-			log.Println("Error writing migration entries:", err)
+			log.Println("error writing migration entries:", err)
 			return
 		}
 
 		displayRolledBack(rolledBackMigrations)
-		log.Println("Migrated to database successfully.")
+		log.Println("migrated to database successfully.")
 
 	},
 }

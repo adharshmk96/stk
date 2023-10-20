@@ -34,7 +34,7 @@ func displayContextAndConfig(ctx *sqlmigrator.Context, generator *sqlmigrator.Ge
 }
 
 func displayGeneratedFiles(files []string) {
-	fmt.Println("\nGenerated Files:")
+	fmt.Println("\ngenerated files:")
 	for _, file := range files {
 		fmt.Println(file)
 	}
@@ -43,7 +43,7 @@ func displayGeneratedFiles(files []string) {
 
 var GenerateCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "Generate migration files.",
+	Short: "generate migration files.",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -58,20 +58,20 @@ var GenerateCmd = &cobra.Command{
 		generator := sqlmigrator.NewGenerator(migrationName, numToGenerate, fill)
 		displayContextAndConfig(ctx, generator)
 
-		log.Println("Generating migrations...")
+		log.Println("generating migrations...")
 		generatedFiles, err := generator.Generate(ctx)
 		if err != nil {
-			log.Println("Error generating migrations:", err)
+			log.Println("error generating migrations:", err)
 			return
 		}
 		displayGeneratedFiles(generatedFiles)
 
 		err = ctx.WriteMigrationEntries()
 		if err != nil {
-			log.Println("Error writing migration entries:", err)
+			log.Println("error writing migration entries:", err)
 			return
 		}
-		log.Println("Generated migrations successfully.")
+		log.Println("generated migrations successfully.")
 
 	},
 }
