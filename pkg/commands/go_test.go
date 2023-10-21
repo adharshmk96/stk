@@ -59,3 +59,42 @@ func TestInitGoMod(t *testing.T) {
 	})
 
 }
+
+func TestGoCmds(t *testing.T) {
+	t.Run("tidies go module", func(t *testing.T) {
+		tempDir, removeTemp := testutils.CreateTempDirectory(t)
+		defer removeTemp()
+		os.Chdir(tempDir)
+
+		goCmd := commands.NewGoCmd()
+
+		err := goCmd.ModTidy()
+		assert.Error(t, err)
+
+		err = goCmd.ModInit("some-package-name")
+		assert.NoError(t, err)
+		assert.FileExists(t, "go.mod")
+
+		err = goCmd.ModTidy()
+		assert.NoError(t, err)
+	})
+
+	t.Run("package name from go.mod", func(t *testing.T) {
+		tempDir, removeTemp := testutils.CreateTempDirectory(t)
+		defer removeTemp()
+		os.Chdir(tempDir)
+
+		goCmd := commands.NewGoCmd()
+
+		_, err := goCmd.ModPackageName()
+		assert.Error(t, err)
+
+		err = goCmd.ModInit("some-package-name")
+		assert.NoError(t, err)
+		assert.FileExists(t, "go.mod")
+
+		packageName, err := goCmd.ModPackageName()
+		assert.NoError(t, err)
+		assert.Equal(t, "some-package-name", packageName)
+	})
+}
