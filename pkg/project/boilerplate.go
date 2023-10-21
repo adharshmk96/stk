@@ -8,7 +8,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/adharshmk96/stk/pkg/git"
 	"github.com/adharshmk96/stk/pkg/project/tpl"
 )
 
@@ -17,7 +16,7 @@ const MODULE_PLACEHOLDER = "ping"
 func GenerateProjectBoilerplate(ctx *Context) error {
 	if !ctx.IsGitRepo {
 		fmt.Println("initializing git repository...")
-		err := git.Init()
+		err := ctx.GitCmd.Init()
 		if err != nil {
 			return err
 		}
@@ -25,7 +24,7 @@ func GenerateProjectBoilerplate(ctx *Context) error {
 
 	if !ctx.IsGoModule {
 		fmt.Println("initializing go module...")
-		err := InitGoMod(ctx.PackageName)
+		err := ctx.GoCmd.ModInit(ctx.PackageName)
 		if err != nil {
 			return err
 		}
@@ -46,7 +45,7 @@ func GenerateProjectBoilerplate(ctx *Context) error {
 	}
 
 	fmt.Println("running go mod tidy...")
-	err = GoModTidy()
+	err = ctx.GoCmd.ModTidy()
 	if err != nil {
 		return err
 	}

@@ -4,7 +4,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/adharshmk96/stk/pkg/git"
+	"github.com/adharshmk96/stk/pkg/commands"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/viper"
 )
@@ -18,6 +18,9 @@ type Context struct {
 	IsGoModule bool
 
 	WorkDir string
+
+	GitCmd commands.GitCmd
+	GoCmd  commands.GoCmd
 }
 
 type TemplateConfig struct {
@@ -35,7 +38,9 @@ func NewContext(args []string) *Context {
 
 	setDefaults()
 
-	// todo, get this from config with defaults
+	goCmd := commands.NewGoCmd()
+	gitCmd := commands.NewGitCmd()
+
 	workDir := viper.GetString("project.workdir")
 	modules := viper.GetStringSlice("project.modules")
 
@@ -44,10 +49,10 @@ func NewContext(args []string) *Context {
 	packageName := GetPackageName(args)
 	appName := GetAppNameFromPkgName(packageName)
 
-	isGitRepo := git.IsRepo()
-	isGoMod := IsGoModule()
+	isGitRepo := gitCmd.IsRepo()
+	isGoMod := goCmd.IsMod()
 
-	return &Context{
+	ctx := &Context{
 		PackageName: packageName,
 		AppName:     appName,
 		Modules:     modules,
@@ -56,7 +61,12 @@ func NewContext(args []string) *Context {
 		IsGitRepo:  isGitRepo,
 
 		WorkDir: workDir,
+
+		GitCmd: gitCmd,
+		GoCmd:  goCmd,
 	}
+
+	return ctx
 }
 
 func GetTemplateConfig(ctx *Context, module string) *TemplateConfig {

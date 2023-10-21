@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adharshmk96/stk/pkg/git"
+	"github.com/adharshmk96/stk/pkg/commands"
 )
 
 func RunCmd(cmd string, args ...string) (string, error) {
@@ -44,12 +44,13 @@ func OpenDirectory(workDir string) error {
 }
 
 func GitRepoName() (string, error) {
-	remoteUrl, err := Clean(git.GetRemoteOrigin())
+	gitCmd := commands.NewGitCmd()
+	remoteUrl, err := Clean(gitCmd.GetRemoteOrigin())
 	if err != nil {
 		return "", err
 	}
 
-	repoUrl := strings.TrimSuffix(remoteUrl, ".git\n")
+	repoUrl := strings.TrimSuffix(remoteUrl, ".git")
 	repoUrl = strings.ReplaceAll(repoUrl, "https://", "")
 	repoUrl = strings.ReplaceAll(repoUrl, "git@", "")
 	repoUrl = strings.ReplaceAll(repoUrl, ":", "/")

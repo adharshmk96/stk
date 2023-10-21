@@ -4,6 +4,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/adharshmk96/stk/pkg/commands"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/viper"
 )
@@ -22,7 +23,9 @@ func GetPackageName(args []string) string {
 		return repoName
 	}
 
-	if packageName, err := GoModPackageName(); err == nil {
+	goCmd := commands.NewGoCmd()
+	packageName, err := goCmd.ModPackageName()
+	if err == nil {
 		log.Println("using go module name as package name.")
 		return packageName
 	}

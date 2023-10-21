@@ -4,13 +4,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/adharshmk96/stk/pkg/git"
+	"github.com/adharshmk96/stk/pkg/commands"
 	"github.com/adharshmk96/stk/pkg/project"
 	"github.com/adharshmk96/stk/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGitRepoName(t *testing.T) {
+	gitCmd := commands.NewGitCmd()
 	t.Run("return https git repo name", func(t *testing.T) {
 		tempDir, removeTemp := testutils.CreateTempDirectory(t)
 
@@ -18,8 +19,8 @@ func TestGitRepoName(t *testing.T) {
 
 		os.Chdir(tempDir)
 
-		git.Init()
-		git.AddRemote("origin", "https://github.com/adharshmk96/stk")
+		gitCmd.Init()
+		gitCmd.AddRemote("origin", "https://github.com/adharshmk96/stk")
 
 		repoName, err := project.GitRepoName()
 		assert.NoError(t, err)
@@ -33,8 +34,8 @@ func TestGitRepoName(t *testing.T) {
 
 		os.Chdir(tempDir)
 
-		git.Init()
-		git.AddRemote("origin", "git@github.com:adharshmk96/stk")
+		gitCmd.Init()
+		gitCmd.AddRemote("origin", "git@github.com:adharshmk96/stk")
 
 		repoName, err := project.GitRepoName()
 		assert.NoError(t, err)
@@ -60,7 +61,7 @@ func TestGitRepoName(t *testing.T) {
 
 		os.Chdir(tempDir)
 
-		git.Init()
+		gitCmd.Init()
 
 		_, err := project.GitRepoName()
 		assert.Error(t, err)
