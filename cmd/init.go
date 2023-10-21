@@ -29,6 +29,13 @@ var initCmd = &cobra.Command{
 		fmt.Println("default configs written successfully.")
 
 		fmt.Println("generating boilerplate...")
+		err = project.GenerateProjectBoilerplate(ctx)
+		if err != nil {
+			fmt.Printf("error while generating: %s", err)
+			return
+		}
+
+		fmt.Println("boilerplate generated successfully.")
 	},
 }
 
