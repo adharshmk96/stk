@@ -1,6 +1,9 @@
 package project
 
 import (
+	"os"
+	"path"
+
 	"github.com/adharshmk96/stk/pkg/git"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/viper"
@@ -25,7 +28,6 @@ type TemplateConfig struct {
 }
 
 func setDefaults() {
-	viper.SetDefault("project.workdir", ".")
 	viper.SetDefault("project.modules", []string{"ping"})
 }
 
@@ -33,15 +35,17 @@ func NewContext(args []string) *Context {
 
 	setDefaults()
 
+	// todo, get this from config with defaults
+	workDir := viper.GetString("project.workdir")
+	modules := viper.GetStringSlice("project.modules")
+
+	os.Chdir(workDir)
+
 	packageName := GetPackageName(args)
 	appName := GetAppNameFromPkgName(packageName)
 
 	isGitRepo := git.IsRepo()
 	isGoMod := IsGoModule()
-
-	// todo, get this from config with defaults
-	workDir := viper.GetString("project.workdir")
-	modules := viper.GetStringSlice("project.modules")
 
 	return &Context{
 		PackageName: packageName,
@@ -66,4 +70,31 @@ func GetTemplateConfig(ctx *Context, module string) *TemplateConfig {
 		ModName:      moduleName,
 		ExportedName: exportedName,
 	}
+}
+
+func (ctx *Context) WriteDefaultConfig() error {
+
+	// project configs
+	viper.Set("name", ctx.AppName)
+	viper.Set("version", "v0.0.1")
+	viper.Set("description", "This project is generated using stk.")
+	viper.Set("author", "")
+
+	// module configs
+	viper.Set("project.modules", ctx.Modules)
+
+	// Migrator configs
+	viper.Set("migrator.workdir", "./stk-migrations")
+	viper.Set("migrator.database", "sqlite3")
+	viper.Set("migrator.sqlite.filepath", "stk.db")
+
+	// Create the config file
+	configPath := path.Join(ctx.WorkDir, ".stk.yaml")
+	err := viper.WriteConfigAs(configPath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

@@ -11,32 +11,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func writeDefaultConfig(ctx *project.Context) {
-	fmt.Println("initializing config file...")
-
-	// project configs
-	viper.Set("name", ctx.AppName)
-	viper.Set("version", "v0.0.1")
-	viper.Set("description", "This project is generated using stk.")
-	viper.Set("author", "")
-
-	// module configs
-	viper.Set("project.modules", ctx.Modules)
-
-	// Migrator configs
-	viper.Set("migrator.workdir", "./stk-migrations")
-	viper.Set("migrator.database", "sqlite3")
-	viper.Set("migrator.sqlite.filepath", "stk.db")
-
-	// Create the config file
-	err := viper.WriteConfigAs(".stk.yaml")
-	if err != nil {
-		fmt.Printf("error while writing config file: %s", err)
-	}
-
-	fmt.Println("default configs written successfully.")
-
-}
+var workDir string
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
@@ -45,10 +20,22 @@ var initCmd = &cobra.Command{
 	Long:  `a new project will be created in the current directory initializing the go module, git, boilerplate code required to start a new project.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := project.NewContext(args)
-		writeDefaultConfig(ctx)
+
+		fmt.Println("initializing config file...")
+		err := ctx.WriteDefaultConfig()
+		if err != nil {
+			fmt.Printf("error while writing config file: %s", err)
+		}
+		fmt.Println("default configs written successfully.")
+
+		fmt.Println("generating boilerplate...")
 	},
 }
 
 func init() {
+	initCmd.PersistentFlags().StringVarP(&workDir, "workdir", "w", ".", "project directory")
+
+	viper.BindPFlag("project.workdir", initCmd.PersistentFlags().Lookup("workdir"))
+
 	rootCmd.AddCommand(initCmd)
 }

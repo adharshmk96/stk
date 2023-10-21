@@ -6,7 +6,7 @@ import (
 
 // IsRepo returns true if current folder is a git repository.
 func IsRepo() bool {
-	out, err := RunCmd("rev-parse", "--is-inside-work-tree")
+	out, err := Revparse("--is-inside-work-tree")
 	return err == nil && strings.TrimSpace(out) == "true"
 }
 
@@ -30,6 +30,15 @@ func AddRemote(remoteName, remoteUrl string) error {
 
 func GetRemoteOrigin() (string, error) {
 	out, err := RunCmd("config", "--get", "remote.origin.url")
+	if err != nil {
+		return "", err
+	}
+
+	return out, nil
+}
+
+func Revparse(ref string) (string, error) {
+	out, err := RunCmd("rev-parse", ref)
 	if err != nil {
 		return "", err
 	}
