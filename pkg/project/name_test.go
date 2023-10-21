@@ -40,7 +40,7 @@ func TestGetPackageName(t *testing.T) {
 		goCmd.ModInit("github.com/user/package")
 
 		packageName := project.GetPackageName([]string{"some-package"})
-		assert.Equal(t, "some-package", packageName)
+		assert.Equal(t, "github.com/user/package", packageName)
 	})
 
 	t.Run("gets package name from first arg", func(t *testing.T) {

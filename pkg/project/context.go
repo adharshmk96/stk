@@ -17,7 +17,6 @@ const (
 type Context struct {
 	PackageName string
 	AppName     string
-	Modules     []string
 
 	IsGitRepo  bool
 	IsGoModule bool
@@ -47,7 +46,6 @@ func NewContext(args []string) *Context {
 	gitCmd := commands.NewGitCmd()
 
 	workDir := viper.GetString("project.workdir")
-	modules := viper.GetStringSlice("project.modules")
 
 	os.Chdir(workDir)
 
@@ -60,7 +58,6 @@ func NewContext(args []string) *Context {
 	ctx := &Context{
 		PackageName: packageName,
 		AppName:     appName,
-		Modules:     modules,
 
 		IsGoModule: isGoMod,
 		IsGitRepo:  isGitRepo,
@@ -94,9 +91,6 @@ func (ctx *Context) WriteDefaultConfig() error {
 	viper.Set("version", "v0.0.1")
 	viper.Set("description", "This project is generated using stk.")
 	viper.Set("author", "")
-
-	// module configs
-	viper.Set("project.modules", ctx.Modules)
 
 	// Migrator configs
 	viper.Set("migrator.workdir", "./stk-migrations")

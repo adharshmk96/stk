@@ -72,7 +72,6 @@ func TestGenerateBoilerplate(t *testing.T) {
 				ctx := &project.Context{
 					PackageName: "github.com/sample/sapp",
 					AppName:     "sapp",
-					Modules:     []string{"ping"},
 					IsGitRepo:   tt.isGitRepo,
 					IsGoModule:  tt.isGoModule,
 					WorkDir:     tempDir,
@@ -98,7 +97,6 @@ func TestGenerateBoilerplate(t *testing.T) {
 		ctx := &project.Context{
 			PackageName: "github.com/sample/sapp",
 			AppName:     "sapp",
-			Modules:     []string{"ping"},
 			IsGitRepo:   false,
 			IsGoModule:  false,
 			WorkDir:     tempDir,
@@ -135,7 +133,6 @@ func TestGenerateModuleBoilerplate(t *testing.T) {
 		ctx := &project.Context{
 			PackageName: "github.com/sample/sapp",
 			AppName:     "sapp",
-			Modules:     []string{"admin"},
 			IsGitRepo:   true,
 			IsGoModule:  true,
 			WorkDir:     tempDir,

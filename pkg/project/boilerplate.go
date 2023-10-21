@@ -11,6 +11,7 @@ import (
 	"github.com/adharshmk96/stk/pkg/project/tpl"
 )
 
+const DEFAULT_MODULE = "ping"
 const MODULE_PLACEHOLDER = "ping"
 
 func GenerateProjectBoilerplate(ctx *Context) error {
@@ -31,17 +32,15 @@ func GenerateProjectBoilerplate(ctx *Context) error {
 	}
 
 	fmt.Println("generating project files...")
-	templateConfig := GetTemplateConfig(ctx, "")
+	templateConfig := GetTemplateConfig(ctx, DEFAULT_MODULE)
 	err := generateBoilerplate(tpl.ProjectTemplates, templateConfig)
 	if err != nil {
 		return err
 	}
-	for _, module := range ctx.Modules {
-		templateConfig := GetTemplateConfig(ctx, module)
-		err = generateBoilerplate(tpl.ModuleTemplates, templateConfig)
-		if err != nil {
-			return err
-		}
+
+	err = generateBoilerplate(tpl.ModuleTemplates, templateConfig)
+	if err != nil {
+		return err
 	}
 
 	fmt.Println("running go mod tidy...")
