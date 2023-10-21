@@ -39,6 +39,24 @@ func TestGitCmd(t *testing.T) {
 
 	})
 
+	t.Run("init repo", func(t *testing.T) {
+		testDir, removeDir := testutils.CreateTempDirectory(t)
+		defer removeDir()
+		os.Chdir(testDir)
+
+		gitCmd := commands.NewGitCmd()
+
+		isRepo := gitCmd.IsRepo()
+		assert.False(t, isRepo)
+
+		err := gitCmd.Init()
+		assert.NoError(t, err)
+
+		isRepo = gitCmd.IsRepo()
+		assert.True(t, isRepo)
+		assert.DirExists(t, testDir+"/.git")
+	})
+
 	t.Run("remote origin", func(t *testing.T) {
 		testDir, removeDir := testutils.CreateTempDirectory(t)
 		defer removeDir()

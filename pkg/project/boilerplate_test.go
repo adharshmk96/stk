@@ -157,3 +157,58 @@ func TestGenerateModuleBoilerplate(t *testing.T) {
 		assert.True(t, gitCmd.IsRepo())
 	})
 }
+
+func TestDeleteModuleBoilerplate(t *testing.T) {
+	t.Run("deletes module boilerplate", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+		defer removeDir()
+		os.Chdir(tempDir)
+
+		goCmd := commands.NewGoCmd()
+		gitCmd := commands.NewGitCmd()
+
+		goCmd.ModInit("github.com/sample/sapp")
+		gitCmd.Init()
+
+		ctx := &project.Context{
+			PackageName: "github.com/sample/sapp",
+			AppName:     "sapp",
+			IsGitRepo:   true,
+			IsGoModule:  true,
+			WorkDir:     tempDir,
+
+			GoCmd:  goCmd,
+			GitCmd: gitCmd,
+		}
+
+		err := project.GenerateProjectBoilerplate(ctx)
+		assert.NoError(t, err)
+
+		err = project.GenerateModuleBoilerplate(ctx, "admin")
+		assert.NoError(t, err)
+
+		assert.FileExists(t, filepath.Join(tempDir, "internals/core/entity", "admin.go"))
+		assert.FileExists(t, filepath.Join(tempDir, "internals/core/serr", "admin.go"))
+		assert.FileExists(t, filepath.Join(tempDir, "internals/service", "admin.go"))
+		assert.FileExists(t, filepath.Join(tempDir, "internals/service_test", "admin_test.go"))
+		assert.FileExists(t, filepath.Join(tempDir, "internals/http/handler", "admin.go"))
+		assert.FileExists(t, filepath.Join(tempDir, "internals/http/helpers", "admin.go"))
+		assert.FileExists(t, filepath.Join(tempDir, "internals/http/transport", "admin.go"))
+		assert.FileExists(t, filepath.Join(tempDir, "internals/http/handler_test", "admin_test.go"))
+
+		err = project.DeleteModuleBoilerplate(ctx, "admin")
+		assert.NoError(t, err)
+
+		assert.NoFileExists(t, filepath.Join(tempDir, "internals/core/entity", "admin.go"))
+		assert.NoFileExists(t, filepath.Join(tempDir, "internals/core/serr", "admin.go"))
+		assert.NoFileExists(t, filepath.Join(tempDir, "internals/service", "admin.go"))
+		assert.NoFileExists(t, filepath.Join(tempDir, "internals/service_test", "admin_test.go"))
+		assert.NoFileExists(t, filepath.Join(tempDir, "internals/http/handler", "admin.go"))
+		assert.NoFileExists(t, filepath.Join(tempDir, "internals/http/helpers", "admin.go"))
+		assert.NoFileExists(t, filepath.Join(tempDir, "internals/http/transport", "admin.go"))
+		assert.NoFileExists(t, filepath.Join(tempDir, "internals/http/handler_test", "admin_test.go"))
+
+		assert.True(t, goCmd.IsMod())
+		assert.True(t, gitCmd.IsRepo())
+	})
+}

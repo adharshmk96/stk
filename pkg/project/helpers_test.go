@@ -67,3 +67,18 @@ func TestGitRepoName(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestOpenDirectory(t *testing.T) {
+	t.Run("opens directory", func(t *testing.T) {
+		tempDir, removeTemp := testutils.CreateTempDirectory(t)
+		defer removeTemp()
+
+		err := project.OpenDirectory(tempDir)
+		assert.NoError(t, err)
+	})
+
+	t.Run("returns error if directory does not exist", func(t *testing.T) {
+		err := project.OpenDirectory("some-directory")
+		assert.Error(t, err)
+	})
+}

@@ -1,32 +1,15 @@
 package project
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"math/rand"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/adharshmk96/stk/pkg/commands"
 )
-
-func RunCmd(cmd string, args ...string) (string, error) {
-	stdout := bytes.Buffer{}
-	stderr := bytes.Buffer{}
-
-	c := exec.Command(cmd, args...)
-	c.Stdout = &stdout
-	c.Stderr = &stderr
-
-	err := c.Run()
-	if err != nil {
-		return "", errors.New(stderr.String())
-	}
-	return stdout.String(), nil
-}
 
 func Clean(output string, err error) (string, error) {
 	output = strings.ReplaceAll(strings.Split(output, "\n")[0], "'", "")
