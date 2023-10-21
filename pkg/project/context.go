@@ -9,6 +9,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	DEFAULT_WORKDIR = "./"
+	CONFIG_FILENAME = ".stk.yaml"
+)
+
 type Context struct {
 	PackageName string
 	AppName     string
@@ -99,7 +104,7 @@ func (ctx *Context) WriteDefaultConfig() error {
 	viper.Set("migrator.sqlite.filepath", "stk.db")
 
 	// Create the config file
-	configPath := path.Join(ctx.WorkDir, ".stk.yaml")
+	configPath := path.Join(ctx.WorkDir, CONFIG_FILENAME)
 	err := viper.WriteConfigAs(configPath)
 	if err != nil {
 		return err

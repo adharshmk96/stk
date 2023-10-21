@@ -66,7 +66,7 @@ func (g *goCommands) ModPackageName() (string, error) {
 		return "", errors.New("not a Go module")
 	}
 
-	out, err := Clean(g.RunCmd("go", "list", "-m"))
+	out, err := Clean(g.RunCmd("list", "-m"))
 	if err != nil {
 		return "", err
 	}
