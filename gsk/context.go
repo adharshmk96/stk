@@ -7,64 +7,28 @@ import (
 	"net/http"
 )
 
-// type Context interface {
-// 	// http objects
-// 	Request() *http.Request
-// 	Writer() http.ResponseWriter
-// 	Path() string
-
-// 	Origin() string
-
-// 	// get data from request
-// 	GetStatusCode() int
-// 	Param(key string) string
-// 	QueryParam(key string) string
-// 	DecodeJSONBody(v interface{}) error
-
-// 	// set data for response
-// 	Status(status int) Context
-// 	SetHeader(string, string)
-// 	RawResponse(raw []byte)
-// 	JSONResponse(data interface{})
-// 	StringResponse(data string)
-
-// 	// cookies
-// 	SetCookie(cookie *http.Cookie)
-// 	GetCookie(name string) (*http.Cookie, error)
-
-// 	// logger
-// 	Logger() *slog.Logger
-
-// 	// Internals
-// 	eject() gskContext
-// }
+// TODO: experiment with a response object
 
 type Context struct {
 	// server
 	Request *http.Request
 	Writer  http.ResponseWriter
 
-	// request params
-	params Params
-
-	// logging
-	logger        *slog.Logger
+	// request
+	params        Params
 	bodySizeLimit int64
 
-	// to write response
+	// logging
+	logger *slog.Logger
+
+	// response
 	responseStatus int
 	responseBody   []byte
 }
 
 type Map map[string]interface{}
 
-func (c *Context) Path() string {
-	return c.Request.URL.Path
-}
-
-func (c *Context) Origin() string {
-	return c.Request.Header.Get("Origin")
-}
+// Methods to handle request
 
 // Param gets the params within the path mentioned as a wildcard
 func (c *Context) Param(key string) string {
@@ -74,6 +38,19 @@ func (c *Context) Param(key string) string {
 // QueryParam gets the query parameters passed eg: /?name=value
 func (c *Context) QueryParam(key string) string {
 	return c.Request.URL.Query().Get(key)
+}
+
+func (c *Context) Path() string {
+	return c.Request.URL.Path
+}
+
+func (c *Context) Origin() string {
+	return c.Request.Header.Get("Origin")
+}
+
+// Get cookie using cookie name
+func (c *Context) GetCookie(name string) (*http.Cookie, error) {
+	return c.Request.Cookie(name)
 }
 
 func (c *Context) DecodeJSONBody(v interface{}) error {
@@ -114,6 +91,20 @@ func (c *Context) DecodeJSONBody(v interface{}) error {
 	return nil
 }
 
+// TODO: support for form data, multipart form data, urlencoded form data
+
+// Methods related to response
+
+// sets response header key value
+func (c *Context) SetHeader(key string, value string) {
+	c.Writer.Header().Add(key, value)
+}
+
+// Set cookie using http.Cookie
+func (c *Context) SetCookie(cookie *http.Cookie) {
+	http.SetCookie(c.Writer, cookie)
+}
+
 // Status sets the status code of the response
 func (c *Context) Status(status int) *Context {
 	c.responseStatus = status
@@ -128,11 +119,6 @@ func (c *Context) Redirect(url string) {
 	}
 	// Set the default redirect status code
 	http.Redirect(c.Writer, c.Request, url, status)
-}
-
-// sets response header key value
-func (c *Context) SetHeader(key string, value string) {
-	c.Writer.Header().Add(key, value)
 }
 
 // JSONResponse marshals the provided interface into JSON and writes it to the response writer
@@ -163,19 +149,13 @@ func (c *Context) RawResponse(raw []byte) {
 	c.responseBody = raw
 }
 
+// TODO: support for template rendering, file response, stream response
+
+// Methods to get context values
+
 // get the logger
 func (c *Context) Logger() *slog.Logger {
 	return c.logger
-}
-
-// Set cookie using http.Cookie
-func (c *Context) SetCookie(cookie *http.Cookie) {
-	http.SetCookie(c.Writer, cookie)
-}
-
-// Get cookie using cookie name
-func (c *Context) GetCookie(name string) (*http.Cookie, error) {
-	return c.Request.Cookie(name)
 }
 
 // Get the status code set for the response

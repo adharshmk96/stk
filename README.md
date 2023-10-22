@@ -6,20 +6,20 @@ Server toolkit - minimal and simple framework for developing server in golang
 [![codecov](https://codecov.io/gh/adharshmk96/stk/graph/badge.svg?token=HMGG55CCLT)](https://codecov.io/gh/adharshmk96/stk)
 [![Go Release Workflow](https://github.com/adharshmk96/stk/actions/workflows/go-release.yml/badge.svg)](https://github.com/adharshmk96/stk/actions/workflows/go-release.yml)
 
-## Library
+STK provides a suite of tools tailored for building and managing server applications.
 
-GSK - Web server framework [here](#gsk---web-server-framework--library-)
+## Features:
 
-## CLI Tools
+- **gsk (go server kit) package**: Ideal for constructing REST API servers.
+- **Project & Module Generation**: Quickly scaffold your project and add modules with ease. It uses gsk package to run the server.
+- **SQL Migration Management**: Generate migration files, perform migration on your sql database.
 
-There are few cli tools that comes with stk
-- Migrator - Database migration tool [here](#migrator)
-- Project generator - Generates a new project with gsk following clean architecture
-- Verify - Verify the project structure for arch rules (WIP)
+## Installation
 
-### Install
+with go install
+
 ```bash
-go install github.com/adharshmk96/stk
+go install github.com/adharshmk96/stk@latest
 ```
 
 If go isn't configured properly run this
@@ -28,7 +28,6 @@ echo 'export PATH="$PATH:/snap/bin"' >> ~/.profile
 echo 'export PATH="$PATH:~/go/bin"' >> ~/.profile
 source ~/.profile
 ```
-
 
 ## GSK - Web server framework ( library )
 
@@ -40,111 +39,25 @@ source ~/.profile
 - DB Connection helper functions
 - Utilities
 
-### Get started
+## STK - CLI Tools
 
-```go
-package main
+[docs](docs/stk.md)
 
-import (
-	"net/http"
+- [Project & Module generator](#get-started)
+- [Migrator](#migrator)
 
-	"github.com/adharshmk96/stk/gsk"
-)
 
-func main() {
-	// create new server
-	server := gsk.New()
 
-	// add routes
-	server.Get("/", func(gc *gsk.Context) {
-		gc.Status(http.StatusOK).JSONResponse(gsk.Map{"message": "Hello World"})
-	})
+## Get started
 
-	// start server
-	server.Start()
-}
-```
-
-### Middleware
-
-you can add any middleware by simply creating a function like this and adding it to server.Use()
-
-NOTE: Middleware functions only wraps registered routes.
-
-```go
-middleware := func(next stk.HandlerFunc) stk.HandlerFunc {
-	return func(gc stk.Context) {
-		if gc.Request.URL.Path == "/blocked" {
-  			gc.Status(http.StatusForbidden).JSONResponse("blocked")
-			return
-  		}
-		next(c)
-	}
-}
-
-server.Use(middleware)
-```
-
-# CLI Tools
-
-## Migrator
-- CLI tool for generating migration files and running migrations
-- Supports sqlite3 (default)
-
-### Get started
-
-Generate migration files ( optinally name it and fill )
+1. Setup and initialize a project scaffolded using gsk and clean arch format. Read more about the project structure [here](docs/project.md)
 
 ```bash
-stk migrator generate -n "initial migration" --fill
+stk init
 ```
 
-migrate up ( applies all migrations, or specified number of steps )
+STK init will generate a project in the current directory (default) or directory specified by `-w` flag. with the following structure.
 
-```bash
-stk migrator up
-```
-
-migrate down ( applies all down migrations, or specified number of steps )
-
-```bash
-stk migrator down
-```
-
-History - Shows history of applied migrations
-
-```bash
-stk migrator history
-```
-
-```
-Number  Name               Type  Created     
-000001  initial_migration  up    2023-07-01  
-000002  initial_migration  up    2023-07-01  
-000003  initial_migration  up    2023-07-01  
-000004  initial_migration  up    2023-07-01  
-000005  initial_migration  up    2023-07-01  
-000005  initial_migration  down  2023-07-01  
-000004  initial_migration  down  2023-07-01  
-000003  initial_migration  down  2023-07-01  
-000002  initial_migration  down  2023-07-01  
-000001  initial_migration  down  2023-07-01
-```
-
-## Project Generator
-
-- Generates a new project with gsk following clean architecture
-
-### Get started
-
-1. goto working directory `cd <target directory>`
-2. run the following command
-
-```bash
-stk project generate
-```
-
-The command will generate a project with the following structure
 
 ```
 │   .gitignore
@@ -153,7 +66,6 @@ The command will generate a project with the following structure
 │   main.go
 │   makefile
 │   README.md
-│   request.http
 |
 ├───.github
 │   └───workflows
@@ -175,10 +87,23 @@ The command will generate a project with the following structure
     ├───infra
     ├───middleware
     └───routing
-
 ```
 
-find more about the project structure [here](docs/project.md)
+
+
+2. Start the server
+
+```bash
+make run
+```
+
+it will run `go run . serve -p 8080` command
+
+3. Test the server
+
+```bash
+curl http://localhost:8080/ping
+```
 
 ### Add Modules to project
 
@@ -186,7 +111,7 @@ To add a module to the project run the following command
 
 
 ```bash
-stk project module <module-name>
+stk add module <module-name>
 ```
 
 It will generate the module in the project structure
@@ -243,6 +168,39 @@ func SetupRoutes(server *gsk.Server) {
 	setupModuleRoutes(server)
 }
 ```
+
+
+## Migrator
+- CLI tool for generating migration files and running migrations
+- Supports sqlite3 (default)
+
+### Get started
+
+Generate migration files ( optinally name it and fill )
+
+```bash
+stk migrator generate -n "initial migration" --fill
+```
+
+migrate up ( applies all migrations, or specified number of steps )
+
+```bash
+stk migrator up
+```
+
+migrate down ( applies all down migrations, or specified number of steps )
+
+```bash
+stk migrator down
+```
+
+History - Shows history of applied migrations
+
+```bash
+stk migrator history
+```
+
+
 
 ## Development
 

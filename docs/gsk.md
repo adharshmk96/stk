@@ -31,7 +31,9 @@ func main() {
 }
 ```
 
-1. **Initialization:** Initialize a new server instance by invoking the `New` function.
+### Initialization:
+
+Initialize a new server instance by invoking the `New` function.
 
 ```go
 server := gsk.New()
@@ -48,7 +50,9 @@ config := &gsk.ServerConfig{
 server := gsk.New(config)
 ```
 
-2. **Starting and Stopping:** Use `Start` to start the server and `Shutdown` to stop it.
+### Starting and Stopping:
+ 
+Use `Start` to start the server and `Shutdown` to stop it.
 
 ```go
 server.Start()
@@ -63,43 +67,61 @@ if err != nil {
 Here is an example function to start and gracefully shutdown the server:
 
 ```go
-func setupRoutes(server gsk.Server) {
-    server.Get("/", func(c *gsk.Context) {
-        c.Status(http.StatusOK).JSONResponse(gsk.Map{"message": "Hello World"})
-    })
+package main
+
+import (
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/adharshmk96/stk/gsk"
+	"github.com/adharshmk96/stk/pkg/middleware"
+)
+
+var logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+func setupRoutes(server *gsk.Server) {
+	server.Get("/", func(c *gsk.Context) {
+		c.Status(http.StatusOK).JSONResponse(gsk.Map{"message": "Hello World"})
+	})
 }
 
-func StartHttpServer(port string) (gsk.Server, chan bool) {
-    serverConfig := &gsk.ServerConfig{
+func StartHttpServer(port string) (*gsk.Server, chan bool) {
+
+	serverConfig := &gsk.ServerConfig{
 		Port:   port,
 		Logger: logger,
 	}
 
 	server := gsk.New(serverConfig)
 
-    // add middlewares
-	rateLimiter := rateLimiter()
-	server.Use(rateLimiter)
-	server.Use(middleware.RequestLogger)
+	rateLimiter := middleware.NewRateLimiter()
+	server.Use(rateLimiter.Middleware)
 
-    // setup routes after adding middleware
+	server.Use(middleware.RequestLogger)
+	server.Use(middleware.CORS(middleware.CORSConfig{
+		AllowAll: true,
+	}))
+
 	setupRoutes(server)
 
 	server.Start()
 
-	// prepare for graceful shutdown
+	// graceful shutdown
 	done := make(chan bool)
 
-	// A goroutine that listens for OS signals
+	// A go routine that listens for os signals
 	// it will block until it receives a signal
-	// once it receives a signal, it will shutdown and close the done channel
+	// once it receives a signal, it will shutdown close the done channel
 	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
 		<-sigint
 
 		if err := server.Shutdown(); err != nil {
-			logger.Error(err)
+			logger.Error("Server Shutdown Failed", err)
 		}
 
 		close(done)
@@ -108,15 +130,20 @@ func StartHttpServer(port string) (gsk.Server, chan bool) {
 	return server, done
 }
 
-
 func main() {
-    server, done := StartHttpServer("8080")
-    <-done
-    logger.Info("Server Stopped")
+
+	startAddr := "0.0.0.0:"
+	startingPort := "8080"
+
+	_, done := StartHttpServer(startAddr + startingPort)
+	// blocks the routine until done is closed
+	<-done
+
 }
 ```
 
-3. **Routing HTTP methods:** Define routes for each HTTP method (Get, Post, Put, Delete, Patch) by calling the appropriate function.
+### Routing HTTP methods: 
+Define routes for each HTTP method (Get, Post, Put, Delete, Patch) by calling the appropriate function.
 
 ```go
 server.Get("/path", func(c *gsk.Context) {
@@ -124,13 +151,73 @@ server.Get("/path", func(c *gsk.Context) {
 })
 ```
 
-4. **Serving Static Files:** Use the `Static` function to serve static files from a specific directory.
+#### Route Parameters:
+
+Use the `Param` function to get the value of a route parameter.
+
+```go
+server.Get("/path/:id", func(c *gsk.Context) {
+	id := c.Param("id")
+	// handle the request
+})
+```
+
+#### Query Parameters:
+
+Use the `Query` function to get the value of a query parameter.
+
+```go
+server.Get("/path", func(c *gsk.Context) {
+	// example: /path?id=123, id = 123
+	id := c.Query("id")
+	// handle the request
+})
+```
+
+#### Request Body:
+
+Use the `Body` function to get the request body as a string.
+
+```go
+server.Post("/path", func(c *gsk.Context) {
+	body := c.Body()
+	// handle the request
+})
+```
+
+### Route Groups:
+
+Use the `RouteGroup` function to group routes under a common prefix.
+
+
+```go
+server := gsk.New()
+
+apiRoutes := server.RouteGroup("/api")
+
+// all routes registered under /api will be prefixed with /api
+apiRoutes.Get("/path", func(c *gsk.Context) {
+	// handle the request for /api/path
+})
+
+otherRoutes := server.RouteGroup("/other")
+
+// all routes registered under /other will be prefixed with /other
+otherRoutes.Get("/path", func(c *gsk.Context) {
+	// handle the request for /other/path
+})
+
+```
+
+### Serving Static Files: 
+
+Use the `Static` function to serve static files from a specific directory.
 
 ```go
 server.Static("/assets/*filepath", "/path/to/your/static/files")
 ```
 
-## Usage with Middleware
+## Middlewares
 
 Middleware executes code before the request is handled by the route handler. Middleware functions are defined separately and then added to the server using the `Use` function.
 
@@ -138,9 +225,11 @@ Middleware executes code before the request is handled by the route handler. Mid
 // Define your middleware
 var MyMiddleware gsk.Middleware = func(next gsk.HandlerFunc) gsk.HandlerFunc {
     return func(c *gsk.Context) {
-        // Middleware code here
+        // Execute code Before handler 
 
         next(c)
+
+		// Execute code after handler
     }
 }
 
@@ -170,7 +259,7 @@ server.Get("/path2", func(c *gsk.Context) {
 })
 ```
 
-### Route Grouping
+### With Route Groups
 
 Group routes and apply middleware to the group:
 

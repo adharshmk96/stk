@@ -25,7 +25,7 @@ func GetSemverInfo() string {
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Display the current version of semver",
+	Short: "Display the current version of stk",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(GetSemverInfo())
 	},
