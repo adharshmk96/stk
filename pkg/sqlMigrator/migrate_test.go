@@ -13,8 +13,7 @@ import (
 )
 
 func checkUnappliedMigrations(t *testing.T, ctx *sqlmigrator.Context, expected int) {
-	unappliedMigrations, err := sqlmigrator.LoadUncommitedMigrations(ctx)
-	assert.NoError(t, err)
+	unappliedMigrations := sqlmigrator.LoadUncommitedMigrations(ctx)
 	assert.Equal(t, expected, len(unappliedMigrations))
 }
 

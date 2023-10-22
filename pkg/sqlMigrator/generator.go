@@ -68,10 +68,8 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 func (g *Generator) Clean(ctx *Context) ([]string, error) {
 	removedFiles := []string{}
 
-	uncommitedMigrations, err := LoadUncommitedMigrations(ctx)
-	if err != nil {
-		return nil, err
-	}
+	uncommitedMigrations := LoadUncommitedMigrations(ctx)
+
 	if ctx.DryRun {
 		dryRunGeneration(uncommitedMigrations)
 		return removedFiles, nil

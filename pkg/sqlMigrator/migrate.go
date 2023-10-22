@@ -17,10 +17,7 @@ func NewMigrator(dbRepo DBRepo) *migrator {
 
 func (m *migrator) MigrateUp(ctx *Context, num int) ([]*MigrationFileEntry, error) {
 	appliedMigrations := []*MigrationFileEntry{}
-	migrationToApply, err := LoadUncommitedMigrations(ctx)
-	if err != nil {
-		return appliedMigrations, err
-	}
+	migrationToApply := LoadUncommitedMigrations(ctx)
 
 	if len(migrationToApply) == 0 {
 		fmt.Println("no migrations to apply")
@@ -66,10 +63,7 @@ func (m *migrator) MigrateUp(ctx *Context, num int) ([]*MigrationFileEntry, erro
 
 func (m *migrator) MigrateDown(ctx *Context, num int) ([]*MigrationFileEntry, error) {
 	rolledBackMigrations := []*MigrationFileEntry{}
-	migrationToApply, err := LoadCommittedMigrations(ctx)
-	if err != nil {
-		return rolledBackMigrations, err
-	}
+	migrationToApply := LoadCommittedMigrations(ctx)
 
 	if len(migrationToApply) == 0 {
 		fmt.Println("no migrations to rollback")

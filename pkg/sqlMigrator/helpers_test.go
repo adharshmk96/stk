@@ -47,8 +47,7 @@ func TestInitializeMigrationsFolder(t *testing.T) {
 func TestLoadUncommitedMigration(t *testing.T) {
 	t.Run("returns an empty migration entry if the log file is empty", func(t *testing.T) {
 		ctx := sqlmigrator.NewContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
-		migration, err := sqlmigrator.LoadUncommitedMigrations(ctx)
-		assert.NoError(t, err)
+		migration := sqlmigrator.LoadUncommitedMigrations(ctx)
 		assert.Empty(t, migration)
 		assert.Equal(t, 0, len(migration))
 	})
@@ -70,8 +69,9 @@ func TestLoadUncommitedMigration(t *testing.T) {
 		err := os.WriteFile(logPath, []byte(logFile_content), 0644)
 		assert.NoError(t, err)
 
-		migrations, err := sqlmigrator.LoadUncommitedMigrations(ctx)
-		assert.NoError(t, err)
+		ctx.LoadMigrationEntries()
+		migrations := sqlmigrator.LoadUncommitedMigrations(ctx)
+		assert.NotEmpty(t, migrations)
 
 		expected := func() []*sqlmigrator.MigrationFileEntry {
 			migrationEntry := []*sqlmigrator.MigrationFileEntry{}
@@ -98,10 +98,8 @@ func TestLoadUncommitedMigration(t *testing.T) {
 func TestLoadCommittedMigration(t *testing.T) {
 	t.Run("returns an empty migration entry if the log file is empty", func(t *testing.T) {
 		ctx := sqlmigrator.NewContext(t.TempDir(), sqlmigrator.SQLiteDB, "migrator.log", false)
-		migration, err := sqlmigrator.LoadCommittedMigrations(ctx)
-		assert.NoError(t, err)
+		migration := sqlmigrator.LoadCommittedMigrations(ctx)
 		assert.Empty(t, migration)
-		assert.Equal(t, 0, len(migration))
 	})
 
 	t.Run("returns committed migration entries from the log file", func(t *testing.T) {
@@ -121,8 +119,9 @@ func TestLoadCommittedMigration(t *testing.T) {
 		err := os.WriteFile(logPath, []byte(logFile_content), 0644)
 		assert.NoError(t, err)
 
-		migrations, err := sqlmigrator.LoadCommittedMigrations(ctx)
-		assert.NoError(t, err)
+		ctx.LoadMigrationEntries()
+		migrations := sqlmigrator.LoadCommittedMigrations(ctx)
+		assert.NotEmpty(t, migrations)
 
 		expected := func() []*sqlmigrator.MigrationFileEntry {
 			migrationEntry := []*sqlmigrator.MigrationFileEntry{}
