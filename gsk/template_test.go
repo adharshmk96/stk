@@ -1,6 +1,7 @@
 package gsk_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/adharshmk96/stk/gsk"
@@ -50,5 +51,29 @@ func TestTemplateResponseRender(t *testing.T) {
 </html>`
 
 		assert.Equal(t, expected, string(rendered))
+	})
+
+	t.Run("execute error is returned", func(t *testing.T) {
+		tempFile, _ := testutils.CreateTempFile(t, templateContent)
+
+		data := struct {
+			Title string
+			Body  string
+		}{
+			Title: "Hello",
+			Body:  "World",
+		}
+
+		templateResp := gsk.Tpl{
+			TemplatePath: tempFile,
+			Variables:    data,
+		}
+
+		// Remove template file to force execute error
+		err := os.Remove(tempFile)
+		assert.NoError(t, err)
+
+		_, err = templateResp.Render()
+		assert.Error(t, err)
 	})
 }
