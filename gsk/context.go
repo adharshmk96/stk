@@ -124,9 +124,9 @@ func (c *Context) Redirect(url string) {
 // JSONResponse marshals the provided interface into JSON and writes it to the response writer
 // If there is an error in marshalling the JSON, an internal server error is returned
 func (c *Context) JSONResponse(data interface{}) {
-	response, err := json.Marshal(data)
 	// Set the content type to JSON
 	c.Writer.Header().Set("Content-Type", "application/json")
+	response, err := json.Marshal(data)
 
 	// Check if there is an error in marshalling the JSON (internal server error)
 	if err != nil {
@@ -135,6 +135,19 @@ func (c *Context) JSONResponse(data interface{}) {
 		return
 	}
 
+	c.responseBody = response
+}
+
+// TemplateResponse renders the provided template with the provided data
+// and writes it to the response writer with content type text/html
+func (c *Context) TemplateResponse(template *Tpl) {
+	c.Writer.Header().Set("Content-Type", "text/html")
+	response, err := template.Render()
+	if err != nil {
+		c.responseStatus = http.StatusInternalServerError
+		c.responseBody = []byte(ErrInternalServer.Error())
+		return
+	}
 	c.responseBody = response
 }
 
