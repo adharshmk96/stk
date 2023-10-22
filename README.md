@@ -10,9 +10,10 @@ STK provides a suite of tools tailored for building and managing server applicat
 
 ## Features:
 
-- **gsk (go server kit) package**: Ideal for constructing REST API servers.
-- **Project & Module Generation**: Quickly scaffold your project and add modules with ease. It uses gsk package to run the server.
-- **SQL Migration Management**: Generate migration files, perform migration on your sql database.
+- [gsk (library)](docs/gsk.md): Ideal for constructing REST API servers.
+- [STK CLI](#get-started): 
+  - Quickly scaffold your project and add modules with ease. It uses gsk package to run the server.
+  - [Migrator](#migrator): Generate migration files, perform migration on your sql database.
 
 ## Installation
 
@@ -28,25 +29,6 @@ echo 'export PATH="$PATH:/snap/bin"' >> ~/.profile
 echo 'export PATH="$PATH:~/go/bin"' >> ~/.profile
 source ~/.profile
 ```
-
-## GSK - Web server framework ( library )
-
-[docs](docs/gsk.md)
-
-- A web server framework with go's native http server wrapper and httprouter for routing
-- Middleware support
-- slog Logger
-- DB Connection helper functions
-- Utilities
-
-## STK - CLI Tools
-
-[docs](docs/stk.md)
-
-- [Project & Module generator](#get-started)
-- [Migrator](#migrator)
-
-
 
 ## Get started
 
