@@ -43,12 +43,3 @@ func ReadLines(filePath string) ([]string, error) {
 
 	return lines, nil
 }
-
-func readFileContent(filePath string) (string, error) {
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		return "", err
-	}
-
-	return string(content), nil
-}

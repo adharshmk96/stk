@@ -1,6 +1,7 @@
 package project_test
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -155,6 +156,80 @@ func TestGenerateModuleBoilerplate(t *testing.T) {
 
 		assert.True(t, goCmd.IsMod())
 		assert.True(t, gitCmd.IsRepo())
+	})
+
+	t.Run("errors when go mod init fails", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+		defer removeDir()
+		os.Chdir(tempDir)
+
+		goCmd, gitCmd := getMockCommands(t)
+
+		gitCmd.On("Init").Return(errors.New(("init failed")))
+
+		ctx := &project.Context{
+			PackageName: "github.com/sample/sapp",
+			AppName:     "sapp",
+			IsGitRepo:   false,
+			IsGoModule:  false,
+			WorkDir:     tempDir,
+
+			GoCmd:  goCmd,
+			GitCmd: gitCmd,
+		}
+
+		err := project.GenerateProjectBoilerplate(ctx)
+		assert.Error(t, err)
+	})
+
+	t.Run("errors when git init fails", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+		defer removeDir()
+		os.Chdir(tempDir)
+
+		goCmd, gitCmd := getMockCommands(t)
+
+		gitCmd.On("Init").Return(errors.New("init failed"))
+
+		ctx := &project.Context{
+			PackageName: "github.com/sample/sapp",
+			AppName:     "sapp",
+			IsGitRepo:   false,
+			IsGoModule:  false,
+			WorkDir:     tempDir,
+
+			GoCmd:  goCmd,
+			GitCmd: gitCmd,
+		}
+
+		err := project.GenerateProjectBoilerplate(ctx)
+		assert.Error(t, err)
+	})
+
+	t.Run("errors when go mod tidy fails", func(t *testing.T) {
+		tempDir, removeDir := testutils.CreateTempDirectory(t)
+		defer removeDir()
+		os.Chdir(tempDir)
+
+		goCmd, gitCmd := getMockCommands(t)
+
+		goCmd.On("ModInit", "github.com/sample/sapp").Return(nil)
+		gitCmd.On("Init").Return(nil)
+		goCmd.On("ModTidy").Return(errors.New("some error"))
+
+		ctx := &project.Context{
+			PackageName: "github.com/sample/sapp",
+			AppName:     "sapp",
+			IsGitRepo:   false,
+			IsGoModule:  false,
+			WorkDir:     tempDir,
+
+			GoCmd:  goCmd,
+			GitCmd: gitCmd,
+		}
+
+		err := project.GenerateProjectBoilerplate(ctx)
+		assert.Error(t, err)
 	})
 }
 
