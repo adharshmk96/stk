@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/adharshmk96/stk/gsk"
+	"github.com/adharshmk96/stk/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -570,5 +571,80 @@ func TestHelperFunctions(t *testing.T) {
 
 		s.Test("GET", "/", nil)
 
+	})
+}
+
+func TestTemplateResponse(t *testing.T) {
+	t.Run("renders template with data", func(t *testing.T) {
+		templateContent := `<html>
+	<head>
+		<title>{{ .Title }}</title>
+	</head>
+	<body>
+		<h1>{{ .Title }}</h1>
+		<p>{{ .Body }}</p>
+	</body>
+</html>`
+
+		tempFile, removeDir := testutils.CreateTempFile(t, templateContent)
+		defer removeDir()
+
+		config := &gsk.ServerConfig{
+			Port: "8888",
+		}
+		s := gsk.New(config)
+
+		s.Get("/", func(c *gsk.Context) {
+			c.Status(http.StatusOK).TemplateResponse(&gsk.Tpl{
+				TemplatePath: tempFile,
+				Variables: struct {
+					Title string
+					Body  string
+				}{
+					Title: "Hello",
+					Body:  "World",
+				},
+			})
+		})
+
+		rr, _ := s.Test("GET", "/", nil)
+
+		expected := `<html>
+	<head>
+		<title>Hello</title>
+	</head>
+	<body>
+		<h1>Hello</h1>
+		<p>World</p>
+	</body>
+</html>`
+
+		assert.Equal(t, expected, rr.Body.String())
+		assert.Equal(t, http.StatusOK, rr.Code)
+
+	})
+
+	t.Run("returns error if template is not found", func(t *testing.T) {
+		config := &gsk.ServerConfig{
+			Port: "8888",
+		}
+		s := gsk.New(config)
+
+		s.Get("/", func(c *gsk.Context) {
+			c.Status(http.StatusOK).TemplateResponse(&gsk.Tpl{
+				TemplatePath: "/tmp/nonext",
+				Variables: struct {
+					Title string
+					Body  string
+				}{
+					Title: "Hello",
+					Body:  "World",
+				},
+			})
+		})
+
+		rr, _ := s.Test("GET", "/", nil)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	})
 }

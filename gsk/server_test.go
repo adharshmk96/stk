@@ -1,40 +1,45 @@
 package gsk_test
 
 import (
+	"bytes"
 	"io"
+	"log/slog"
+	"net"
 	"net/http"
+	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/adharshmk96/stk/gsk"
 )
 
-// func TestServer_Start(t *testing.T) {
-// 	buffer := new(bytes.Buffer)
-// 	logger := slog.New(slog.NewJSONHandler(buffer, nil))
+func TestServer_Start(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	logger := slog.New(slog.NewJSONHandler(buffer, nil))
 
-// 	// Create a ServerConfig
-// 	config := &gsk.ServerConfig{
-// 		Port:   "8888",
-// 		Logger: logger,
-// 	}
+	// Create a ServerConfig
+	config := &gsk.ServerConfig{
+		Port:   "8888",
+		Logger: logger,
+	}
 
-// 	// Create a new server
-// 	server := gsk.New(config)
+	// Create a new server
+	server := gsk.New(config)
 
-// 	// Start the server in a goroutine
-// 	go server.Start()
+	// Start the server in a goroutine
+	go server.Start()
 
-// 	// Wait for the server to start
-// 	time.Sleep(2 * time.Second)
+	// Wait for the server to start
+	time.Sleep(2 * time.Second)
 
-// 	// Check if the server is running
-// 	_, err := net.DialTimeout("tcp", "localhost:"+config.Port, 1*time.Second)
-// 	if err != nil {
-// 		t.Fatalf("Expected server to start, but it didn't: %v", err)
-// 	}
-// }
+	// Check if the server is running
+	_, err := net.DialTimeout("tcp", "localhost:"+config.Port, 1*time.Second)
+	if err != nil {
+		t.Fatalf("Expected server to start, but it didn't: %v", err)
+	}
+}
 
 // Test server routes
 
@@ -441,34 +446,36 @@ func TestServer_Test(t *testing.T) {
 	assert.Equal(t, "\"ok\"", string(body))
 }
 
-// func setupTestDir() {
-// 	os.MkdirAll("./testdata", os.ModePerm)
-// 	os.Create("./testdata/test.txt")
-// }
+func setupTestDir(t *testing.T) {
+	os.MkdirAll("./testdata", os.ModePerm)
+	file, err := os.Create("./testdata/test.txt")
+	assert.NoError(t, err)
+	file.WriteString("test")
+}
 
-// func teardownTestDir() {
-// 	os.RemoveAll("./testdata")
-// }
+func teardownTestDir() {
+	os.RemoveAll("./testdata")
+}
 
-// func TestServer_Static(t *testing.T) {
-// 	setupTestDir()
-// 	defer teardownTestDir()
+func TestServer_Static(t *testing.T) {
+	setupTestDir(t)
+	defer teardownTestDir()
 
-// 	config := &gsk.ServerConfig{
-// 		Port: "8888",
-// 	}
-// 	s := gsk.New(config)
+	config := &gsk.ServerConfig{
+		Port: "8888",
+	}
+	s := gsk.New(config)
 
-// 	s.Static("/static/*filepath", "./testdata")
+	s.Static("/static/*filepath", "./testdata")
 
-// 	w, err := s.Test("GET", "/static/test.txt", nil)
-// 	if err != nil {
-// 		t.Errorf("Expected no error, but got %v", err)
-// 	}
+	w, err := s.Test("GET", "/static/test.txt", nil)
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
 
-// 	assert.Equal(t, http.StatusOK, w.Code)
-// 	assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
 
-// 	// body, _ := io.ReadAll(w.Body)
-// 	// assert.Equal(t, "test", string(body))
-// }
+	body, _ := io.ReadAll(w.Body)
+	assert.Equal(t, "test", string(body))
+}
