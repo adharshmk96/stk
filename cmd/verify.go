@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// verifyCmd represents the project command
+// verifyCmd represents the verify command
 var verifyCmd = &cobra.Command{
 	Use:   "verify",
 	Short: "Verify the project structure, check if the project follows required pattern.",
