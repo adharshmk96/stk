@@ -34,13 +34,7 @@ type TemplateConfig struct {
 	ExportedName string
 }
 
-func setDefaults() {
-	viper.SetDefault("project.modules", []string{"ping"})
-}
-
 func NewContext(args []string) *Context {
-
-	setDefaults()
 
 	goCmd := commands.NewGoCmd()
 	gitCmd := commands.NewGitCmd()
@@ -88,9 +82,8 @@ func (ctx *Context) WriteDefaultConfig() error {
 
 	// project configs
 	viper.Set("name", ctx.AppName)
-	viper.Set("version", "v0.0.1")
 	viper.Set("description", "This project is generated using stk.")
-	viper.Set("author", "")
+	viper.Set("author", "STK")
 
 	// Migrator configs
 	viper.Set("migrator.workdir", "./stk-migrations")
