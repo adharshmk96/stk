@@ -12,7 +12,7 @@ import (
 )
 
 func displayCleanedFiles(files []string) {
-	fmt.Println("\nCleaned Files:")
+	fmt.Println("\ncleaned files:")
 	for _, file := range files {
 		fmt.Println(file)
 	}
@@ -22,7 +22,7 @@ func displayCleanedFiles(files []string) {
 // CleanCmd represents the mkconfig command
 var CleanCmd = &cobra.Command{
 	Use:   "clean",
-	Short: "Remove all unapplied migration files.",
+	Short: "remove all unapplied migration files.",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -32,7 +32,7 @@ var CleanCmd = &cobra.Command{
 		ctx := sqlmigrator.NewContext(workDir, dbType, logFile, dryRun)
 		ctx.LoadMigrationEntries()
 
-		log.Println("Cleaning unapplied migrations...")
+		log.Println("cleaning unapplied migrations...")
 
 		generator := &sqlmigrator.Generator{
 			DryRun: dryRun,
@@ -47,10 +47,10 @@ var CleanCmd = &cobra.Command{
 		displayCleanedFiles(removedFiles)
 		err = ctx.WriteMigrationEntries()
 		if err != nil {
-			log.Println("Error writing migration entries:", err)
+			log.Println("error writing migration entries:", err)
 			return
 		}
-		log.Println("Cleaned migrations successfully.")
+		log.Println("cleaned migrations successfully.")
 
 	},
 }

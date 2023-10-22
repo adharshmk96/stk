@@ -13,7 +13,7 @@ import (
 )
 
 func displayCommitted(committed []*sqlmigrator.MigrationFileEntry) {
-	fmt.Printf("\nCommitted Migrations:\n\n")
+	fmt.Printf("\ncommitted migrations:\n\n")
 	for _, entry := range committed {
 		fmt.Println(entry.String())
 	}
@@ -23,7 +23,7 @@ func displayCommitted(committed []*sqlmigrator.MigrationFileEntry) {
 // UpCmd represents the mkconfig command
 var UpCmd = &cobra.Command{
 	Use:   "up",
-	Short: "Perform forward migration from the files in the migrations folder",
+	Short: "perform forward migration from the files in the migrations folder",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -45,12 +45,12 @@ var UpCmd = &cobra.Command{
 
 		err = ctx.WriteMigrationEntries()
 		if err != nil {
-			log.Println("Error writing migration entries:", err)
+			log.Println("error writing migration entries:", err)
 			return
 		}
 
 		displayCommitted(committedMigration)
-		log.Println("Migrated to database successfully.")
+		log.Println("migrated to database successfully.")
 
 	},
 }

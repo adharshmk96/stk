@@ -481,3 +481,94 @@ func TestCookie(t *testing.T) {
 	})
 
 }
+
+func TestHelperFunctions(t *testing.T) {
+	t.Run("test origin", func(t *testing.T) {
+		config := &gsk.ServerConfig{
+			Port: "8888",
+		}
+		s := gsk.New(config)
+
+		s.Get("/", func(c *gsk.Context) {
+			assert.Equal(t, "http://example.com", c.Origin())
+		})
+
+		s.Test("GET", "/", nil, gsk.TestParams{
+			Headers: map[string]string{
+				"Origin": "http://example.com",
+			},
+		})
+
+	})
+
+	t.Run("logger is returned", func(t *testing.T) {
+		config := &gsk.ServerConfig{
+			Port: "8888",
+		}
+		s := gsk.New(config)
+
+		s.Get("/", func(c *gsk.Context) {
+			assert.NotNil(t, c.Logger())
+		})
+
+		s.Test("GET", "/", nil)
+	})
+
+	t.Run("redirect method redirects to the given url", func(t *testing.T) {
+		config := &gsk.ServerConfig{
+			Port: "8888",
+		}
+		s := gsk.New(config)
+
+		s.Get("/", func(c *gsk.Context) {
+			c.Redirect("http://example.com")
+		})
+
+		rr, _ := s.Test("GET", "/", nil)
+
+		assert.Equal(t, http.StatusTemporaryRedirect, rr.Code)
+		assert.Equal(t, "http://example.com", rr.Header().Get("Location"))
+	})
+
+	t.Run("get cookie returns cookie from the request", func(t *testing.T) {
+		config := &gsk.ServerConfig{
+			Port: "8888",
+		}
+		s := gsk.New(config)
+
+		s.Get("/", func(c *gsk.Context) {
+			cookie, err := c.GetCookie("X-Cookie")
+			assert.NoError(t, err)
+			assert.Equal(t, "Added", cookie.Value)
+		})
+
+		cookie := &http.Cookie{
+			Name:  "X-Cookie",
+			Value: "Added",
+			Path:  "/",
+		}
+		testParams := gsk.TestParams{
+			Cookies: []*http.Cookie{
+				cookie,
+			},
+		}
+
+		s.Test("GET", "/", nil, testParams)
+	})
+
+	t.Run("get status returns status code of the response", func(t *testing.T) {
+		config := &gsk.ServerConfig{
+			Port: "8888",
+		}
+		s := gsk.New(config)
+
+		s.Get("/", func(c *gsk.Context) {
+			c.Status(http.StatusTeapot)
+			statusCode := c.GetStatusCode()
+			assert.Equal(t, http.StatusTeapot, statusCode)
+		})
+
+		s.Test("GET", "/", nil)
+
+	})
+}

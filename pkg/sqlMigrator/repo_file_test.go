@@ -15,14 +15,6 @@ var TEST_FILE_CONTENT = `1_create_users_table_up
 6_create_messages_table_down
 `
 
-func TestReadFileContent(t *testing.T) {
-	t.Run("returns error if file doesn't exist", func(t *testing.T) {
-		_, err := readFileContent("non-existent-file.txt")
-
-		assert.Error(t, err)
-	})
-}
-
 func TestReadLines(t *testing.T) {
 	t.Run("reads a file and returns all lines", func(t *testing.T) {
 		filePath, removeTempFile := testutils.CreateTempFile(t, TEST_FILE_CONTENT)

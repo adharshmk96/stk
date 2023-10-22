@@ -94,7 +94,7 @@ func (db *sqliteDb) InitMigrationTable() error {
 		created DATETIME DEFAULT CURRENT_TIMESTAMP
 	)`)
 	if err != nil {
-		fmt.Println("Error creating migration table")
+		fmt.Println("error creating migration table")
 		return err
 	}
 

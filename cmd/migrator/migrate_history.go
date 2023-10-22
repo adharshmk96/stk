@@ -48,7 +48,7 @@ func displayMigrationHistory(history []*sqlmigrator.MigrationDBEntry) {
 // historyCmd represents the mkconfig command
 var HistoryCmd = &cobra.Command{
 	Use:   "history",
-	Short: "View the migration history of the database.",
+	Short: "view the migration history of the database.",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 

@@ -47,7 +47,7 @@ func initConfig() {
 		// Search config in home directory with name ".stk" (without extension).
 		viper.AddConfigPath("./")
 		viper.SetConfigType("yaml")
-		viper.SetConfigName("stk")
+		viper.SetConfigName(".stk")
 	}
 
 	viper.AutomaticEnv()

@@ -38,8 +38,7 @@ Dedicated to housing the core application logic, organized into various segments
   
 - **service**: Contains the service layer, encapsulating business logic and dictating how data is processed and handled within the application.
   
-- **storage**
-  - **pingStorage**: Specific implementation directory, potentially dealing with storage operations related to "ping" entities or functionalities.
+- **storage**: Manages the storage layer, which is responsible for data persistence and retrieval.
 
 ---
 

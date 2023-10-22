@@ -23,7 +23,7 @@ func (m *migrator) MigrateUp(ctx *Context, num int) ([]*MigrationFileEntry, erro
 	}
 
 	if len(migrationToApply) == 0 {
-		fmt.Println("No migrations to apply")
+		fmt.Println("no migrations to apply")
 		return appliedMigrations, nil
 	}
 
@@ -72,7 +72,7 @@ func (m *migrator) MigrateDown(ctx *Context, num int) ([]*MigrationFileEntry, er
 	}
 
 	if len(migrationToApply) == 0 {
-		fmt.Println("No migrations to rollback")
+		fmt.Println("no migrations to rollback")
 		return rolledBackMigrations, nil
 	}
 
