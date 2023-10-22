@@ -10,7 +10,7 @@ STK provides a suite of tools tailored for building and managing server applicat
 
 ## Features:
 
-- [gsk (library)](docs/gsk.md): Ideal for constructing REST API servers.
+- [GSK (library)](docs/gsk.md): Ideal for constructing servers.
 - [STK CLI](#get-started): 
   - Quickly scaffold your project and add modules with ease. It uses gsk package to run the server.
   - [Migrator](#migrator): Generate migration files, perform migration on your sql database.
@@ -23,55 +23,21 @@ with go install
 go install github.com/adharshmk96/stk@latest
 ```
 
-If go isn't configured properly run this
+If installation fails, check the GOPATH and GOBIN environment variables. Make sure that GOBIN is added to your PATH.
 ```bash
-echo 'export PATH="$PATH:/snap/bin"' >> ~/.profile
-echo 'export PATH="$PATH:~/go/bin"' >> ~/.profile
-source ~/.profile
+
+echo export PATH=$PATH:$GOBIN >> ~/.bashrc
+source ~/.bashrc
+
 ```
 
-## Get started
+## Get started ( with CLI )
 
 1. Setup and initialize a project scaffolded using gsk and clean arch format. Read more about the project structure [here](docs/project.md)
 
 ```bash
 stk init
 ```
-
-STK init will generate a project in the current directory (default) or directory specified by `-w` flag. with the following structure.
-
-
-```
-│   .gitignore
-│   go.mod
-│   go.sum
-│   main.go
-│   makefile
-│   README.md
-|
-├───.github
-│   └───workflows
-├───.vscode
-├───cmd
-├───internals
-│   ├───core
-│   │   ├───entity
-│   │   └───serr
-│   ├───http
-│   │   ├───handler
-│   │   ├───helpers
-│   │   └───transport
-│   ├───service
-│   └───storage
-│       └───pingStorage
-├───mocks
-└───server
-    ├───infra
-    ├───middleware
-    └───routing
-```
-
-
 
 2. Start the server
 
@@ -87,51 +53,14 @@ it will run `go run . serve -p 8080` command
 curl http://localhost:8080/ping
 ```
 
+Checkout the library documentation [here](docs/gsk.md)
+
 ### Add Modules to project
 
-To add a module to the project run the following command
-
+To add a new module to the project run the following command
 
 ```bash
 stk add module <module-name>
-```
-
-It will generate the module in the project structure
-
-```
-├───internals
-│   |
-│   ├───core
-│   │   ├───entity
-│   │   │       <module-name>.go
-│   │   │
-│   │   └───serr
-│   │           <module-name>.go
-│   │
-│   ├───http
-│   │   ├───handler
-│   │   │       <module-name>.go
-│   │   │       <module-name>_test.go
-│   │   │
-│   │   ├───helpers
-│   │   │       <module-name>.go
-│   │   │
-│   │   └───transport
-│   │           <module-name>.go
-│   │
-│   ├───service
-│   │       <module-name>.go
-│   │       <module-name>_test.go
-│   │
-│   └───storage
-│        └───<module-name>Storage
-│               <module-name>.go
-│               <module-name>Connection.go
-│               <module-name>Queries.go
-└───server
-    |
-    └───routing
-        <module-name>.go
 ```
 
 you can use it by adding `setup<module-name>Routes` to the `routing/initRoutes.go` file

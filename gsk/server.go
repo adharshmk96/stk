@@ -27,31 +27,6 @@ type Server struct {
 	config *ServerConfig
 }
 
-// type Server interface {
-// 	// Start and Stop
-// 	Start()
-// 	Shutdown() error
-// 	// Middleware
-// 	Use(Middleware)
-// 	// RouteGroup
-// 	RouteGroup(path string) RouteGroup
-
-// 	// HTTP methods
-// 	Get(path string, handler HandlerFunc)
-// 	Post(path string, handler HandlerFunc)
-// 	Put(path string, handler HandlerFunc)
-// 	Delete(path string, handler HandlerFunc)
-// 	Patch(path string, handler HandlerFunc)
-// 	// Handle arbitrary HTTP methods
-// 	Handle(method string, path string, handler HandlerFunc)
-
-// 	// Other Server methods
-// 	Static(string, string)
-
-// 	// Helpers
-// 	Test(method string, path string, body io.Reader, params ...TestParams) (httptest.ResponseRecorder, error)
-// }
-
 // New creates a new server instance
 // Configurations can be passed as a parameter and It's optional
 // If no configurations are passed, default values are used
@@ -131,7 +106,6 @@ func (s *Server) Use(mw Middleware) {
 	// this is a hack to make sure that the preflight handler works with CORS Middleware
 	router := s.router.Router()
 	router.GlobalOPTIONS = wrapHandlerFunc(s, applyMiddlewares(s.middlewares, preFlightHandler))
-
 }
 
 // Register handlers for the HTTP methods
@@ -162,7 +136,7 @@ func preFlightHandler(gc *Context) {
 }
 
 func (s *Server) Handle(method string, path string, handler HandlerFunc) {
-	s.router.HandlerFunc(method, path, wrapHandlerFunc(s, applyMiddlewares(s.middlewares, handler)))
+	s.router.HandlerFunc(method, path, wrapHandlerFunc(s, handler))
 }
 
 func (s *Server) Static(path string, dir string) {
@@ -240,7 +214,8 @@ func wrapHandlerFunc(s *Server, handler HandlerFunc) http.HandlerFunc {
 			bodySizeLimit: s.config.BodySizeLimit,
 		}
 
-		handler(handlerContext)
+		finalHandler := applyMiddlewares(s.middlewares, handler)
+		finalHandler(handlerContext)
 
 		gc := handlerContext.eject()
 
