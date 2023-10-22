@@ -83,11 +83,21 @@ func deleteBoilerplate(templates []tpl.Template, config *TemplateConfig) error {
 	for _, tf := range templates {
 		tf.FilePath = formatModuleFilePath(tf.FilePath, config)
 
+		dir := filepath.Dir(tf.FilePath)
+		if strings.Contains(dir, config.ModName) {
+			err := os.RemoveAll(dir)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
 		err := os.Remove(tf.FilePath)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 

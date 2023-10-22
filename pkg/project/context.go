@@ -15,11 +15,11 @@ const (
 )
 
 type Context struct {
-	PackageName string
-	AppName     string
-
 	IsGitRepo  bool
 	IsGoModule bool
+
+	PackageName string
+	AppName     string
 
 	WorkDir string
 

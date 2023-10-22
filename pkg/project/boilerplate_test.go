@@ -270,6 +270,11 @@ func TestDeleteModuleBoilerplate(t *testing.T) {
 		assert.FileExists(t, filepath.Join(tempDir, "internals/http/helpers", "admin.go"))
 		assert.FileExists(t, filepath.Join(tempDir, "internals/http/transport", "admin.go"))
 		assert.FileExists(t, filepath.Join(tempDir, "internals/http/handler_test", "admin_test.go"))
+		assert.FileExists(t, filepath.Join(tempDir, "internals/storage/adminStorage", "admin.go"))
+		assert.FileExists(t, filepath.Join(tempDir, "internals/storage/adminStorage", "adminConnection.go"))
+		assert.FileExists(t, filepath.Join(tempDir, "internals/storage/adminStorage", "adminQueries.go"))
+
+		assert.DirExists(t, filepath.Join(tempDir, "internals/storage/adminStorage"))
 
 		err = project.DeleteModuleBoilerplate(ctx, "admin")
 		assert.NoError(t, err)
@@ -282,6 +287,8 @@ func TestDeleteModuleBoilerplate(t *testing.T) {
 		assert.NoFileExists(t, filepath.Join(tempDir, "internals/http/helpers", "admin.go"))
 		assert.NoFileExists(t, filepath.Join(tempDir, "internals/http/transport", "admin.go"))
 		assert.NoFileExists(t, filepath.Join(tempDir, "internals/http/handler_test", "admin_test.go"))
+
+		assert.NoDirExists(t, filepath.Join(tempDir, "internals/storage/adminStorage"))
 
 		assert.True(t, goCmd.IsMod())
 		assert.True(t, gitCmd.IsRepo())

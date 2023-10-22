@@ -54,7 +54,7 @@ clean-branch:
 init: 
 	@go mod tidy
 # Install tools
-	@go install github.com/adharshmk96/semver
+	@go install github.com/adharshmk96/semver@latest
 	@go install github.com/vektra/mockery/v2@v2.35.4
 # Setup Git hooks
 	@git config core.hooksPath .githooks

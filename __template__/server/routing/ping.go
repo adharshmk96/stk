@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func setupPingRoutes(server *gsk.Server) {
+func setupPingRoutes(rg *gsk.RouteGroup) {
 	dbConfig := viper.GetString(infra.ENV_SQLITE_FILEPATH)
 	conn := db.GetSqliteConnection(dbConfig)
 
@@ -18,5 +18,5 @@ func setupPingRoutes(server *gsk.Server) {
 	pingService := service.NewPingService(pingStorage)
 	pingHandler := handler.NewPingHandler(pingService)
 
-	server.Get("/ping", pingHandler.PingHandler)
+	rg.Get("/ping", pingHandler.PingHandler)
 }

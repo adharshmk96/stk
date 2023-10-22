@@ -50,20 +50,20 @@ it will run `go run . serve -p 8080` command
 3. Test the server
 
 ```bash
-curl http://localhost:8080/ping
+curl http://localhost:8080/api/ping
 ```
 
 Checkout the library documentation [here](docs/gsk.md)
 
 ### Add Modules to project
 
-To add a new module to the project run the following command
+To add a new module "auth" to the project run the following command
 
 ```bash
-stk add module <module-name>
+stk add -m auth
 ```
 
-you can use it by adding `setup<module-name>Routes` to the `routing/initRoutes.go` file
+you can use it by adding `setupAuthRoutes` to the `routing/initRoutes.go` file
 
 example:
 
@@ -76,7 +76,29 @@ import (
 
 func SetupRoutes(server *gsk.Server) {
 	setupPingRoutes(server)
-	setupModuleRoutes(server)
+	setupAuthRoutes(server)
+}
+```
+
+To remove a module "auth" from the project run the following command
+
+```bash
+stk rm -m auth
+```
+
+you can remove the module by removing `setupAuthRoutes` from the `routing/initRoutes.go` file
+
+example:
+
+```go
+package routing
+
+import (
+	"github.com/adharshmk96/stk/gsk"
+)
+
+func SetupRoutes(server *gsk.Server) {
+	setupPingRoutes(server)
 }
 ```
 

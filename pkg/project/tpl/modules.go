@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func setup{{ .ExportedName }}Routes(server *gsk.Server) {
+func setup{{ .ExportedName }}Routes(rg *gsk.RouteGroup) {
 	dbConfig := viper.GetString(infra.ENV_SQLITE_FILEPATH)
 	conn := db.GetSqliteConnection(dbConfig)
 
@@ -22,7 +22,7 @@ func setup{{ .ExportedName }}Routes(server *gsk.Server) {
 	{{ .ModName }}Service := service.New{{ .ExportedName }}Service({{ .ModName }}Storage)
 	{{ .ModName }}Handler := handler.New{{ .ExportedName }}Handler({{ .ModName }}Service)
 
-	server.Get("/{{ .ModName }}", {{ .ModName }}Handler.{{ .ExportedName }}Handler)
+	rg.Get("/{{ .ModName }}", {{ .ModName }}Handler.{{ .ExportedName }}Handler)
 }
 `,
 }

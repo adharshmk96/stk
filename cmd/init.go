@@ -35,7 +35,7 @@ var initCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println("boilerplate generated successfully.")
+		fmt.Printf("boilerplate generated successfully. \n\nrun 'make init' to initialize the project with necessary tools.\n\n")
 	},
 }
 

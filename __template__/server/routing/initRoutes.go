@@ -5,5 +5,7 @@ import (
 )
 
 func SetupRoutes(server *gsk.Server) {
-	setupPingRoutes(server)
+	apiRoutes := server.RouteGroup("/api")
+
+	setupPingRoutes(apiRoutes)
 }
