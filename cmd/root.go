@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,6 +14,18 @@ import (
 )
 
 var cfgFile string
+var SemVer = "v0.0.0"
+
+func GetSemverInfo() string {
+	if SemVer != "v0.0.0" {
+		return SemVer
+	}
+	version, ok := debug.ReadBuildInfo()
+	if ok && version.Main.Version != "(devel)" && version.Main.Version != "" {
+		return version.Main.Version
+	}
+	return SemVer
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -22,6 +35,13 @@ var rootCmd = &cobra.Command{
 You can use the gsk (go server kit) package for building rest api servers. 
 stk CLI has tools to do project and module generation, sql migration management.
 Refer the documentation to see the usage.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if cmd.Flag("version").Value.String() == "true" {
+			fmt.Println(GetSemverInfo())
+			return
+		}
+		cmd.Help()
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -36,6 +56,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", ".stk.yaml", "config file.")
+	rootCmd.PersistentFlags().BoolP("version", "v", false, "display stk version")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -43,11 +64,6 @@ func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
-	} else {
-		// Search config in home directory with name ".stk" (without extension).
-		viper.AddConfigPath("./")
-		viper.SetConfigType("yaml")
-		viper.SetConfigName(".stk")
 	}
 
 	viper.AutomaticEnv()
