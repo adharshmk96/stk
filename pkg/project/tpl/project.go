@@ -193,20 +193,39 @@ var CMD_ROOTGO_TPL = Template{
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var version = "v0.0.0"
 var cfgFile string
+var SemVer = "v0.0.0"
+
+func GetSemverInfo() string {
+	if SemVer != "v0.0.0" {
+		return SemVer
+	}
+	version, ok := debug.ReadBuildInfo()
+	if ok && version.Main.Version != "(devel)" && version.Main.Version != "" {
+		return version.Main.Version
+	}
+	return SemVer
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "{{ .AppName }}",
-	Short: "{{ .AppName }} is a template for creating api servers.",
-	Long:  "{{ .AppName }} is a template for creating api servers using stk.",
+	Short: "{{ .AppName }} is an stk project.",
+	Long:  "{{ .AppName }} is generated using stk cli.",
+	Run: func(cmd *cobra.Command, args []string) {
+		if cmd.Flag("version").Value.String() == "true" {
+			fmt.Println(GetSemverInfo())
+		} else {
+			cmd.Help()
+		}
+	},
 }
 
 func Execute() {
@@ -218,7 +237,8 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "{{ .AppName }}.yaml", "config file.")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", ".stk.yaml", "config file.")
+	rootCmd.Flags().BoolP("version", "v", false, "display {{ .AppName }} version")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -282,47 +302,6 @@ func init() {
 	serveCmd.Flags().StringVarP(&startingPort, "port", "p", "8080", "Port to start the server on")
 
 	rootCmd.AddCommand(serveCmd)
-}
-`,
-}
-
-var CMD_VERSIONGO_TPL = Template{
-	FilePath: "cmd/version.go",
-	Content: `/*
-Copyright © 2023 Adharsh M dev@adharsh.in
-*/
-package cmd
-
-import (
-	"fmt"
-	"runtime/debug"
-
-	"github.com/spf13/cobra"
-)
-
-var SemVer = "v0.0.0"
-
-func GetSemverInfo() string {
-	if SemVer != "v0.0.0" {
-		return SemVer
-	}
-	version, ok := debug.ReadBuildInfo()
-	if ok && version.Main.Version != "(devel)" && version.Main.Version != "" {
-		return version.Main.Version
-	}
-	return SemVer
-}
-
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Display the current version of semver",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(GetSemverInfo())
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(versionCmd)
 }
 `,
 }
@@ -504,7 +483,6 @@ var ProjectTemplates = []Template{
 	READMEMD_TPL,
 	CMD_ROOTGO_TPL,
 	CMD_SERVEGO_TPL,
-	CMD_VERSIONGO_TPL,
 	VSCODE_LAUNCHJSON_TPL,
 	SERVER_SETUPGO_TPL,
 	SERVER_ROUTING_INITROUTESGO_TPL,

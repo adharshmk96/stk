@@ -3,20 +3,39 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var version = "v0.0.0"
 var cfgFile string
+var SemVer = "v0.0.0"
+
+func GetSemverInfo() string {
+	if SemVer != "v0.0.0" {
+		return SemVer
+	}
+	version, ok := debug.ReadBuildInfo()
+	if ok && version.Main.Version != "(devel)" && version.Main.Version != "" {
+		return version.Main.Version
+	}
+	return SemVer
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "singlemod",
-	Short: "singlemod is a template for creating api servers.",
-	Long:  "singlemod is a template for creating api servers using stk.",
+	Short: "singlemod is an stk project.",
+	Long:  "singlemod is generated using stk cli.",
+	Run: func(cmd *cobra.Command, args []string) {
+		if cmd.Flag("version").Value.String() == "true" {
+			fmt.Println(GetSemverInfo())
+		} else {
+			cmd.Help()
+		}
+	},
 }
 
 func Execute() {
@@ -28,7 +47,8 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "singlemod.yaml", "config file.")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", ".stk.yaml", "config file.")
+	rootCmd.Flags().BoolP("version", "v", false, "display singlemod version")
 }
 
 // initConfig reads in config file and ENV variables if set.
