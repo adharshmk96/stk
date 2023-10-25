@@ -14,17 +14,17 @@ import (
 )
 
 var cfgFile string
-var SemVer = "v0.0.0"
+var SemVer = "development"
 
-func GetSemverInfo() string {
-	if SemVer != "v0.0.0" {
-		return SemVer
+func displaySemverInfo() {
+	if SemVer != "development" {
+		fmt.Println(SemVer)
 	}
 	version, ok := debug.ReadBuildInfo()
 	if ok && version.Main.Version != "(devel)" && version.Main.Version != "" {
-		return version.Main.Version
+		SemVer = version.Main.Version
 	}
-	return SemVer
+	fmt.Println(SemVer)
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -37,7 +37,7 @@ stk CLI has tools to do project and module generation, sql migration management.
 Refer the documentation to see the usage.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if cmd.Flag("version").Value.String() == "true" {
-			fmt.Println(GetSemverInfo())
+			displaySemverInfo()
 			return
 		}
 		cmd.Help()
@@ -56,7 +56,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", ".stk.yaml", "config file.")
-	rootCmd.PersistentFlags().BoolP("version", "v", false, "display stk version")
+	rootCmd.Flags().BoolP("version", "v", false, "display stk version")
 }
 
 // initConfig reads in config file and ENV variables if set.
