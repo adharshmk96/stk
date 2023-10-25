@@ -11,6 +11,8 @@ import (
 )
 
 func setupPingRoutes(rg *gsk.RouteGroup) {
+	pingRoutes := rg.RouteGroup("/ping")
+
 	dbConfig := viper.GetString(infra.ENV_SQLITE_FILEPATH)
 	conn := db.GetSqliteConnection(dbConfig)
 
@@ -18,5 +20,5 @@ func setupPingRoutes(rg *gsk.RouteGroup) {
 	pingService := service.NewPingService(pingStorage)
 	pingHandler := handler.NewPingHandler(pingService)
 
-	rg.Get("/ping", pingHandler.PingHandler)
+	pingRoutes.Get("", pingHandler.PingHandler)
 }

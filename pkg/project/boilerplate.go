@@ -72,6 +72,15 @@ func generateBoilerplate(templates []tpl.Template, config *TemplateConfig) error
 			return err
 		}
 
+		// if tf.FilePath ends with .html, then just write the content to the file
+		if strings.HasSuffix(tf.FilePath, ".html") {
+			err := os.WriteFile(tf.FilePath, []byte(tf.Content), 0644)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
 		if err := createAndExecuteTemplate(tf, config); err != nil {
 			return err
 		}

@@ -17,6 +17,10 @@ type ServerConfig struct {
 	Logger *slog.Logger
 	// Input
 	BodySizeLimit int64
+
+	// Static
+	StaticPath string
+	StaticDir  string
 }
 
 type Server struct {
@@ -38,6 +42,9 @@ func New(userconfig ...*ServerConfig) *Server {
 	startingPort := NormalizePort(config.Port)
 	router := newGskRouter()
 
+	// Serve static files
+	router.ServeFiles(config.StaticPath+"/*filepath", http.Dir(config.StaticDir))
+
 	newSTKServer := &Server{
 		httpServer: &http.Server{
 			Addr:    startingPort,
@@ -53,7 +60,6 @@ func New(userconfig ...*ServerConfig) *Server {
 
 // Start starts the server on the configured port
 func (s *Server) Start() {
-
 	startingPort := NormalizePort(s.config.Port)
 	s.config.Logger.Info("starting server", "port", startingPort)
 	err := s.httpServer.ListenAndServe()
@@ -136,11 +142,10 @@ func preFlightHandler(gc *Context) {
 }
 
 func (s *Server) Handle(method string, path string, handler HandlerFunc) {
+	if path != "/" {
+		path = strings.TrimSuffix(path, "/")
+	}
 	s.router.HandlerFunc(method, path, wrapHandlerFunc(s, handler))
-}
-
-func (s *Server) Static(path string, dir string) {
-	s.router.ServeFiles(path, http.Dir(dir))
 }
 
 // RouteGroup returns a new RouteGroup instance
@@ -150,6 +155,9 @@ func (s *Server) Static(path string, dir string) {
 // rg := server.RouteGroup("/api")
 // rg.Get("/users", func(c stk.Context) { gc.Status(http.StatusOK).JSONResponse("OK") })
 func (s *Server) RouteGroup(path string) *RouteGroup {
+	// Trim suffix /
+	path = strings.TrimSuffix(path, "/")
+
 	return &RouteGroup{
 		server:     s,
 		pathPrefix: path,

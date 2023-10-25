@@ -1,5 +1,7 @@
 package gsk
 
+import "strings"
+
 type RouteGroup struct {
 	server      *Server
 	pathPrefix  string
@@ -11,6 +13,7 @@ func (rg *RouteGroup) Use(middleware Middleware) {
 }
 
 func (rg *RouteGroup) RouteGroup(path string) *RouteGroup {
+	path = strings.TrimSuffix(path, "/")
 	return &RouteGroup{
 		server:      rg.server,
 		pathPrefix:  rg.pathPrefix + path,

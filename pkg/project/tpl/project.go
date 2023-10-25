@@ -19,10 +19,11 @@ run:
 	@go run . serve -p 8080
 
 test:
-	@go test ./... -coverprofile=coverage.out
+	@go test ./...
 
 coverage:
-	@go test -v ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
+	@go test -v ./... -coverprofile=coverage.out 
+	@go tool cover -html=coverage.out
 
 testci:
 	@go test ./... -coverprofile=coverage.out
@@ -31,8 +32,6 @@ clean:
 	@go clean
 	@rm -f ./out/$(BINARY_NAME)
 	@rm -f coverage.out
-	@rm -rf .keys
-	@rm -f auth_database.db
 
 deps:
 	@go mod download
@@ -59,7 +58,7 @@ init:
 	@go mod tidy
 # Install tools
 	@go install github.com/adharshmk96/semver@latest
-	@go install github.com/vektra/mockery/v2@v2.35.4
+	@go install github.com/vektra/mockery/v2@latest
 # Setup Git hooks
 	@git config core.hooksPath .githooks
 
@@ -362,7 +361,8 @@ func StartHttpServer(port string) (*gsk.Server, chan bool) {
 
 	infra.LoadDefaultConfig()
 
-	routing.SetupRoutes(server)
+	routing.SetupTemplateRoutes(server)
+	routing.SetupApiRoutes(server)
 
 	server.Start()
 
@@ -397,10 +397,24 @@ import (
 	"github.com/adharshmk96/stk/gsk"
 )
 
-func SetupRoutes(server *gsk.Server) {
+func SetupApiRoutes(server *gsk.Server) {
 	apiRoutes := server.RouteGroup("/api")
 
 	setup{{ .ExportedName }}Routes(apiRoutes)
+}
+
+func SetupTemplateRoutes(server *gsk.Server) {
+	templateRoutes := server.RouteGroup("/")
+
+	templateRoutes.Get("/", func(gc *gsk.Context) {
+		gc.TemplateResponse(&gsk.Tpl{
+			TemplatePath: "public/templates/index.html",
+			Variables: gsk.Map{
+				"Title":   "STK",
+				"Content": "Hello, World!",
+			},
+		})
+	})
 }
 `,
 }
@@ -476,6 +490,35 @@ func GetLogger() *slog.Logger {
 `,
 }
 
+var PUBLIC_ASSETS_SCRIPTJS_TPL = Template{
+	FilePath: "public/assets/script.js",
+	Content: ``,
+}
+
+var PUBLIC_ASSETS_STYLESCSS_TPL = Template{
+	FilePath: "public/assets/styles.css",
+	Content: ``,
+}
+
+var PUBLIC_TEMPLATES_INDEXHTML_TPL = Template{
+	FilePath: "public/templates/index.html",
+	Content: `<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <title>{{ .Var.Title }}</title>
+    <link rel="stylesheet" href="{{ .Config.Static }}/style.css">
+</head>
+<body>
+    <h1>{{ .Var.Title }}</h1>
+    <p>{{ .Var.Content }}</p>
+
+    <script src="{{ .Config.Static }}/script.js"></script>
+</body>
+</html>
+`,
+}
+
 var ProjectTemplates = []Template{
 	MAKEFILE_TPL,
 	GITIGNORE_TPL,
@@ -490,4 +533,7 @@ var ProjectTemplates = []Template{
 	SERVER_INFRA_CONFIGGO_TPL,
 	SERVER_INFRA_CONSTANTSGO_TPL,
 	SERVER_INFRA_LOGGERGO_TPL,
+	PUBLIC_ASSETS_SCRIPTJS_TPL,
+	PUBLIC_ASSETS_STYLESCSS_TPL,
+	PUBLIC_TEMPLATES_INDEXHTML_TPL,
 }

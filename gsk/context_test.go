@@ -578,11 +578,11 @@ func TestTemplateResponse(t *testing.T) {
 	t.Run("renders template with data", func(t *testing.T) {
 		templateContent := `<html>
 	<head>
-		<title>{{ .Title }}</title>
+		<title>{{ .Var.Title }}</title>
 	</head>
 	<body>
-		<h1>{{ .Title }}</h1>
-		<p>{{ .Body }}</p>
+		<h1>{{ .Var.Title }}</h1>
+		<p>{{ .Var.Body }}</p>
 	</body>
 </html>`
 

@@ -15,10 +15,11 @@ run:
 	@go run . serve -p 8080
 
 test:
-	@go test ./... -coverprofile=coverage.out
+	@go test ./...
 
 coverage:
-	@go test -v ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
+	@go test -v ./... -coverprofile=coverage.out 
+	@go tool cover -html=coverage.out
 
 testci:
 	@go test ./... -coverprofile=coverage.out
@@ -27,8 +28,6 @@ clean:
 	@go clean
 	@rm -f ./out/$(BINARY_NAME)
 	@rm -f coverage.out
-	@rm -rf .keys
-	@rm -f auth_database.db
 
 deps:
 	@go mod download
@@ -55,7 +54,7 @@ init:
 	@go mod tidy
 # Install tools
 	@go install github.com/adharshmk96/semver@latest
-	@go install github.com/vektra/mockery/v2@v2.35.4
+	@go install github.com/vektra/mockery/v2@latest
 # Setup Git hooks
 	@git config core.hooksPath .githooks
 

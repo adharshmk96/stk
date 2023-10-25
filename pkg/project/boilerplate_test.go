@@ -2,7 +2,6 @@ package project_test
 
 import (
 	"errors"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -56,9 +55,8 @@ func TestGenerateBoilerplate(t *testing.T) {
 
 		for _, tt := range tc {
 			t.Run(tt.name, func(t *testing.T) {
-				tempDir, removeDir := testutils.CreateTempDirectory(t)
+				tempDir, removeDir := testutils.SetupTempDirectory(t)
 				defer removeDir()
-				os.Chdir(tempDir)
 
 				goCmd, gitCmd := getMockCommands(t)
 
@@ -91,9 +89,8 @@ func TestGenerateBoilerplate(t *testing.T) {
 	})
 
 	t.Run("generates project boilerplate non-mock", func(t *testing.T) {
-		tempDir, removeDir := testutils.CreateTempDirectory(t)
+		tempDir, removeDir := testutils.SetupTempDirectory(t)
 		defer removeDir()
-		os.Chdir(tempDir)
 
 		ctx := &project.Context{
 			PackageName: "github.com/sample/sapp",
@@ -124,9 +121,8 @@ func TestGenerateModuleBoilerplate(t *testing.T) {
 	goCmd := commands.NewGoCmd()
 	gitCmd := commands.NewGitCmd()
 	t.Run("generates module boilerplate", func(t *testing.T) {
-		tempDir, removeDir := testutils.CreateTempDirectory(t)
+		tempDir, removeDir := testutils.SetupTempDirectory(t)
 		defer removeDir()
-		os.Chdir(tempDir)
 
 		goCmd.ModInit("github.com/sample/sapp")
 		gitCmd.Init()
@@ -159,9 +155,8 @@ func TestGenerateModuleBoilerplate(t *testing.T) {
 	})
 
 	t.Run("errors when go mod init fails", func(t *testing.T) {
-		tempDir, removeDir := testutils.CreateTempDirectory(t)
+		tempDir, removeDir := testutils.SetupTempDirectory(t)
 		defer removeDir()
-		os.Chdir(tempDir)
 
 		goCmd, gitCmd := getMockCommands(t)
 
@@ -183,9 +178,8 @@ func TestGenerateModuleBoilerplate(t *testing.T) {
 	})
 
 	t.Run("errors when git init fails", func(t *testing.T) {
-		tempDir, removeDir := testutils.CreateTempDirectory(t)
+		tempDir, removeDir := testutils.SetupTempDirectory(t)
 		defer removeDir()
-		os.Chdir(tempDir)
 
 		goCmd, gitCmd := getMockCommands(t)
 
@@ -207,9 +201,8 @@ func TestGenerateModuleBoilerplate(t *testing.T) {
 	})
 
 	t.Run("errors when go mod tidy fails", func(t *testing.T) {
-		tempDir, removeDir := testutils.CreateTempDirectory(t)
+		tempDir, removeDir := testutils.SetupTempDirectory(t)
 		defer removeDir()
-		os.Chdir(tempDir)
 
 		goCmd, gitCmd := getMockCommands(t)
 
@@ -235,9 +228,8 @@ func TestGenerateModuleBoilerplate(t *testing.T) {
 
 func TestDeleteModuleBoilerplate(t *testing.T) {
 	t.Run("deletes module boilerplate", func(t *testing.T) {
-		tempDir, removeDir := testutils.CreateTempDirectory(t)
+		tempDir, removeDir := testutils.SetupTempDirectory(t)
 		defer removeDir()
-		os.Chdir(tempDir)
 
 		goCmd := commands.NewGoCmd()
 		gitCmd := commands.NewGitCmd()

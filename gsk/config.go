@@ -2,6 +2,16 @@ package gsk
 
 import "github.com/adharshmk96/stk/pkg/logging"
 
+const (
+	DEFAULT_PORT        = "8080"
+	DEFAULT_STATIC_PATH = "/static"
+	DEFAULT_STATIC_DIR  = "public/assets"
+)
+
+var DEFAULT_TEMPLATE_VARIABLES = map[string]interface{}{
+	"Static": DEFAULT_STATIC_PATH,
+}
+
 // Initialize the server configurations
 // if no configurations are passed, default values are used
 func initConfig(config ...*ServerConfig) *ServerConfig {
@@ -22,6 +32,14 @@ func initConfig(config ...*ServerConfig) *ServerConfig {
 
 	if initConfig.BodySizeLimit == 0 {
 		initConfig.BodySizeLimit = 1
+	}
+
+	if initConfig.StaticPath == "" {
+		initConfig.StaticPath = DEFAULT_STATIC_PATH
+	}
+
+	if initConfig.StaticDir == "" {
+		initConfig.StaticDir = DEFAULT_STATIC_DIR
 	}
 
 	return initConfig

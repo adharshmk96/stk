@@ -142,7 +142,7 @@ func (c *Context) JSONResponse(data interface{}) {
 // and writes it to the response writer with content type text/html
 func (c *Context) TemplateResponse(template *Tpl) {
 	c.Writer.Header().Set("Content-Type", "text/html")
-	response, err := template.Render()
+	response, err := template.Render(DEFAULT_TEMPLATE_VARIABLES)
 	if err != nil {
 		c.responseStatus = http.StatusInternalServerError
 		c.responseBody = []byte(ErrInternalServer.Error())

@@ -7,12 +7,14 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/adharshmk96/stk/gsk"
+	"github.com/adharshmk96/stk/testutils"
 )
 
 func TestServer_Start(t *testing.T) {
@@ -446,36 +448,54 @@ func TestServer_Test(t *testing.T) {
 	assert.Equal(t, "\"ok\"", string(body))
 }
 
-func setupTestDir(t *testing.T) {
-	os.MkdirAll("./testdata", os.ModePerm)
-	file, err := os.Create("./testdata/test.txt")
-	assert.NoError(t, err)
-	file.WriteString("test")
-}
-
-func teardownTestDir() {
-	os.RemoveAll("./testdata")
-}
-
 func TestServer_Static(t *testing.T) {
-	setupTestDir(t)
-	defer teardownTestDir()
+	t.Run("serve static file from default dir and path", func(t *testing.T) {
+		_, tearDown := testutils.SetupTempDirectory(t)
+		defer tearDown()
 
-	config := &gsk.ServerConfig{
-		Port: "8888",
-	}
-	s := gsk.New(config)
+		assert.NoError(t, os.MkdirAll(gsk.DEFAULT_STATIC_DIR, os.ModePerm))
+		assert.NoError(t, os.WriteFile(path.Join(gsk.DEFAULT_STATIC_DIR, "test.txt"), []byte("test"), os.ModePerm))
 
-	s.Static("/static/*filepath", "./testdata")
+		config := &gsk.ServerConfig{
+			Port: "8888",
+		}
+		s := gsk.New(config)
 
-	w, err := s.Test("GET", "/static/test.txt", nil)
-	if err != nil {
-		t.Errorf("Expected no error, but got %v", err)
-	}
+		w, err := s.Test("GET", gsk.DEFAULT_STATIC_PATH+"/test.txt", nil)
+		if err != nil {
+			t.Errorf("Expected no error, but got %v", err)
+		}
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
 
-	body, _ := io.ReadAll(w.Body)
-	assert.Equal(t, "test", string(body))
+		body, _ := io.ReadAll(w.Body)
+		assert.Equal(t, "test", string(body))
+	})
+
+	t.Run("serve static file from custom dir and path", func(t *testing.T) {
+		_, tearDown := testutils.SetupTempDirectory(t)
+		defer tearDown()
+
+		assert.NoError(t, os.MkdirAll("assets", os.ModePerm))
+		assert.NoError(t, os.WriteFile("assets/test.txt", []byte("test"), os.ModePerm))
+
+		config := &gsk.ServerConfig{
+			Port:       "8888",
+			StaticPath: "/public",
+			StaticDir:  "assets",
+		}
+		s := gsk.New(config)
+
+		w, err := s.Test("GET", "/public/test.txt", nil)
+		if err != nil {
+			t.Errorf("Expected no error, but got %v", err)
+		}
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
+
+		body, _ := io.ReadAll(w.Body)
+		assert.Equal(t, "test", string(body))
+	})
 }

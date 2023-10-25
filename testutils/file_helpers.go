@@ -40,6 +40,18 @@ func CreateTempDirectory(t *testing.T) (string, func()) {
 	return dir, removeDir(t, dir)
 }
 
+func SetupTempDirectory(t *testing.T) (string, func()) {
+	dir, removeDir := CreateTempDirectory(t)
+	err := os.Chdir(dir)
+	assert.NoError(t, err)
+
+	return dir, removeDir
+}
+
+func WriteFile(t *testing.T, filePath string, content string) {
+	assert.NoError(t, os.WriteFile(filePath, []byte(content), 0644))
+}
+
 func GetFileContent(t *testing.T, filePath string) string {
 	t.Helper()
 	file, err := os.ReadFile(filePath)

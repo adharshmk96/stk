@@ -2,6 +2,8 @@ module github.com/adharshmk96/stk-template/singlemod
 
 go 1.21
 
+replace github.com/adharshmk96/stk => ../
+
 require (
 	github.com/adharshmk96/stk v0.6.4
 	github.com/spf13/cobra v1.7.0

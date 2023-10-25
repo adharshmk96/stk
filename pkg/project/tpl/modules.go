@@ -15,6 +15,8 @@ import (
 )
 
 func setup{{ .ExportedName }}Routes(rg *gsk.RouteGroup) {
+	{{ .ModName }}Routes := rg.RouteGroup("/{{ .ModName }}")
+
 	dbConfig := viper.GetString(infra.ENV_SQLITE_FILEPATH)
 	conn := db.GetSqliteConnection(dbConfig)
 
@@ -22,7 +24,7 @@ func setup{{ .ExportedName }}Routes(rg *gsk.RouteGroup) {
 	{{ .ModName }}Service := service.New{{ .ExportedName }}Service({{ .ModName }}Storage)
 	{{ .ModName }}Handler := handler.New{{ .ExportedName }}Handler({{ .ModName }}Service)
 
-	rg.Get("/{{ .ModName }}", {{ .ModName }}Handler.{{ .ExportedName }}Handler)
+	{{ .ModName }}Routes.Get("", {{ .ModName }}Handler.{{ .ExportedName }}Handler)
 }
 `,
 }
