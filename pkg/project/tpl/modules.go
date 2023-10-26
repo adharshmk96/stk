@@ -5,26 +5,30 @@ var SERVER_ROUTING_PINGGO_MOD_TPL = Template{
 	Content: `package routing
 
 import (
+	"{{ .PkgName }}/internals/core/entity"
 	"{{ .PkgName }}/internals/http/handler"
 	"{{ .PkgName }}/internals/service"
 	"{{ .PkgName }}/internals/storage/{{ .ModName }}Storage"
-	"{{ .PkgName }}/server/infra"
+	"{{ .PkgName }}/server/infra/db"
 	"github.com/adharshmk96/stk/gsk"
-	"github.com/adharshmk96/stk/pkg/db"
-	"github.com/spf13/viper"
 )
 
-func setup{{ .ExportedName }}Routes(rg *gsk.RouteGroup) {
-	{{ .ModName }}Routes := rg.RouteGroup("/{{ .ModName }}")
-
-	dbConfig := viper.GetString(infra.ENV_SQLITE_FILEPATH)
-	conn := db.GetSqliteConnection(dbConfig)
+func initialize{{ .ExportedName }}() entity.{{ .ExportedName }}Handlers {
+	conn := db.GetSqliteConnection()
 
 	{{ .ModName }}Storage := {{ .ModName }}Storage.NewSqliteRepo(conn)
 	{{ .ModName }}Service := service.New{{ .ExportedName }}Service({{ .ModName }}Storage)
 	{{ .ModName }}Handler := handler.New{{ .ExportedName }}Handler({{ .ModName }}Service)
 
-	{{ .ModName }}Routes.Get("", {{ .ModName }}Handler.{{ .ExportedName }}Handler)
+	return {{ .ModName }}Handler
+}
+
+func setup{{ .ExportedName }}Routes(rg *gsk.RouteGroup) {
+	{{ .ModName }}Handler := initialize{{ .ExportedName }}()
+
+	{{ .ModName }}Routes := rg.RouteGroup("/{{ .ModName }}")
+
+	{{ .ModName }}Routes.Get("/", {{ .ModName }}Handler.{{ .ExportedName }}Handler)
 }
 `,
 }
@@ -244,38 +248,12 @@ var INTERNALS_STORAGE_PINGSTORAGE_PINGGO_MOD_TPL = Template{
 	Content: `package {{ .ModName }}Storage
 
 import (
+	"database/sql"
 	"fmt"
 
+	"{{ .PkgName }}/internals/core/entity"
 	"{{ .PkgName }}/internals/core/serr"
 	"{{ .PkgName }}/server/infra"
-)
-
-// Repository Methods
-func (s *sqliteRepo) {{ .ExportedName }}() error {
-	res, err := s.conn.Exec("SELECT 1")
-	if err != nil {
-		return serr.Err{{ .ExportedName }}Failed
-	}
-	num, err := res.RowsAffected()
-	if err != nil {
-		return serr.Err{{ .ExportedName }}Failed
-	}
-
-	logger := infra.GetLogger()
-	logger.Info(fmt.Sprintf("{{ .ExportedName }} Success: %d", num))
-	return nil
-}
-`,
-}
-
-var INTERNALS_STORAGE_PINGSTORAGE_PINGCONNECTIONGO_MOD_TPL = Template{
-	FilePath: "internals/storage/pingStorage/pingConnection.go",
-	Content: `package {{ .ModName }}Storage
-
-import (
-	"database/sql"
-
-	"{{ .PkgName }}/internals/core/entity"
 )
 
 type sqliteRepo struct {
@@ -286,6 +264,30 @@ func NewSqliteRepo(conn *sql.DB) entity.{{ .ExportedName }}Storage {
 	return &sqliteRepo{
 		conn: conn,
 	}
+}
+
+// Repository Methods
+func (s *sqliteRepo) {{ .ExportedName }}() error {
+	rows, err := s.conn.Query("SELECT 1")
+	if err != nil {
+		return serr.Err{{ .ExportedName }}Failed
+	}
+	defer rows.Close()
+
+	var result int
+
+	if rows.Next() {
+		err = rows.Scan(&result)
+		if err != nil {
+			return serr.Err{{ .ExportedName }}Failed
+		}
+	} else {
+		return serr.Err{{ .ExportedName }}Failed
+	}
+
+	logger := infra.GetLogger()
+	logger.Info(fmt.Sprintf("connection result: %d", result))
+	return nil
 }
 `,
 }
@@ -311,6 +313,5 @@ var ModuleTemplates = []Template{
 	INTERNALS_HTTP_TRANSPORT_PINGGO_MOD_TPL,
 	INTERNALS_HTTP_HANDLER_TEST_PING_TESTGO_MOD_TPL,
 	INTERNALS_STORAGE_PINGSTORAGE_PINGGO_MOD_TPL,
-	INTERNALS_STORAGE_PINGSTORAGE_PINGCONNECTIONGO_MOD_TPL,
 	INTERNALS_STORAGE_PINGSTORAGE_PINGQUERIESGO_MOD_TPL,
 }
