@@ -68,14 +68,14 @@ func (g *Generator) Generate(ctx *Context) ([]string, error) {
 func (g *Generator) Clean(ctx *Context) ([]string, error) {
 	removedFiles := []string{}
 
-	uncommitedMigrations := LoadUncommitedMigrations(ctx)
+	unappliedMigrations := LoadUnappliedMigrations(ctx)
 
 	if ctx.DryRun {
-		dryRunGeneration(uncommitedMigrations)
+		dryRunGeneration(unappliedMigrations)
 		return removedFiles, nil
 	}
 
-	for _, migration := range uncommitedMigrations {
+	for _, migration := range unappliedMigrations {
 		upFileName, downFileName := migration.FileNames(SelectExtention(ctx.Database))
 
 		upFilePath := path.Join(ctx.WorkDir, upFileName)
@@ -94,7 +94,7 @@ func (g *Generator) Clean(ctx *Context) ([]string, error) {
 		removedFiles = append(removedFiles, upFilePath, downFilePath)
 	}
 
-	ctx.Migrations = ctx.Migrations[:len(ctx.Migrations)-len(uncommitedMigrations)]
+	ctx.Migrations = ctx.Migrations[:len(ctx.Migrations)-len(unappliedMigrations)]
 	return removedFiles, nil
 }
 

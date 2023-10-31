@@ -30,6 +30,7 @@ func NewSQLiteRepo(filePath string) sqlmigrator.DBRepo {
 	return repo
 }
 
+// TODO: handle the result
 func (db *sqliteDb) Exec(query string) error {
 	_, err := db.conn.Exec(query)
 	if err != nil {

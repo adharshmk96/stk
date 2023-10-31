@@ -31,7 +31,7 @@ func InitializeMigrationsFolder(ctx *Context) error {
 }
 
 // TODO: optimize to read from last, and break when commit status is true
-func LoadUncommitedMigrations(ctx *Context) []*MigrationFileEntry {
+func LoadUnappliedMigrations(ctx *Context) []*MigrationFileEntry {
 	migrations := []*MigrationFileEntry{}
 
 	for _, migration := range ctx.Migrations {
@@ -43,7 +43,7 @@ func LoadUncommitedMigrations(ctx *Context) []*MigrationFileEntry {
 	return migrations
 }
 
-func LoadCommittedMigrations(ctx *Context) []*MigrationFileEntry {
+func LoadAppliedMigrations(ctx *Context) []*MigrationFileEntry {
 	migrations := []*MigrationFileEntry{}
 
 	for _, migration := range ctx.Migrations {
