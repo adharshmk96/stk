@@ -37,7 +37,7 @@ builds:
   - main: ./main.go
     binary: {{ .AppName }}template
     ldflags:
-      - -s -w -X "{{ .PkgName }}template/cmd.SemVer={{{{ .Tag }}}}"
+      - -s -w -X "{{ .PkgName }}template/cmd.SemVer={{"{{ .Tag }}"}}"
     env:
       - CGO_ENABLED=0
     goos:
@@ -55,7 +55,7 @@ archives:
         format: zip
     
     # this name template makes the OS and Arch compatible with the results of uname.
-    name_template: "{{{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}}}"
+    name_template: "{{"{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"}}"
 
 changelog:
   sort: asc
