@@ -27,9 +27,9 @@ func displaySemverInfo() {
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "singlemod",
-	Short: "singlemod is an stk project.",
-	Long:  "singlemod is generated using stk cli.",
+	Use:   "stktemplate",
+	Short: "stktemplate is an stk project.",
+	Long:  "stktemplate is generated using stk cli.",
 	Run: func(cmd *cobra.Command, args []string) {
 		if cmd.Flag("version").Value.String() == "true" {
 			displaySemverInfo()
@@ -49,7 +49,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", ".stk.yaml", "config file.")
-	rootCmd.Flags().BoolP("version", "v", false, "display singlemod version")
+	rootCmd.Flags().BoolP("version", "v", false, "display stktemplate version")
 }
 
 // initConfig reads in config file and ENV variables if set.

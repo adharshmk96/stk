@@ -2,19 +2,16 @@ package handler_test
 
 // run the following command to generate mocks for Ping interfaces
 //
-// mockery --dir=internals/core/entity --name=^Ping.*
-//
-// and uncomment the following code
-
-/*
+// mockery --dir=internals/ping/ping --name=^Ping.*
 
 import (
 	"net/http"
 	"testing"
 
-	"github.com/adharshmk96/stk-template/singlemod/internals/http/handler"
-	"github.com/adharshmk96/stk-template/singlemod/mocks"
+	"github.com/adharshmk96/stktemplate/internals/ping/api/handler"
+
 	"github.com/adharshmk96/stk/gsk"
+	"github.com/adharshmk96/stktemplate/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,5 +34,3 @@ func TestPingHandler(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 	})
 }
-
-*/

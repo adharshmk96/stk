@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"sync"
 
-	"github.com/adharshmk96/stk-template/singlemod/server/infra"
+	"github.com/adharshmk96/stktemplate/server/infra"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/viper"
 )

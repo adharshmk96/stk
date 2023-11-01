@@ -64,4 +64,4 @@ init:
 
 template:
 	@echo "Running project template generator script"
-	@cd ./__template__ && python3 generate.py
+	@python3 scripts/template-generator.py

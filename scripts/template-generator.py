@@ -4,21 +4,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Tuple, Callable
 
-BASE_PATH = Path('./')
+BASE_PATH = Path('./__template__')
 WORKING_DIR = '../pkg/project/tpl'
 OUT_PROJECT_PATH = Path(WORKING_DIR+'/project.go')
 OUT_MODULE_PATH = Path(WORKING_DIR+'/modules.go')
 
 IGNORE_DIRS = ['.git', 'mocks']
 IGNORE_FILES = [
-    'template.go', 
     "go.mod", 
     "go.sum",
     "database.db",
-    "generate.py",
 ]
 WRITE_ONLY_FILES = [
-    "*.yaml",
     "*.yml",
     "*.html",
     "*.md",
@@ -38,10 +35,11 @@ def get_pkg_and_app_name_from_go_mod():
             if 'module' in line:
                 pkg_name = line.split(' ')[1].strip('\n')
                 app_name = pkg_name.split('/')[-1]
+                print("using ",pkg_name, app_name)
                 return pkg_name, app_name
     return None, None
 
-pkg_name, app_name = get_pkg_and_app_name_from_go_mod()
+
 mod_name = "ping"
 exported_mod_name = "Ping"
 
@@ -73,16 +71,18 @@ def generate_var_name(relative_path: str) -> str:
     )
     return var_name
 
-def find_template_map(base_path: Path, filename_condition: Callable[[str], bool], template_var_suffix: str) -> List[TemplateData]:
+def find_template_map(filename_condition: Callable[[str], bool], template_var_suffix: str) -> List[TemplateData]:
     template_map = []
+    base_path = Path(".")
     for path in base_path.rglob('*'):
         # Check if it's a file, satisfies the filename condition, not in ignore dirs/files
         if (
-            path.is_file() 
-            and filename_condition(path.name) 
+            path.is_file()
+            and filename_condition(path.as_posix()) 
             and not ignore_dir(path.parent) 
             and path.name not in IGNORE_FILES
         ):
+            print("found ", path.as_posix())
             relative_path = path.relative_to(base_path).as_posix()
             var_name = generate_var_name(relative_path)
             var_name += template_var_suffix
@@ -112,14 +112,13 @@ def write_template_to_file(target_path: Path, file_content: str, template_map: L
         output_file.write("}\n")
 
 def create_template(
-    base_directory: Path, 
     target_file_path: Path, 
     filename_condition, 
     replacements: dict, 
     var_name: str,
     template_var_suffix: str
 ) -> None:
-    template_map = find_template_map(base_directory, filename_condition, template_var_suffix)
+    template_map = find_template_map(filename_condition, template_var_suffix)
     template_content = generate_template(template_map, replacements)
     write_template_to_file(target_file_path, template_content, template_map, var_name)
 
@@ -132,8 +131,12 @@ def remove_files(files):
             pass
 
 if __name__ == '__main__':
+    # chdir to base path
+    os.chdir(BASE_PATH)
 
     remove_files([OUT_PROJECT_PATH, OUT_MODULE_PATH])
+    pkg_name, app_name = get_pkg_and_app_name_from_go_mod()
+
     replacements = {
         # order is important, pkg should be before app_name
         pkg_name: PLACEHOLDERS['pkg'],        
@@ -142,12 +145,12 @@ if __name__ == '__main__':
         exported_mod_name: PLACEHOLDERS['exported']
     }
 
+
     print("Generating Project Templates...\n")
 
     create_template(
-        BASE_PATH, 
         OUT_PROJECT_PATH, 
-        filename_condition=lambda f: "ping" not in f,
+        filename_condition=lambda f: "ping" not in f and "Ping" not in f,
         replacements=replacements,
         var_name="ProjectTemplates",
         template_var_suffix="_TPL"
@@ -156,9 +159,8 @@ if __name__ == '__main__':
     print("Generating Module Templates...\n")
     
     create_template(
-        BASE_PATH,
         OUT_MODULE_PATH,
-        filename_condition=lambda f: "ping" in f,
+        filename_condition=lambda f: "ping" in f or "Ping" in f,
         replacements=replacements,
         var_name="ModuleTemplates",
         template_var_suffix="_MOD_TPL"

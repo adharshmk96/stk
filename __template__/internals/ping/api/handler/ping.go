@@ -3,15 +3,16 @@ package handler
 import (
 	"net/http"
 
-	"github.com/adharshmk96/stk-template/singlemod/internals/core/entity"
+	"github.com/adharshmk96/stktemplate/internals/ping/domain"
+
 	"github.com/adharshmk96/stk/gsk"
 )
 
 type pingHandler struct {
-	service entity.PingService
+	service domain.PingService
 }
 
-func NewPingHandler(service entity.PingService) entity.PingHandlers {
+func NewPingHandler(service domain.PingService) domain.PingHandlers {
 	return &pingHandler{
 		service: service,
 	}
@@ -25,7 +26,7 @@ Response:
 */
 func (h *pingHandler) PingHandler(gc *gsk.Context) {
 
-	ping, err := h.service.PingService()
+	message, err := h.service.PingService()
 	if err != nil {
 		gc.Status(http.StatusInternalServerError).JSONResponse(gsk.Map{
 			"error": err.Error(),
@@ -34,6 +35,6 @@ func (h *pingHandler) PingHandler(gc *gsk.Context) {
 	}
 
 	gc.Status(http.StatusOK).JSONResponse(gsk.Map{
-		"message": ping,
+		"message": message,
 	})
 }

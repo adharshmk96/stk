@@ -6,7 +6,7 @@ publish:
 ### Build Commands
 ##########################
 
-BINARY_NAME=singlemod
+BINARY_NAME=stktemplate
 
 build:
 	@go build -o ./out/$(BINARY_NAME) -v

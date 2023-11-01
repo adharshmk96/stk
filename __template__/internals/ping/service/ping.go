@@ -1,12 +1,14 @@
 package service
 
-import "github.com/adharshmk96/stk-template/singlemod/internals/core/entity"
+import (
+	"github.com/adharshmk96/stktemplate/internals/ping/domain"
+)
 
 type pingService struct {
-	storage entity.PingStorage
+	storage domain.PingStorage
 }
 
-func NewPingService(storage entity.PingStorage) entity.PingService {
+func NewPingService(storage domain.PingStorage) domain.PingService {
 	return &pingService{
 		storage: storage,
 	}

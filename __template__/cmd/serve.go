@@ -3,7 +3,7 @@ package cmd
 import (
 	"sync"
 
-	"github.com/adharshmk96/stk-template/singlemod/server"
+	"github.com/adharshmk96/stktemplate/server"
 	"github.com/spf13/cobra"
 )
 
