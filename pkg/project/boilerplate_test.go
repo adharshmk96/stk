@@ -227,7 +227,7 @@ func TestGenerateModuleBoilerplate(t *testing.T) {
 }
 
 func assertBoilerplateExists(t *testing.T, tempDir, moduleName string) {
-	paths := []string{
+	dirs := []string{
 		filepath.Join("internals", moduleName),
 		filepath.Join("internals", moduleName, "domain"),
 		filepath.Join("internals", moduleName, "serr"),
@@ -237,20 +237,30 @@ func assertBoilerplateExists(t *testing.T, tempDir, moduleName string) {
 		filepath.Join("internals", moduleName, "storage"),
 		filepath.Join("internals", moduleName, "api/handler"),
 		filepath.Join("internals", moduleName, "api/transport"),
+	}
+	files := []string{
 		filepath.Join("internals", moduleName, "routes.go"),
+		filepath.Join("internals", moduleName, "service", moduleName+".go"),
+		filepath.Join("internals", moduleName, "service", moduleName+"_test.go"),
+		filepath.Join("internals", moduleName, "storage", moduleName+".go"),
+		filepath.Join("internals", moduleName, "storage", moduleName+"Queries.go"),
+		filepath.Join("internals", moduleName, "domain", moduleName+".go"),
+		filepath.Join("internals", moduleName, "serr", moduleName+".go"),
+		filepath.Join("internals", moduleName, "api/handler", moduleName+".go"),
+		filepath.Join("internals", moduleName, "api/handler", moduleName+"_test.go"),
+		filepath.Join("internals", moduleName, "api/transport", moduleName+".go"),
+		filepath.Join("internals", moduleName, "web", moduleName+".go"),
 		filepath.Join("server/routing", moduleName+".go"),
 	}
 
-	for _, path := range paths {
-		if filepath.Base(path) == moduleName {
-			assert.DirExists(t, filepath.Join(tempDir, path))
-		} else {
-			assert.FileExists(t, filepath.Join(tempDir, path, moduleName+".go"))
-			if path == filepath.Join("internals", moduleName, "service") {
-				assert.FileExists(t, filepath.Join(tempDir, path, moduleName+"_test.go"))
-			}
-		}
+	for _, dir := range dirs {
+		assert.DirExists(t, filepath.Join(tempDir, dir))
 	}
+
+	for _, file := range files {
+		assert.FileExists(t, filepath.Join(tempDir, file))
+	}
+
 }
 
 func TestDeleteModuleBoilerplate(t *testing.T) {
