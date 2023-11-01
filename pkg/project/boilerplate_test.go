@@ -226,7 +226,35 @@ func TestGenerateModuleBoilerplate(t *testing.T) {
 	})
 }
 
+func assertBoilerplateExists(t *testing.T, tempDir, moduleName string) {
+	paths := []string{
+		filepath.Join("internals", moduleName),
+		filepath.Join("internals", moduleName, "domain"),
+		filepath.Join("internals", moduleName, "serr"),
+		filepath.Join("internals", moduleName, "service"),
+		filepath.Join("internals", moduleName, "web"),
+		filepath.Join("internals", moduleName, "storage"),
+		filepath.Join("internals", moduleName, "storage"),
+		filepath.Join("internals", moduleName, "api/handler"),
+		filepath.Join("internals", moduleName, "api/transport"),
+		filepath.Join("internals", moduleName, "routes.go"),
+		filepath.Join("server/routing", moduleName+".go"),
+	}
+
+	for _, path := range paths {
+		if filepath.Base(path) == moduleName {
+			assert.DirExists(t, filepath.Join(tempDir, path))
+		} else {
+			assert.FileExists(t, filepath.Join(tempDir, path, moduleName+".go"))
+			if path == filepath.Join("internals", moduleName, "service") {
+				assert.FileExists(t, filepath.Join(tempDir, path, moduleName+"_test.go"))
+			}
+		}
+	}
+}
+
 func TestDeleteModuleBoilerplate(t *testing.T) {
+
 	t.Run("deletes module boilerplate", func(t *testing.T) {
 		tempDir, removeDir := testutils.SetupTempDirectory(t)
 		defer removeDir()
@@ -254,22 +282,13 @@ func TestDeleteModuleBoilerplate(t *testing.T) {
 		err = project.GenerateModuleBoilerplate(ctx, "admin")
 		assert.NoError(t, err)
 
-		assert.DirExists(t, filepath.Join(tempDir, "internals/admin"))
-
-		assert.FileExists(t, filepath.Join(tempDir, "internals/admin/domain", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/admin/serr", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/admin/service", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/admin/service", "admin_test.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/admin/web", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/admin/storage", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/admin/stroage", "adminQueries.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/admin/api/handler", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/admin/api/transport", "admin.go"))
+		assertBoilerplateExists(t, tempDir, "admin")
 
 		err = project.DeleteModuleBoilerplate(ctx, "admin")
 		assert.NoError(t, err)
 
 		assert.NoDirExists(t, filepath.Join(tempDir, "internals/admin"))
+		assert.NoFileExists(t, filepath.Join(tempDir, "server/routing", "admin.go"))
 
 		assert.True(t, goCmd.IsMod())
 		assert.True(t, gitCmd.IsRepo())
@@ -298,36 +317,17 @@ func TestDeleteModuleBoilerplate(t *testing.T) {
 
 		err := project.GenerateProjectBoilerplate(ctx)
 		assert.NoError(t, err)
+		assertBoilerplateExists(t, tempDir, "ping")
 
 		err = project.GenerateModuleBoilerplate(ctx, "admin")
 		assert.NoError(t, err)
-
-		assert.FileExists(t, filepath.Join(tempDir, "internals/core/entity", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/core/serr", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/service", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/service_test", "admin_test.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/http/handler", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/http/helpers", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/http/transport", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/http/handler_test", "admin_test.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/storage/adminStorage", "admin.go"))
-		assert.FileExists(t, filepath.Join(tempDir, "internals/storage/adminStorage", "adminQueries.go"))
-
-		assert.DirExists(t, filepath.Join(tempDir, "internals/storage/adminStorage"))
+		assertBoilerplateExists(t, tempDir, "admin")
 
 		err = project.DeleteModuleBoilerplate(ctx, "ping")
 		assert.NoError(t, err)
 
-		assert.NoFileExists(t, filepath.Join(tempDir, "internals/core/entity", "ping.go"))
-		assert.NoFileExists(t, filepath.Join(tempDir, "internals/core/serr", "ping.go"))
-		assert.NoFileExists(t, filepath.Join(tempDir, "internals/service", "ping.go"))
-		assert.NoFileExists(t, filepath.Join(tempDir, "internals/service_test", "ping_test.go"))
-		assert.NoFileExists(t, filepath.Join(tempDir, "internals/http/handler", "ping.go"))
-		assert.NoFileExists(t, filepath.Join(tempDir, "internals/http/helpers", "ping.go"))
-		assert.NoFileExists(t, filepath.Join(tempDir, "internals/http/transport", "ping.go"))
-		assert.NoFileExists(t, filepath.Join(tempDir, "internals/http/handler_test", "ping_test.go"))
-
-		assert.NoDirExists(t, filepath.Join(tempDir, "internals/storage/pingStorage"))
+		assert.NoDirExists(t, filepath.Join(tempDir, "internals/ping"))
+		assert.NoFileExists(t, filepath.Join(tempDir, "server/routing", "ping.go"))
 
 		assert.True(t, goCmd.IsMod())
 		assert.True(t, gitCmd.IsRepo())
