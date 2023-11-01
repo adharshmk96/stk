@@ -77,11 +77,12 @@ def find_template_map(filename_condition: Callable[[str], bool], template_var_su
     for path in base_path.rglob('*'):
         # Check if it's a file, satisfies the filename condition, not in ignore dirs/files
         if (
-            path.is_file() 
-            and filename_condition(path.name) 
+            path.is_file()
+            and filename_condition(path.as_posix()) 
             and not ignore_dir(path.parent) 
             and path.name not in IGNORE_FILES
         ):
+            print("found ", path.as_posix())
             relative_path = path.relative_to(base_path).as_posix()
             var_name = generate_var_name(relative_path)
             var_name += template_var_suffix
@@ -149,7 +150,7 @@ if __name__ == '__main__':
 
     create_template(
         OUT_PROJECT_PATH, 
-        filename_condition=lambda f: "ping" not in f,
+        filename_condition=lambda f: "ping" not in f and "Ping" not in f,
         replacements=replacements,
         var_name="ProjectTemplates",
         template_var_suffix="_TPL"
@@ -159,7 +160,7 @@ if __name__ == '__main__':
     
     create_template(
         OUT_MODULE_PATH,
-        filename_condition=lambda f: "ping" in f,
+        filename_condition=lambda f: "ping" in f or "Ping" in f,
         replacements=replacements,
         var_name="ModuleTemplates",
         template_var_suffix="_MOD_TPL"
