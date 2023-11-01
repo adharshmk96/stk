@@ -13,6 +13,7 @@ import (
 
 const DEFAULT_MODULE = "ping"
 const MODULE_PLACEHOLDER = "ping"
+const MODULE_PLACEHOLDER_UPPER = "Ping"
 
 func GenerateProjectBoilerplate(ctx *Context) error {
 	if !ctx.IsGitRepo {
@@ -109,7 +110,9 @@ func deleteBoilerplate(templates []tpl.Template, config *TemplateConfig) error {
 }
 
 func formatModuleFilePath(pathTemplate string, config *TemplateConfig) string {
-	return strings.ReplaceAll(pathTemplate, MODULE_PLACEHOLDER, config.ModName)
+	modname := strings.ReplaceAll(pathTemplate, MODULE_PLACEHOLDER, config.ModName)
+	modname = strings.ReplaceAll(modname, MODULE_PLACEHOLDER_UPPER, config.ExportedName)
+	return modname
 }
 
 func createDirectoryForFile(path string) error {
