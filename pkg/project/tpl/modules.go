@@ -8,9 +8,9 @@ var INTERNALS_PING_API_HANDLER_PINGGO_MOD_TPL = Template{
 import (
 	"net/http"
 
-	"{{ .PkgName }}template/internals/{{ .ModName }}/domain"
+	"{{ .PkgName }}/internals/{{ .ModName }}/domain"
 
-	"{{ .PkgName }}/gsk"
+	"github.com/adharshmk96/stk/gsk"
 )
 
 type {{ .ModName }}Handler struct {
@@ -59,10 +59,10 @@ import (
 	"net/http"
 	"testing"
 
-	"{{ .PkgName }}template/internals/{{ .ModName }}/api/handler"
+	"{{ .PkgName }}/internals/{{ .ModName }}/api/handler"
 
-	"{{ .PkgName }}/gsk"
-	"{{ .PkgName }}template/mocks"
+	"github.com/adharshmk96/stk/gsk"
+	"{{ .PkgName }}/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -100,7 +100,7 @@ var INTERNALS_PING_DOMAIN_PINGGO_MOD_TPL = Template{
 	Render: true,
 	Content: `package domain
 
-import "{{ .PkgName }}/gsk"
+import "github.com/adharshmk96/stk/gsk"
 
 // Domain
 type {{ .ExportedName }}Data struct {
@@ -143,7 +143,7 @@ var INTERNALS_PING_SERVICE_PINGGO_MOD_TPL = Template{
 	Content: `package service
 
 import (
-	"{{ .PkgName }}template/internals/{{ .ModName }}/domain"
+	"{{ .PkgName }}/internals/{{ .ModName }}/domain"
 )
 
 type {{ .ModName }}Service struct {
@@ -178,8 +178,8 @@ var INTERNALS_PING_SERVICE_PING_TESTGO_MOD_TPL = Template{
 import (
 	"testing"
 
-	"{{ .PkgName }}template/internals/{{ .ModName }}/service"
-	"{{ .PkgName }}template/mocks"
+	"{{ .PkgName }}/internals/{{ .ModName }}/service"
+	"{{ .PkgName }}/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -212,9 +212,9 @@ import (
 	"database/sql"
 	"fmt"
 
-	"{{ .PkgName }}template/internals/{{ .ModName }}/domain"
-	"{{ .PkgName }}template/internals/{{ .ModName }}/serr"
-	"{{ .PkgName }}template/server/infra"
+	"{{ .PkgName }}/internals/{{ .ModName }}/domain"
+	"{{ .PkgName }}/internals/{{ .ModName }}/serr"
+	"{{ .PkgName }}/server/infra"
 )
 
 type sqliteRepo struct {
@@ -274,7 +274,7 @@ var INTERNALS_PING_WEB_PINGGO_MOD_TPL = Template{
 	Content: `package web
 
 import (
-	"{{ .PkgName }}/gsk"
+	"github.com/adharshmk96/stk/gsk"
 )
 
 func HomeHandler(gc *gsk.Context) {
@@ -296,7 +296,7 @@ var SERVER_ROUTING_PINGGO_MOD_TPL = Template{
 	Render: true,
 	Content: `package routing
 
-import "{{ .PkgName }}template/internals/{{ .ModName }}"
+import "{{ .PkgName }}/internals/{{ .ModName }}"
 
 func init() {
 	RegisterApiRoutes({{ .ModName }}.SetupApiRoutes)

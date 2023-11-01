@@ -35,10 +35,11 @@ def get_pkg_and_app_name_from_go_mod():
             if 'module' in line:
                 pkg_name = line.split(' ')[1].strip('\n')
                 app_name = pkg_name.split('/')[-1]
+                print("using ",pkg_name, app_name)
                 return pkg_name, app_name
     return None, None
 
-pkg_name, app_name = get_pkg_and_app_name_from_go_mod()
+
 mod_name = "ping"
 exported_mod_name = "Ping"
 
@@ -129,8 +130,12 @@ def remove_files(files):
             pass
 
 if __name__ == '__main__':
+    # chdir to base path
+    os.chdir(BASE_PATH)
 
     remove_files([OUT_PROJECT_PATH, OUT_MODULE_PATH])
+    pkg_name, app_name = get_pkg_and_app_name_from_go_mod()
+
     replacements = {
         # order is important, pkg should be before app_name
         pkg_name: PLACEHOLDERS['pkg'],        
@@ -139,8 +144,6 @@ if __name__ == '__main__':
         exported_mod_name: PLACEHOLDERS['exported']
     }
 
-    # chdir to base path
-    os.chdir(BASE_PATH)
 
     print("Generating Project Templates...\n")
 
