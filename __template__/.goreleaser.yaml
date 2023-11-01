@@ -1,4 +1,4 @@
-project_name: {{ .AppName }}
+project_name: stktemplate
 
 before:
   hooks:
@@ -7,9 +7,9 @@ before:
 
 builds:
   - main: ./main.go
-    binary: {{ .AppName }}
+    binary: stktemplate
     ldflags:
-      - -s -w -X "{{ .PkgName }}/cmd.SemVer={{{{ .Tag }}}}"
+      - -s -w -X "github.com/adharshmk96/stktemplate/cmd.SemVer={{{{ .Tag }}}}"
     env:
       - CGO_ENABLED=0
     goos:

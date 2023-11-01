@@ -26,7 +26,7 @@ dist
 var GORELEASERYAML_TPL = Template{
 	FilePath: ".goreleaser.yaml",
 	Render: true,
-	Content: `project_name: {{ .AppName }}
+	Content: `project_name: {{ .AppName }}template
 
 before:
   hooks:
@@ -35,9 +35,9 @@ before:
 
 builds:
   - main: ./main.go
-    binary: {{ .AppName }}
+    binary: {{ .AppName }}template
     ldflags:
-      - -s -w -X "{{ .PkgName }}/cmd.SemVer={{{{ .Tag }}}}"
+      - -s -w -X "{{ .PkgName }}template/cmd.SemVer={{{{ .Tag }}}}"
     env:
       - CGO_ENABLED=0
     goos:
