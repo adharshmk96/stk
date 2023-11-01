@@ -1,4 +1,4 @@
-project_name: singlemod
+project_name: {{ .AppName }}
 
 before:
   hooks:
@@ -7,9 +7,9 @@ before:
 
 builds:
   - main: ./main.go
-    binary: singlemod
+    binary: {{ .AppName }}
     ldflags:
-      - -s -w -X "github.com/adharshmk96/singlemod/cmd.SemVer={{ .Tag }}"
+      - -s -w -X "{{ .PkgName }}/cmd.SemVer={{{{ .Tag }}}}"
     env:
       - CGO_ENABLED=0
     goos:
@@ -27,7 +27,7 @@ archives:
         format: zip
     
     # this name template makes the OS and Arch compatible with the results of uname.
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "{{{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}}}"
 
 changelog:
   sort: asc

@@ -1,4 +1,4 @@
-# singlemod
+# {{ .AppName }}
 
 Run
 

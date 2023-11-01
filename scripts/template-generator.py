@@ -4,21 +4,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Tuple, Callable
 
-BASE_PATH = Path('./')
+BASE_PATH = Path('./__template__')
 WORKING_DIR = '../pkg/project/tpl'
 OUT_PROJECT_PATH = Path(WORKING_DIR+'/project.go')
 OUT_MODULE_PATH = Path(WORKING_DIR+'/modules.go')
 
 IGNORE_DIRS = ['.git', 'mocks']
 IGNORE_FILES = [
-    'template.go', 
     "go.mod", 
     "go.sum",
     "database.db",
-    "generate.py",
 ]
 WRITE_ONLY_FILES = [
-    "*.yaml",
     "*.yml",
     "*.html",
     "*.md",
@@ -73,8 +70,9 @@ def generate_var_name(relative_path: str) -> str:
     )
     return var_name
 
-def find_template_map(base_path: Path, filename_condition: Callable[[str], bool], template_var_suffix: str) -> List[TemplateData]:
+def find_template_map(filename_condition: Callable[[str], bool], template_var_suffix: str) -> List[TemplateData]:
     template_map = []
+    base_path = Path(".")
     for path in base_path.rglob('*'):
         # Check if it's a file, satisfies the filename condition, not in ignore dirs/files
         if (
@@ -112,14 +110,13 @@ def write_template_to_file(target_path: Path, file_content: str, template_map: L
         output_file.write("}\n")
 
 def create_template(
-    base_directory: Path, 
     target_file_path: Path, 
     filename_condition, 
     replacements: dict, 
     var_name: str,
     template_var_suffix: str
 ) -> None:
-    template_map = find_template_map(base_directory, filename_condition, template_var_suffix)
+    template_map = find_template_map(filename_condition, template_var_suffix)
     template_content = generate_template(template_map, replacements)
     write_template_to_file(target_file_path, template_content, template_map, var_name)
 
@@ -142,10 +139,12 @@ if __name__ == '__main__':
         exported_mod_name: PLACEHOLDERS['exported']
     }
 
+    # chdir to base path
+    os.chdir(BASE_PATH)
+
     print("Generating Project Templates...\n")
 
     create_template(
-        BASE_PATH, 
         OUT_PROJECT_PATH, 
         filename_condition=lambda f: "ping" not in f,
         replacements=replacements,
@@ -156,7 +155,6 @@ if __name__ == '__main__':
     print("Generating Module Templates...\n")
     
     create_template(
-        BASE_PATH,
         OUT_MODULE_PATH,
         filename_condition=lambda f: "ping" in f,
         replacements=replacements,

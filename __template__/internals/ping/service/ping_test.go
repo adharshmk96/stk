@@ -2,17 +2,13 @@ package service_test
 
 // run the following command to generate mocks for PingStorage and Ping interfaces
 //
-// mockery --dir=internals/core/entity --name=^Ping.*
-//
-// and uncomment the following code
-
-/*
+// mockery --dir=internals/ping/ping --name=^Ping.*
 
 import (
 	"testing"
 
-	"github.com/adharshmk96/stk-template/singlemod/internals/service"
-	"github.com/adharshmk96/stk-template/singlemod/mocks"
+	"github.com/adharshmk96/stktemplate/internals/ping/service"
+	"github.com/adharshmk96/stktemplate/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,5 +29,3 @@ func TestPingService(t *testing.T) {
 		assert.Equal(t, "pong", msg)
 	})
 }
-
-*/
