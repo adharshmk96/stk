@@ -225,21 +225,6 @@ func wrapHandlerFunc(s *Server, handler HandlerFunc) http.HandlerFunc {
 		finalHandler := applyMiddlewares(s.middlewares, handler)
 		finalHandler(handlerContext)
 
-		gc := handlerContext.eject()
-
-		if gc.responseStatus != 0 {
-			w.WriteHeader(gc.responseStatus)
-		} else {
-			// Default to 200 OK
-			w.WriteHeader(http.StatusOK)
-		}
-
-		if gc.responseBody != nil {
-			w.Write(gc.responseBody)
-		} else {
-			w.Write([]byte(""))
-		}
-
 	}
 }
 

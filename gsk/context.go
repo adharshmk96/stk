@@ -23,10 +23,17 @@ type Context struct {
 
 	// response
 	responseStatus int
-	responseBody   []byte
 }
 
 type Map map[string]interface{}
+
+func writeResponseWithStatus(c *Context, body []byte) {
+	if c.responseStatus == 0 {
+		c.responseStatus = http.StatusOK
+	}
+	c.Writer.WriteHeader(c.responseStatus)
+	c.Writer.Write(body)
+}
 
 // Methods to handle request
 
@@ -113,10 +120,10 @@ func (c *Context) Status(status int) *Context {
 
 // Redirect redirects the request to the provided URL
 func (c *Context) Redirect(url string) {
-	status := c.responseStatus
-	if status == 0 {
-		status = http.StatusTemporaryRedirect
+	if c.responseStatus == 0 {
+		c.responseStatus = http.StatusTemporaryRedirect
 	}
+	status := c.responseStatus
 	// Set the default redirect status code
 	http.Redirect(c.Writer, c.Request, url, status)
 }
@@ -131,11 +138,12 @@ func (c *Context) JSONResponse(data interface{}) {
 	// Check if there is an error in marshalling the JSON (internal server error)
 	if err != nil {
 		c.responseStatus = http.StatusInternalServerError
-		c.responseBody = []byte(ErrInternalServer.Error())
-		return
+		response = []byte(ErrInternalServer.Error())
 	}
 
-	c.responseBody = response
+	// Write the response to the response writer
+	writeResponseWithStatus(c, response)
+
 }
 
 // TemplateResponse renders the provided template with the provided data
@@ -145,21 +153,20 @@ func (c *Context) TemplateResponse(template *Tpl) {
 	response, err := template.Render(DEFAULT_TEMPLATE_VARIABLES)
 	if err != nil {
 		c.responseStatus = http.StatusInternalServerError
-		c.responseBody = []byte(ErrInternalServer.Error())
-		return
+		response = []byte(ErrInternalServer.Error())
 	}
-	c.responseBody = response
+	writeResponseWithStatus(c, response)
 }
 
 // StringResponse writes the provided string to the response writer
 func (c *Context) StringResponse(data string) {
 	c.Writer.Header().Set("Content-Type", "text/plain")
-	c.responseBody = []byte(data)
+	writeResponseWithStatus(c, []byte(data))
 }
 
 // sets response body as byte array
 func (c *Context) RawResponse(raw []byte) {
-	c.responseBody = raw
+	writeResponseWithStatus(c, raw)
 }
 
 // TODO: support for template rendering, file response, stream response
