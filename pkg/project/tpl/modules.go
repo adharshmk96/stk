@@ -134,31 +134,52 @@ var INTERNALS_PING_API_TRANSPORT_PINGGO_MOD_TPL = Template{
 `,
 }
 
-var INTERNALS_PING_DOMAIN_PINGGO_MOD_TPL = Template{
-	FilePath: "internals/ping/domain/ping.go",
+var INTERNALS_PING_DOMAIN_HANDLERGO_MOD_TPL = Template{
+	FilePath: "internals/ping/domain/handler.go",
 	Render: true,
 	Content: `package domain
 
 import "github.com/adharshmk96/stk/gsk"
 
+// Handler
+type {{ .ExportedName }}Handlers interface {
+	{{ .ExportedName }}Handler(gc *gsk.Context)
+}
+`,
+}
+
+var INTERNALS_PING_DOMAIN_PINGGO_MOD_TPL = Template{
+	FilePath: "internals/ping/domain/ping.go",
+	Render: true,
+	Content: `package domain
+
 // Domain
 type {{ .ExportedName }}Data struct {
 	{{ .ModName }} string
 }
-
-// Storage
-type {{ .ExportedName }}Storage interface {
-	{{ .ExportedName }}() error
+`,
 }
+
+var INTERNALS_PING_DOMAIN_SERVICEGO_MOD_TPL = Template{
+	FilePath: "internals/ping/domain/service.go",
+	Render: true,
+	Content: `package domain
 
 // Service
 type {{ .ExportedName }}Service interface {
 	{{ .ExportedName }}Service() (string, error)
 }
+`,
+}
 
-// Handler
-type {{ .ExportedName }}Handlers interface {
-	{{ .ExportedName }}Handler(gc *gsk.Context)
+var INTERNALS_PING_DOMAIN_STORAGEGO_MOD_TPL = Template{
+	FilePath: "internals/ping/domain/storage.go",
+	Render: true,
+	Content: `package domain
+
+// Storage
+type {{ .ExportedName }}Storage interface {
+	{{ .ExportedName }}() error
 }
 `,
 }
@@ -488,7 +509,10 @@ var ModuleTemplates = []Template{
 	INTERNALS_PING_API_HANDLER_PINGGO_MOD_TPL,
 	INTERNALS_PING_API_HANDLER_PING_TESTGO_MOD_TPL,
 	INTERNALS_PING_API_TRANSPORT_PINGGO_MOD_TPL,
+	INTERNALS_PING_DOMAIN_HANDLERGO_MOD_TPL,
 	INTERNALS_PING_DOMAIN_PINGGO_MOD_TPL,
+	INTERNALS_PING_DOMAIN_SERVICEGO_MOD_TPL,
+	INTERNALS_PING_DOMAIN_STORAGEGO_MOD_TPL,
 	INTERNALS_PING_SERR_PINGGO_MOD_TPL,
 	INTERNALS_PING_SERVICE_PINGGO_MOD_TPL,
 	INTERNALS_PING_SERVICE_PING_TESTGO_MOD_TPL,
