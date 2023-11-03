@@ -22,8 +22,9 @@ type Context struct {
 	logger *slog.Logger
 
 	// response
-	responseStatus int
-	responseBody   []byte
+	responseStatus  int
+	responseBody    []byte
+	responseWritten bool
 }
 
 type Map map[string]interface{}
@@ -54,7 +55,6 @@ func (c *Context) GetCookie(name string) (*http.Cookie, error) {
 }
 
 func (c *Context) DecodeJSONBody(v interface{}) error {
-	// TODO: config from server
 	bodySizeLimit := int64(c.bodySizeLimit << 20) // 1 MB
 
 	if c.Request.Body == nil {
@@ -91,10 +91,9 @@ func (c *Context) DecodeJSONBody(v interface{}) error {
 	return nil
 }
 
-// TODO: support for form data, multipart form data, urlencoded form data
-
 // Methods related to response
 
+// For formdata and multipart formdata, use c.Request.ParseMultipartForm ...
 // sets response header key value
 func (c *Context) SetHeader(key string, value string) {
 	c.Writer.Header().Add(key, value)
@@ -113,10 +112,11 @@ func (c *Context) Status(status int) *Context {
 
 // Redirect redirects the request to the provided URL
 func (c *Context) Redirect(url string) {
-	status := c.responseStatus
-	if status == 0 {
-		status = http.StatusTemporaryRedirect
+	if c.responseStatus == 0 {
+		c.responseStatus = http.StatusTemporaryRedirect
 	}
+	status := c.responseStatus
+	c.responseWritten = true
 	// Set the default redirect status code
 	http.Redirect(c.Writer, c.Request, url, status)
 }
@@ -124,31 +124,29 @@ func (c *Context) Redirect(url string) {
 // JSONResponse marshals the provided interface into JSON and writes it to the response writer
 // If there is an error in marshalling the JSON, an internal server error is returned
 func (c *Context) JSONResponse(data interface{}) {
+	var err error
 	// Set the content type to JSON
 	c.Writer.Header().Set("Content-Type", "application/json")
-	response, err := json.Marshal(data)
+	c.responseBody, err = json.Marshal(data)
 
 	// Check if there is an error in marshalling the JSON (internal server error)
 	if err != nil {
 		c.responseStatus = http.StatusInternalServerError
 		c.responseBody = []byte(ErrInternalServer.Error())
-		return
 	}
-
-	c.responseBody = response
 }
 
 // TemplateResponse renders the provided template with the provided data
 // and writes it to the response writer with content type text/html
 func (c *Context) TemplateResponse(template *Tpl) {
+	var err error
 	c.Writer.Header().Set("Content-Type", "text/html")
-	response, err := template.Render(DEFAULT_TEMPLATE_VARIABLES)
+	c.responseBody, err = template.Render(DEFAULT_TEMPLATE_VARIABLES)
 	if err != nil {
 		c.responseStatus = http.StatusInternalServerError
 		c.responseBody = []byte(ErrInternalServer.Error())
-		return
 	}
-	c.responseBody = response
+
 }
 
 // StringResponse writes the provided string to the response writer

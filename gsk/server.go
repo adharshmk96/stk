@@ -225,22 +225,23 @@ func wrapHandlerFunc(s *Server, handler HandlerFunc) http.HandlerFunc {
 		finalHandler := applyMiddlewares(s.middlewares, handler)
 		finalHandler(handlerContext)
 
-		gc := handlerContext.eject()
+		ctx := handlerContext.eject()
 
-		if gc.responseStatus != 0 {
-			w.WriteHeader(gc.responseStatus)
-		} else {
-			// Default to 200 OK
-			w.WriteHeader(http.StatusOK)
-		}
-
-		if gc.responseBody != nil {
-			w.Write(gc.responseBody)
-		} else {
-			w.Write([]byte(""))
-		}
+		writeResponseWithStatus(&ctx)
 
 	}
+}
+
+func writeResponseWithStatus(c *Context) {
+	if c.responseWritten {
+		return
+	}
+	c.responseWritten = true
+	if c.responseStatus == 0 {
+		c.responseStatus = http.StatusOK
+	}
+	c.Writer.WriteHeader(c.responseStatus)
+	c.Writer.Write(c.responseBody)
 }
 
 func NormalizePort(val string) string {
