@@ -225,7 +225,23 @@ func wrapHandlerFunc(s *Server, handler HandlerFunc) http.HandlerFunc {
 		finalHandler := applyMiddlewares(s.middlewares, handler)
 		finalHandler(handlerContext)
 
+		ctx := handlerContext.eject()
+
+		writeResponseWithStatus(&ctx)
+
 	}
+}
+
+func writeResponseWithStatus(c *Context) {
+	if c.responseWritten {
+		return
+	}
+	c.responseWritten = true
+	if c.responseStatus == 0 {
+		c.responseStatus = http.StatusOK
+	}
+	c.Writer.WriteHeader(c.responseStatus)
+	c.Writer.Write(c.responseBody)
 }
 
 func NormalizePort(val string) string {
