@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/adharshmk96/stk/consts"
 	"github.com/adharshmk96/stk/pkg/utils"
 	"github.com/spf13/viper"
 )
@@ -125,9 +126,9 @@ type Context struct {
 }
 
 func DefaultContextConfig() (string, Database, string) {
-	rootDirectory := viper.GetString("migrator.workdir")
-	dbChoice := viper.GetString("migrator.database")
-	logFile := utils.GetFirst(viper.GetString("migrator.logfile"), DEFAULT_LOG_FILE)
+	rootDirectory := viper.GetString(consts.CONFIG_MIGRATOR_WORKDIR)
+	dbChoice := viper.GetString(consts.CONFIG_MIGRATOR_DB_TYPE)
+	logFile := utils.GetFirst(viper.GetString(consts.CONFIG_MIGRATOR_LOGFILE), DEFAULT_LOG_FILE)
 
 	dbType := SelectDatabase(dbChoice)
 	subDir := SelectSubDirectory(dbType)

@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/adharshmk96/stk/consts"
 	"github.com/adharshmk96/stk/pkg/commands"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/viper"
@@ -86,9 +87,9 @@ func (ctx *Context) WriteDefaultConfig() error {
 	viper.Set("author", "STK")
 
 	// Migrator configs
-	viper.Set("migrator.workdir", "./stk-migrations")
-	viper.Set("migrator.database", "sqlite3")
-	viper.Set("migrator.sqlite.filepath", "stk.db")
+	viper.Set(consts.CONFIG_MIGRATOR_WORKDIR, "./stk-migrations")
+	viper.Set(consts.CONFIG_MIGRATOR_DB_TYPE, "sqlite3")
+	viper.Set(consts.CONFIG_MIGRATOR_DB_FILEPATH, "stk.db")
 
 	// Create the config file
 	configPath := path.Join(ctx.WorkDir, CONFIG_FILENAME)
