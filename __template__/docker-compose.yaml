@@ -1,0 +1,13 @@
+services:
+  stktemplate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - stktemplate-network
+
+networks:
+  stktemplate-network:
+    driver: bridge

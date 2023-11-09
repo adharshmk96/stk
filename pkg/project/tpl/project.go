@@ -20,7 +20,8 @@ var GITIGNORE_TPL = Template{
 *.out
 dist
 
-*.db`,
+*.db
+.stk.yaml`,
 }
 
 var GORELEASERYAML_TPL = Template{
@@ -72,6 +73,60 @@ changelog:
       - "^perf:"
 
 
+`,
+}
+
+var DOCKERCOMPOSEYAML_TPL = Template{
+	FilePath: "docker-compose.yaml",
+	Render: true,
+	Content: `services:
+  {{ .AppName }}:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - {{ .AppName }}-network
+
+networks:
+  {{ .AppName }}-network:
+    driver: bridge
+`,
+}
+
+var DOCKERFILE_TPL = Template{
+	FilePath: "Dockerfile",
+	Render: true,
+	Content: `# Start from the official Golang image to build our application.
+FROM golang:1.21 AS build
+
+# Set the working directory inside the container.
+WORKDIR /app
+
+# Copy go.mod and go.sum to download all dependencies.
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the rest of the source code.
+COPY . .
+
+# Build the application. 
+# This produces a statically linked executable by disabling cgo which 
+# is not needed in a scratch container.
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o {{ .AppName }} .
+
+# Now, start from a new stage with a minimal base image for a smaller final image.
+FROM alpine:latest
+
+# Copy the statically linked executable from the build stage to the current stage.
+COPY --from=build /app/{{ .AppName }} .
+
+# Expose the port the application listens on.
+EXPOSE 8080
+
+# Command to run the executable.
+CMD ["./{{ .AppName }}"]
 `,
 }
 
@@ -649,6 +704,8 @@ func SetupTemplateRoutes(server *gsk.Server) {
 var ProjectTemplates = []Template{
 	GITIGNORE_TPL,
 	GORELEASERYAML_TPL,
+	DOCKERCOMPOSEYAML_TPL,
+	DOCKERFILE_TPL,
 	MAINGO_TPL,
 	MAKEFILE_TPL,
 	READMEMD_TPL,
