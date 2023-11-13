@@ -1,6 +1,7 @@
 package gsk
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -26,6 +27,8 @@ type Context struct {
 	responseBody    []byte
 	responseWritten bool
 }
+
+type any interface{}
 
 type Map map[string]interface{}
 
@@ -177,4 +180,14 @@ func (c *Context) GetStatusCode() int {
 // returns a copy of the context, now it's safe to use
 func (c *Context) eject() Context {
 	return *c
+}
+
+// Methods for Middleware Data
+
+func (c *Context) Set(key any, value any) {
+	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), key, value))
+}
+
+func (c *Context) Get(key any) interface{} {
+	return c.Request.Context().Value(key)
 }
