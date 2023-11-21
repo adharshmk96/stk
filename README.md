@@ -23,9 +23,18 @@ go install github.com/adharshmk96/stk@latest
 ```
 
 If installation fails, check the GOPATH and GOBIN environment variables. Make sure that GOBIN is added to your PATH.
+```zsh
+
+echo export PATH=$PATH:$(go env GOPATH)/bin >> ~/.zshrc
+source ~/.zshrc
+
+```
+
+or
+
 ```bash
 
-echo export PATH=$PATH:$GOBIN >> ~/.bashrc
+echo export PATH=$PATH:$(go env GOPATH)/bin >> ~/.bashrc
 source ~/.bashrc
 
 ```
