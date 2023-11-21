@@ -18,14 +18,14 @@ var SemVer = "development"
 
 func displaySemverInfo() {
 	if SemVer != "development" {
-		fmt.Printf("v%s", SemVer)
+		fmt.Println(SemVer)
 		return
 	}
 	version, ok := debug.ReadBuildInfo()
 	if ok && version.Main.Version != "(devel)" && version.Main.Version != "" {
 		SemVer = version.Main.Version
 	}
-	fmt.Printf("v%s", SemVer)
+	fmt.Println(SemVer)
 }
 
 // rootCmd represents the base command when called without any subcommands
