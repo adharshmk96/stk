@@ -19,6 +19,9 @@ var initCmd = &cobra.Command{
 	Short: "initialize a new stk project",
 	Long:  `a new project will be created in the current directory initializing the go module, git, boilerplate code required to start a new project.`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		cfg := cmd.Flag("cfg").Value.String() == "true"
+
 		ctx := project.NewContext(args)
 
 		fmt.Println("initializing config file...")
@@ -27,6 +30,10 @@ var initCmd = &cobra.Command{
 			fmt.Printf("error while writing config file: %s", err)
 		}
 		fmt.Println("default configs written successfully.")
+
+		if cfg {
+			return
+		}
 
 		fmt.Println("generating boilerplate...")
 		err = project.GenerateProjectBoilerplate(ctx)
@@ -41,6 +48,7 @@ var initCmd = &cobra.Command{
 
 func init() {
 	initCmd.PersistentFlags().StringVarP(&workDir, "workdir", "w", ".", "project directory")
+	initCmd.Flags().Bool("cfg", false, "config file only")
 
 	viper.BindPFlag("project.workdir", initCmd.PersistentFlags().Lookup("workdir"))
 

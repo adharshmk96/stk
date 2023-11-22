@@ -18,7 +18,6 @@ IGNORE_FILES = [
 WRITE_ONLY_FILES = [
     "*.yml",
     "*.html",
-    "*.md",
 ]
 
 PLACEHOLDERS = { 

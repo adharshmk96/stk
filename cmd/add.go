@@ -27,7 +27,6 @@ var addCmd = &cobra.Command{
 
 		ctx := project.NewContext(args)
 
-		fmt.Println("removing module boilerplate...")
 		err := project.GenerateModuleBoilerplate(ctx, moduleName)
 		if err != nil {
 			fmt.Printf("error while deleting: %s", err)
